@@ -1,6 +1,4 @@
-# Battlecode 2021 Scaffold
-
-This is the Battlecode 2021 scaffold, containing an `examplefuncsplayer`. Read https://2021.battlecode.org/getting-started!
+# Battlecode 2021 3 Musketeers
 
 ### Project Structure
 
@@ -32,4 +30,3 @@ This is the Battlecode 2021 scaffold, containing an `examplefuncsplayer`. Read h
     Runs a game with the settings in gradle.properties
 - `./gradlew update`
     Update to the newest version! Run every so often
-
