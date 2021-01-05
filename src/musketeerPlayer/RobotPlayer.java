@@ -62,6 +62,17 @@ public strictfp class RobotPlayer {
     }
 
     static void runEnlightenmentCenter() throws GameActionException {
+        int currInfluence = rc.getInfluence();
+        int biddingInfluence = currInfluence / 10;
+        assert rc.canBid(biddingInfluence);
+        if (rc.canBid(biddingInfluence) && rc.getRoundNum() > 200) {
+            rc.bid(biddingInfluence);
+        }
+        System.out.println("curr influence after bid:" + rc.getInfluence());
+        System.out.println("bidding influence:" + biddingInfluence);
+        System.out.println();
+
+
         RobotType toBuild = randomSpawnableRobotType();
         int influence = 50;
         for (Direction dir : directions) {
@@ -72,7 +83,6 @@ public strictfp class RobotPlayer {
             }
         }
     }
-
     static void runPolitician() throws GameActionException {
         Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
