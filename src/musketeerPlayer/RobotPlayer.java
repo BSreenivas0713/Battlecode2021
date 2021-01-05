@@ -108,6 +108,15 @@ public strictfp class RobotPlayer {
         }
     }
     static void runPolitician() throws GameActionException {
+        boolean kill = Math.random() > 0.5;
+        if (turnCount == 1) {
+            if (rc.canEmpower(actionRadius)) {
+                System.out.println("empowering...");
+                rc.empower(actionRadius);
+                System.out.println("empowered");
+                return;
+            }  
+        }
         Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
         RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
