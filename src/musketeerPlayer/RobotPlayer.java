@@ -62,18 +62,23 @@ public strictfp class RobotPlayer {
     }
 
     static void runEnlightenmentCenter() throws GameActionException {
+        int currRoundNum = rc.getRoundNum()
         int currInfluence = rc.getInfluence();
         int biddingInfluence = currInfluence / 10;
         assert rc.canBid(biddingInfluence);
-        if (rc.canBid(biddingInfluence) && rc.getRoundNum() > 200) {
+        if (rc.canBid(biddingInfluence) && currRoundNum > 200) {
             rc.bid(biddingInfluence);
         }
         System.out.println("curr influence after bid:" + rc.getInfluence());
         System.out.println("bidding influence:" + biddingInfluence);
         System.out.println();
-
-
-        RobotType toBuild = randomSpawnableRobotType();
+        RobotType toBuild;
+        if(currRoundNum % 2 == 0){
+            RobotType toBuild = randomSpawnableRobotType();
+        }
+        else{
+            RobotType toBuild = randomSpawnableRobotType();
+        }
         int influence = 50;
         for (Direction dir : directions) {
             if (rc.canBuildRobot(toBuild, dir, influence)) {
