@@ -102,6 +102,7 @@ public strictfp class RobotPlayer {
         for (Direction dir : directions) {
             if (rc.canBuildRobot(toBuild, dir, influence)) {
                 rc.buildRobot(toBuild, dir, influence);
+                robotCounter++;
             } else {
                 break;
             }
