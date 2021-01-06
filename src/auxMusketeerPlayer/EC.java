@@ -54,12 +54,12 @@ public class EC extends Robot {
         else {
             if (currRoundNum < 1000) {
                 if(robotCounter % 10 == 0){
-                    toBuild = RobotType.MUCKRAKER;
-                    influence = 50;
-                }
-                else {
                     toBuild = RobotType.SLANDERER;
                     influence = 100;
+                }
+                else {
+                    toBuild = RobotType.MUCKRAKER;
+                    influence = 50;
                 }
             } else if (currRoundNum < 2000) {
                 if (robotCounter % 5 == 0 || robotCounter % 5 == 1) {

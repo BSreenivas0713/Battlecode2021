@@ -22,6 +22,7 @@ public strictfp class RobotPlayer {
                     if (prev == RobotType.SLANDERER && curr == RobotType.POLITICIAN) {
                         bot = new Politician(rc);
                     }
+                    prev = curr;
                 }
                 bot.takeTurn();
 

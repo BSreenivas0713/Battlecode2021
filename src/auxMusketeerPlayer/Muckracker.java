@@ -14,6 +14,7 @@ public class Muckracker extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
+        System.out.println("muckraker current conviction: " + rc.getConviction());
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
