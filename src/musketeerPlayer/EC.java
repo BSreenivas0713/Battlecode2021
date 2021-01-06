@@ -16,7 +16,7 @@ public class EC extends Robot {
         System.out.println("AI current influence: " + rc.getInfluence());
         int currRoundNum = rc.getRoundNum();
         int currInfluence = rc.getInfluence();
-        int biddingInfluence = currInfluence / 10;
+        int biddingInfluence = currInfluence / 5;
         if (rc.canBid(biddingInfluence) && currRoundNum > 200) {
             rc.bid(biddingInfluence);
         }
@@ -38,7 +38,7 @@ public class EC extends Robot {
                }
            } 
         }
-        if(enemy_near){
+        if(enemy_near) {
             int num_robots = rc.senseNearbyRobots(15).length;
             int naive_influence = num_robots * max_influence;
             influence = Math.min(naive_influence, (int)(3 * rc.getInfluence()/4));
@@ -51,15 +51,15 @@ public class EC extends Robot {
                 }
             }
         }
-        else{
-            if (currRoundNum > 500) {
-                if(robotCounter % 3 == 0){
+        else {
+            if (currRoundNum > 500 && currRoundNum < 1500) {
+                if(robotCounter % 4 == 0 || robotCounter % 4 == 1){
                     toBuild = RobotType.SLANDERER;
                     influence = 50;
                 }
-                else if (robotCounter % 3 == 1){
+                else if (robotCounter % 4 == 3){
                     toBuild = RobotType.POLITICIAN;
-                    influence = currInfluence / 10;
+                    influence = currInfluence / 5;
                 }
                 else{
                     toBuild = RobotType.MUCKRAKER;
