@@ -16,8 +16,8 @@ public class EC extends Robot {
         System.out.println("AI current influence: " + rc.getInfluence());
         int currRoundNum = rc.getRoundNum();
         int currInfluence = rc.getInfluence();
-        int biddingInfluence = currInfluence / 5;
-        if (rc.canBid(biddingInfluence) && currRoundNum > 200) {
+        int biddingInfluence = currInfluence / 20;
+        if (rc.canBid(biddingInfluence) && currRoundNum > 500) {
             rc.bid(biddingInfluence);
         }
         else {
@@ -41,7 +41,7 @@ public class EC extends Robot {
         if(enemy_near) {
             int num_robots = rc.senseNearbyRobots(15).length;
             int naive_influence = num_robots * max_influence;
-            influence = Math.min(naive_influence, (int)(3 * rc.getInfluence()/4));
+            influence = Math.min(naive_influence + 10, (int)(3 * rc.getInfluence()/4));
             for (Direction dir : Util.directions) {
                 if (rc.canBuildRobot(RobotType.POLITICIAN, dir, influence)) {
                     rc.buildRobot(RobotType.POLITICIAN, dir, influence);
@@ -53,25 +53,22 @@ public class EC extends Robot {
         }
         else {
             if (currRoundNum < 1000) {
-                if(robotCounter % 5 == 0){
+                if(robotCounter % 10 == 0){
                     toBuild = RobotType.MUCKRAKER;
                     influence = 50;
                 }
                 else {
                     toBuild = RobotType.SLANDERER;
-                    influence = 50;
+                    influence = 100;
                 }
             } else if (currRoundNum < 2000) {
-                if (robotCounter % 3 == 0) {
+                if (robotCounter % 5 == 0 || robotCounter % 5 == 1) {
                     toBuild = RobotType.MUCKRAKER;
                     influence = 50;
-                } else if (robotCounter % 3 == 1) {
+                } else {
                     toBuild = RobotType.SLANDERER;
                     influence = 50;
-                } else {
-                    toBuild = RobotType.POLITICIAN;
-                    influence = currInfluence / 10;
-                } 
+                }
             } else {
                 toBuild = RobotType.SLANDERER;
                 influence = 50;
