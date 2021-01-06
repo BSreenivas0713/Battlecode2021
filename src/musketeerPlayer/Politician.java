@@ -34,7 +34,7 @@ public class Politician extends Robot {
         }
         Direction toMove = Util.randomDirection();
         if (powerful != null) {
-            toMove = Util.findDirection(rc.getLocation(), powerful.getLocation());
+            toMove = Util.findDirection(powerful.getLocation(), rc.getLocation());
         }
 
         if (tryMove(toMove));

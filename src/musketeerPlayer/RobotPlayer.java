@@ -13,9 +13,16 @@ public strictfp class RobotPlayer {
             case SLANDERER:            bot = new Slanderer(rc);   break;
             case MUCKRAKER:            bot = new Muckracker(rc);  break;
         }
+        RobotType prev = rc.getType();
 
         while (true) {
             try {
+                RobotType curr = rc.getType();
+                if (prev != curr) {
+                    if (prev == RobotType.SLANDERER && curr == RobotType.POLITICIAN) {
+                        bot = new Politician(rc);
+                    }
+                }
                 bot.takeTurn();
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
