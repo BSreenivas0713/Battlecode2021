@@ -4,6 +4,7 @@ import battlecode.common.*;
 import musketeerplayer.Util.*;
 
 public class Politician extends Robot {
+    static Direction main_direction;
     
     public Politician(RobotController r) {
         super(r);
@@ -11,6 +12,10 @@ public class Politician extends Robot {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
+
+        if(main_direction == null){
+            main_direction = Util.randomDirection();
+        }
         Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
         RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
@@ -32,11 +37,14 @@ public class Politician extends Robot {
                 max_influence = currInfluence;
             }
         }
-        Direction toMove = Util.randomDirection();
+        
         if (powerful != null) {
-            toMove = Util.findDirection(powerful.getLocation(), rc.getLocation());
+            Direction toMove = Util.findDirection(powerful.getLocation(), rc.getLocation());
+            tryMove(toMove);
         }
 
-        if (tryMove(toMove));
+        while (!tryMove(main_direction) && rc.isReady()){
+            main_direction = Util.randomDirection();
+        }
     }
 }
