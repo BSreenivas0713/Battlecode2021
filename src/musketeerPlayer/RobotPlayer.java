@@ -134,7 +134,25 @@ public strictfp class RobotPlayer {
     static Direction findDirection(MapLocation curr, MapLocation enemy) {
         int dy = curr.y - enemy.y;
         int dx = curr.x - enemy.x;
-        double angle = Math.toDegrees(Math.abs(Math.atan(dy/dx)));
+        //setting angle
+        double angle;
+        if (dx == 0 && dy > 0) {
+            angle = 90;
+        }
+        else if (dx < 0 && dy == 0) {
+            angle = 180;
+        }
+        else if (dx == 0 && dy < 0) {
+            angle = 270;
+        }
+        else if (dx > 0 && dy == 0) {
+            angle = 360;
+        }
+        else {
+            angle = Math.toDegrees(Math.abs(Math.atan(dy/dx)));
+        }
+
+        //adding angle offsets
         if (dx < 0 && dy >= 0) {
             angle += 90;
         }
@@ -144,6 +162,9 @@ public strictfp class RobotPlayer {
         else if (dx >= 0 && dy < 0) {
             angle += 270;
         }
+        angle = angle % 360;
+
+        //returning directions
         if (22.5 <= angle && angle < 67.5) {
             return Direction.NORTHEAST;
         }
@@ -189,8 +210,8 @@ public strictfp class RobotPlayer {
             toMove = findDirection(curr, minRobot.getLocation());
         }
 
-        if (tryMove(toMove))
-            System.out.println("I moved!");
+        if (tryMove(toMove));
+            // System.out.println("I moved!");
     }
 
     static void runMuckraker() throws GameActionException {
