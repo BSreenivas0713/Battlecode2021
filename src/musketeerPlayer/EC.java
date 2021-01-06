@@ -52,28 +52,29 @@ public class EC extends Robot {
             }
         }
         else {
-            if (currRoundNum > 500 && currRoundNum < 1500) {
-                if(robotCounter % 4 == 0 || robotCounter % 4 == 1){
+            if (currRoundNum < 1000) {
+                if(robotCounter % 5 == 0){
+                    toBuild = RobotType.MUCKRAKER;
+                    influence = 50;
+                }
+                else {
                     toBuild = RobotType.SLANDERER;
                     influence = 50;
                 }
-                else if (robotCounter % 4 == 3){
+            } else if (currRoundNum < 2000) {
+                if (robotCounter % 3 == 0) {
+                    toBuild = RobotType.MUCKRAKER;
+                    influence = 50;
+                } else if (robotCounter % 3 == 1) {
+                    toBuild = RobotType.SLANDERER;
+                    influence = 50;
+                } else {
                     toBuild = RobotType.POLITICIAN;
-                    influence = currInfluence / 5;
-                }
-                else{
-                    toBuild = RobotType.MUCKRAKER;
-                    influence = 20;
-                }
+                    influence = currInfluence / 10;
+                } 
             } else {
-                if(robotCounter % 2 == 0){
-                    toBuild = RobotType.SLANDERER;
-                    influence = 50;
-                }
-                else{
-                    toBuild = RobotType.MUCKRAKER;
-                    influence = 50;
-                }
+                toBuild = RobotType.SLANDERER;
+                influence = 50;
             }
             for (Direction dir : Util.directions) {
                 if (rc.canBuildRobot(toBuild, dir, influence)) {
