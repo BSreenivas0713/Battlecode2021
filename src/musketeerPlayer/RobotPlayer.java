@@ -70,7 +70,7 @@ public strictfp class RobotPlayer {
         int currRoundNum = rc.getRoundNum();
         int currInfluence = rc.getInfluence();
         int biddingInfluence = currInfluence / 10;
-        assert rc.canBid(biddingInfluence);
+        //assert rc.canBid(biddingInfluence);
         if (rc.canBid(biddingInfluence) && currRoundNum > 200) {
             rc.bid(biddingInfluence);
         }
@@ -236,7 +236,7 @@ public strictfp class RobotPlayer {
             }
         }
         if(!muckraker_Found_EC){
-            while (!tryMove(main_direction)){
+            while (!tryMove(main_direction) && rc.isReady()){
                 main_direction = randomDirection();
             }
         }
