@@ -22,8 +22,10 @@ public strictfp class RobotPlayer {
                     if (prev == RobotType.SLANDERER && curr == RobotType.POLITICIAN) {
                         bot = new Politician(rc);
                     }
+                    prev = curr;
                 }
                 bot.takeTurn();
+                // System.out.println("BC left at end: " + Clock.getBytecodesLeft());
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
