@@ -26,6 +26,31 @@ public class EC extends Robot {
 
         RobotType toBuild;
         int influence;
+        boolean enemy_near = false;
+        int max_influence = 1;
+        Team enemy = rc.getTeam().opponent();
+        for (RobotInfo robot : rc.senseNearbyRobots(15, enemy)) {
+           if (robot.getType() == RobotType.MUCKRAKER){
+               enemy_near = true;
+               if (robot.getInfluence() > max_influence){
+                   max_influence = robot.getInfluence();
+               }
+           } 
+        }
+        if(enemy_near){
+            int num_robots = rc.senseNearbyRobots(15).length;
+            int naive_influence = num_robots * max_influence;
+            influence = Math.min(naive_influence, (int)(3 * rc.getInfluence()/4));
+            for (Direction dir : Util.directions) {
+                if (rc.canBuildRobot(RobotType.POLITICIAN, dir, influence)) {
+                    rc.buildRobot(RobotType.POLITICIAN, dir, influence);
+                    robotCounter+=1;
+                } else {
+                    break;
+                }
+            }
+        }
+        else{
         if (currRoundNum > 500) {
             if(robotCounter % 3 == 0){
                 toBuild = RobotType.SLANDERER;
@@ -56,6 +81,7 @@ public class EC extends Robot {
             } else {
                 break;
             }
+        }
         }
     }
 }

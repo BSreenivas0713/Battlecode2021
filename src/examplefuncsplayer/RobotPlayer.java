@@ -63,11 +63,12 @@ public strictfp class RobotPlayer {
 
     static void runEnlightenmentCenter() throws GameActionException {
         System.out.println("Opponent current influence: " + rc.getInfluence());
-        // int currInfluence = rc.getInfluence();
-        // int biddingInfluence = currInfluence / 10;
-        // if(biddingInfluence != 0){
-        // rc.bid(biddingInfluence);
-        // }
+        int currRoundNum = rc.getRoundNum();
+        int currInfluence = rc.getInfluence();
+        int biddingInfluence = currInfluence - 10;
+        if(biddingInfluence != 0  && currRoundNum > 200){
+        rc.bid(biddingInfluence);
+        }
         RobotType toBuild = randomSpawnableRobotType();
         int influence = 50;
         for (Direction dir : directions) {
