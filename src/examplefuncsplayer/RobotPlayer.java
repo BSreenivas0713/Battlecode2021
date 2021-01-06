@@ -65,7 +65,9 @@ public strictfp class RobotPlayer {
         System.out.println("Opponent current influence: " + rc.getInfluence());
         int currInfluence = rc.getInfluence();
         int biddingInfluence = currInfluence / 10;
+        if(biddingInfluence != 0){
         rc.bid(biddingInfluence);
+        }
         RobotType toBuild = randomSpawnableRobotType();
         int influence = 50;
         for (Direction dir : directions) {

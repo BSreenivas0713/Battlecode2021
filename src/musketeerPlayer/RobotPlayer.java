@@ -22,6 +22,8 @@ public strictfp class RobotPlayer {
     };
 
     static int turnCount;
+    static Direction main_direction;
+    static boolean muckraker_Found_EC;
     static int robotCounter;
     static int politicianCounter;
 
@@ -100,7 +102,7 @@ public strictfp class RobotPlayer {
             }
             else{
                 toBuild = RobotType.MUCKRAKER;
-                influence = 1;
+                influence = 50;
             }
         }
         for (Direction dir : directions) {
@@ -132,6 +134,9 @@ public strictfp class RobotPlayer {
     }
 
     static void runMuckraker() throws GameActionException {
+        if(main_direction == null){
+            main_direction = randomDirection();
+        }
         Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
         for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, enemy)) {
@@ -143,8 +148,15 @@ public strictfp class RobotPlayer {
                     return;
                 }
             }
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
+                muckraker_Found_EC = true;
+            }
         }
-        if (tryMove(randomDirection()));
+        if(!muckraker_Found_EC){
+            while (!tryMove(main_direction)){
+                main_direction = randomDirection();
+            }
+        }
             //System.out.println("I moved!");
     }
 
