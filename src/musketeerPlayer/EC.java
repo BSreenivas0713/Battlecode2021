@@ -27,9 +27,10 @@ public class EC extends Robot {
         RobotType toBuild;
         int influence;
         boolean enemy_near = false;
-        int max_influence = 1;
+        int max_influence = 0;
         Team enemy = rc.getTeam().opponent();
-        for (RobotInfo robot : rc.senseNearbyRobots(15, enemy)) {
+        RobotInfo[] botsIn15 = rc.senseNearbyRobots(15, enemy);
+        for (RobotInfo robot : botsIn15) {
            if (robot.getType() == RobotType.MUCKRAKER){
                enemy_near = true;
                if (robot.getInfluence() > max_influence){
@@ -51,37 +52,37 @@ public class EC extends Robot {
             }
         }
         else{
-        if (currRoundNum > 500) {
-            if(robotCounter % 3 == 0){
-                toBuild = RobotType.SLANDERER;
-                influence = 50;
-            }
-            else if (robotCounter % 3 == 1){
-                toBuild = RobotType.POLITICIAN;
-                influence = currInfluence / 10;
-            }
-            else{
-                toBuild = RobotType.MUCKRAKER;
-                influence = 1;
-            }
-        } else {
-            if(robotCounter % 2 == 0){
-                toBuild = RobotType.SLANDERER;
-                influence = 50;
-            }
-            else{
-                toBuild = RobotType.MUCKRAKER;
-                influence = 50;
-            }
-        }
-        for (Direction dir : Util.directions) {
-            if (rc.canBuildRobot(toBuild, dir, influence)) {
-                rc.buildRobot(toBuild, dir, influence);
-                robotCounter+=1;
+            if (currRoundNum > 500) {
+                if(robotCounter % 3 == 0){
+                    toBuild = RobotType.SLANDERER;
+                    influence = 50;
+                }
+                else if (robotCounter % 3 == 1){
+                    toBuild = RobotType.POLITICIAN;
+                    influence = currInfluence / 10;
+                }
+                else{
+                    toBuild = RobotType.MUCKRAKER;
+                    influence = 20;
+                }
             } else {
-                break;
+                if(robotCounter % 2 == 0){
+                    toBuild = RobotType.SLANDERER;
+                    influence = 50;
+                }
+                else{
+                    toBuild = RobotType.MUCKRAKER;
+                    influence = 50;
+                }
             }
-        }
+            for (Direction dir : Util.directions) {
+                if (rc.canBuildRobot(toBuild, dir, influence)) {
+                    rc.buildRobot(toBuild, dir, influence);
+                    robotCounter+=1;
+                } else {
+                    break;
+                }
+            }
         }
     }
 }

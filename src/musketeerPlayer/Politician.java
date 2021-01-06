@@ -20,7 +20,23 @@ public class Politician extends Robot {
             //System.out.println("empowered");
             return;
         }
-        if (tryMove(Util.randomDirection()));
-            //System.out.println("I moved!");
+
+        int sensingRadius = rc.getType().sensorRadiusSquared;
+        RobotInfo[] sensable = rc.senseNearbyRobots(sensingRadius, enemy);
+        RobotInfo powerful = null;
+        int max_influence = 0;
+        for (RobotInfo robot : sensable) {
+            int currInfluence = robot.getInfluence();
+            if (robot.getType() == RobotType.MUCKRAKER && currInfluence > max_influence) {
+                powerful = robot;
+                max_influence = currInfluence;
+            }
+        }
+        Direction toMove = Util.randomDirection();
+        if (powerful != null) {
+            toMove = Util.findDirection(rc.getLocation(), powerful.getLocation());
+        }
+
+        if (tryMove(toMove));
     }
 }
