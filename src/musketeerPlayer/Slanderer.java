@@ -52,5 +52,7 @@ public class Slanderer extends Robot {
                 main_direction = Util.randomDirection();
             }
         }
+
+        broadcastECLocation();
     }
 }

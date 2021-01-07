@@ -18,6 +18,7 @@ public class Robot {
 
     public void takeTurn() throws GameActionException {
         turnCount += 1;
+        System.out.println("Flag set: " + rc.getFlag(rc.getID()));
     }
 
     /**

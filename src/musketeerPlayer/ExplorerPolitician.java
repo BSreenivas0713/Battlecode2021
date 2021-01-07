@@ -50,5 +50,7 @@ public class ExplorerPolitician extends Robot {
         while (!tryMove(main_direction) && rc.isReady()){
             main_direction = Util.randomDirection();
         }
+
+        broadcastECLocation();
     }
 }
