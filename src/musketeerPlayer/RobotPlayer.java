@@ -16,8 +16,15 @@ public strictfp class RobotPlayer {
                     break;
                 }
                 else {
-                    bot = new Politician(rc);
-                    break;
+                    boolean isExplorer = rc.getRoundNum() % 3 != 0;
+                    if (isExplorer) {
+                        bot = new ExplorerPolitician(rc);
+                        break;
+                    }
+                    else {
+                        bot = new Politician(rc);
+                        break;
+                    }
                 }
             case SLANDERER:            bot = new Slanderer(rc);   break;
             case MUCKRAKER:            bot = new Muckracker(rc);  break;
