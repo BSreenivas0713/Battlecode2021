@@ -20,6 +20,20 @@ public class EC extends Robot {
         ECflags = new ArrayDeque<Integer>();
     }
 
+    public void buildRobot(RobotType toBuild, int influence) throws GameActionException {
+        Direction main_direction = Util.randomDirection();
+        int num_direction = 8;
+        while(num_direction != 0) {
+            if (rc.canBuildRobot(toBuild, main_direction, influence)) {
+                rc.buildRobot(toBuild, main_direction, influence);
+                robotCounter += 1;
+                break;
+            }
+            main_direction = Util.pathFinder.get(main_direction);
+            num_direction--;
+        }
+    }
+
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
@@ -64,73 +78,40 @@ public class EC extends Robot {
                }
            } 
         }
-        if (sendTroopsSemaphore > 0) {
+
+        if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && Math.random() < 0.5) {
+            System.out.println("spawn killing politicians");
+            influence = 6*rc.getInfluence()/8;
+            buildRobot(RobotType.POLITICIAN, influence);
+        }
+        else if (sendTroopsSemaphore > 0) {
+            System.out.println("building rush bots");
             int currFlag = rc.getFlag(rc.getID());
             toBuild = RobotType.POLITICIAN;
             // if (Comms.getIC(currFlag) == Comms.InformationCategory.ENEMY_EC) {
             //     toBuild = RobotType.MUCKRAKER;
             // }
             influence = Math.max(50,rc.getInfluence()/30);
-            int i = 0;
-            Direction dir = null;
-            while (i < 8) {
-                dir = Util.randomDirection();
-                if (rc.canBuildRobot(toBuild, dir, influence)) {
-                    rc.buildRobot(toBuild, dir, influence);
-                    robotCounter+=1;
-                    break;
-                }
-                else {
-                    i++;
-                    break;
-                }
-            }
+            buildRobot(toBuild, influence);
 
             sendTroopsSemaphore--;
             if (sendTroopsSemaphore == 0) {
+                ECflags.remove();
                 resetFlagOnNewTurn = true;
             }
         }
         else if (enemy_near) {
+            System.out.println("defending a rush");
             int num_robots = rc.senseNearbyRobots(15).length;
             int naive_influence = num_robots * max_influence;
             influence = Math.min(naive_influence + 10, (int)(3 * rc.getInfluence()/4));
-            int i = 0;
-            Direction dir = null;
-            while (i < 8) {
-                dir = Util.randomDirection();
-                if (rc.canBuildRobot(RobotType.POLITICIAN, dir, influence)) {
-                    rc.buildRobot(RobotType.POLITICIAN, dir, influence);
-                    robotCounter+=1;
-                    break;
-                }
-                else {
-                    i++;
-                    break;
-                }
-            }
-        }
-        else if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
-            influence = 6*rc.getInfluence()/8;
-            int i = 0;
-            Direction dir = null;
-            while (i < 8) {
-                dir = Util.randomDirection();
-                if (rc.canBuildRobot(RobotType.POLITICIAN, dir, influence)) {
-                    rc.buildRobot(RobotType.POLITICIAN, dir, influence);
-                    robotCounter+=1;
-                    break;
-                }
-                else {
-                    i++;
-                    break;
-                }
-            }
+            buildRobot(RobotType.POLITICIAN, influence);
         }
         else {
             int slandererInfluence = Math.max(100, rc.getInfluence() / 10);
             int normalInfluence = Math.max(50, rc.getInfluence() / 20);
             if (currRoundNum < 2000) {
+                System.out.println("default build troop behavior");
                 if(robotCounter % 9 == 0 || robotCounter % 9 == 2 || robotCounter % 9 == 4){
                     toBuild = RobotType.SLANDERER;
                     influence = slandererInfluence;
@@ -145,23 +126,11 @@ public class EC extends Robot {
                 }
             } 
             else {
+                System.out.println("build troop behavior after 2000 rounds");
                 toBuild = RobotType.MUCKRAKER;
                 influence = normalInfluence;
             }
-            int i = 0;
-            Direction dir = null;
-            while (i < 8) {
-                dir = Util.randomDirection();
-                if (rc.canBuildRobot(toBuild, dir, influence)) {
-                    rc.buildRobot(toBuild, dir, influence);
-                    robotCounter+=1;
-                    break;
-                }
-                else {
-                    i++;
-                    break;
-                }
-            }
+            buildRobot(toBuild, influence);
         }
 
         for(int id : ids) {
@@ -176,7 +145,7 @@ public class EC extends Robot {
         }
 
         if (!ECflags.isEmpty() && sendTroopsSemaphore == 0) {
-            int currFlag = ECflags.remove();
+            int currFlag = ECflags.peek();
             sendTroopsSemaphore = 6;
             resetFlagOnNewTurn = false;
             setFlag(currFlag);
