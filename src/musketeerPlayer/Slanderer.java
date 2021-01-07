@@ -8,9 +8,6 @@ public class Slanderer extends Robot {
     
     public Slanderer(RobotController r) {
         super(r);
-        if (rc.canSetFlag(1)) {
-            rc.setFlag(1);
-        }
     }
 
     public void takeTurn() throws GameActionException {
