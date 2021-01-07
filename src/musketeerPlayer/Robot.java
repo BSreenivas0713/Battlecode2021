@@ -44,7 +44,7 @@ public class Robot {
     public void takeTurn() throws GameActionException {
         turnCount += 1;
         System.out.println("Flag set: " + rc.getFlag(rc.getID()));
-        if(rc.getFlag(rc.getID()) > Comms.MIN_FLAG_MESSAGE && resetFlagOnNewTurn) {
+        if(rc.getFlag(rc.getID()) > Comms.MIN_FLAG_MESSAGE && resetFlagOnNewTurn && turnCount > 2) {
             setFlag(defaultFlag);
         }
     }
