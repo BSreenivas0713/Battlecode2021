@@ -4,17 +4,20 @@ import battlecode.common.*;
 import musketeerplayer.Comms.*;
 import musketeerplayer.Util.*;
 import java.util.ArrayList;
+import java.util.ArrayDeque;
 
 
 public class EC extends Robot {
     static int robotCounter;
+    static int sendTroopsSemaphore = 0;
+
     static ArrayList<Integer> ids;
-    static ArrayList<MapLocation> ecs;
+    static ArrayDeque<Integer> ECflags;
 
     public EC(RobotController r) {
         super(r);
         ids = new ArrayList<Integer>();
-        ecs = new ArrayList<MapLocation>();
+        ECflags = new ArrayDeque<Integer>();
     }
 
     public void takeTurn() throws GameActionException {
@@ -22,10 +25,9 @@ public class EC extends Robot {
 
         System.out.println("I am a " + rc.getType() + "; current influence: " + rc.getInfluence());
         System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
-        System.out.println("num of ec's found: " + ecs.size());
+        System.out.println("num of ec's found: " + ECflags.size());
 
-        int sensorRadius = rc.getType().sensorRadiusSquared;
-        RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
+        RobotInfo[] sensable = rc.senseNearbyRobots(2, rc.getTeam());
         for(RobotInfo robot : sensable) {
             if(!ids.contains(robot.getID())) {
                 ids.add(robot.getID());
@@ -73,6 +75,34 @@ public class EC extends Robot {
                     i++;
                     break;
                 }
+            }
+        }
+        else if (sendTroopsSemaphore > 0) {
+            int currFlag = rc.getFlag(rc.getID());
+            toBuild = RobotType.POLITICIAN;
+            if (Comms.getIC(currFlag) == Comms.InformationCategory.ENEMY_EC) {
+                toBuild = RobotType.MUCKRAKER;
+            }
+            influence = 50;
+            int i = 0;
+            Direction dir = null;
+            while (i < 8) {
+                dir = Util.randomDirection();
+                if (rc.canBuildRobot(toBuild, dir, influence)) {
+                    rc.buildRobot(toBuild, dir, influence);
+                    robotCounter+=1;
+                    break;
+                }
+                else {
+                    i++;
+                    break;
+                }
+            }
+            sendTroopsSemaphore--;
+            if (sendTroopsSemaphore == 0) {
+                try {
+                    rc.setFlag(defaultFlag);
+                } catch (Exception e) {}
             }
         }
         else if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
@@ -129,26 +159,24 @@ public class EC extends Robot {
             }
         }
 
-        boolean flagSet = false;
         for(int id : ids) {
             if(rc.canGetFlag(id)) {
                 int flag = rc.getFlag(id);
-                if(flag > 1000000) {
-                    InformationCategory ic = Comms.getIC(flag);
-                    int[] dxdy = Comms.getDxDy(flag);
-                    MapLocation currLoc = rc.getLocation();
-                    MapLocation ecLoc = new MapLocation(dxdy[0] + currLoc.x - Robot.dOffset, dxdy[1] + currLoc.y - Robot.dOffset);
-                    
-                    if(!ecs.contains(ecLoc)) {
-                        ecs.add(ecLoc);
-
-                        if(!flagSet) {
-                            rc.setFlag(flag);
-                            flagSet = true;
-                        }
-                    }
+                if(flag > 1000000 && !ECflags.contains(flag)) {
+                    ECflags.add(flag);
                 }
             }
         }
+
+        if (!ECflags.isEmpty() && sendTroopsSemaphore == 0) {
+            int currFlag = ECflags.remove();
+            sendTroopsSemaphore = 6;
+            if (rc.canSetFlag(currFlag)) {
+                try {
+                    rc.setFlag(currFlag);
+                } catch (Exception e) {}
+            }
+        }
+
     }
 }

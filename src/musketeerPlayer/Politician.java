@@ -19,6 +19,19 @@ public class Politician extends Robot {
         }
     }
 
+    public Politician(RobotController r, int currDx, int currDy) {
+        super(r, currDx, currDy);
+        try {
+            if (rc.canSetFlag(0)) {
+                rc.setFlag(0);
+            }
+        }
+        catch (Exception e) {
+            System.out.println(rc.getType() + " Exception");
+            e.printStackTrace();
+        }
+    }
+
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 

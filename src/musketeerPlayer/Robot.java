@@ -8,17 +8,42 @@ public class Robot {
     static RobotController rc;
     static int turnCount = 0;
 
-    static final int dOffset = 64;
-    static int dx = dOffset;
-    static int dy = dOffset;
+    public static int dx = Util.dOffset;
+    public static int dy = Util.dOffset;
+    static boolean flagSetOnPrevRound = false;
+    static int defaultFlag = 0;
 
     public Robot(RobotController r) {
         rc = r;
+        int sensorRadius = rc.getType().sensorRadiusSquared;
+        RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
+        MapLocation currLoc = rc.getLocation();
+        for (RobotInfo robot : sensable) {
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                MapLocation ecLoc = robot.getLocation();
+                dx += currLoc.x - ecLoc.x;
+                dy += currLoc.y - ecLoc.y;
+            }
+        }
+    }
+
+    public Robot(RobotController r, int currDx, int currDy) {
+        rc = r;
+        dx = currDx;
+        dy = currDy;
     }
 
     public void takeTurn() throws GameActionException {
         turnCount += 1;
         System.out.println("Flag set: " + rc.getFlag(rc.getID()));
+        if (rc.getType() != RobotType.ENLIGHTENMENT_CENTER) {
+            if (flagSetOnPrevRound) {
+                int newFlag = defaultFlag;
+                if (rc.canSetFlag(newFlag)) {
+                    rc.setFlag(newFlag);
+                }
+            }
+        }
     }
 
     /**
@@ -102,7 +127,7 @@ public class Robot {
                 }
             }
         }
-
+        flagSetOnPrevRound = true;
         return res;
     }
 }
