@@ -19,6 +19,8 @@ public class Util {
         Direction.NORTHWEST,
     };
 
+    static final int spawnKillThreshold = 2;
+
     /**
      * Returns a random Direction.
      *

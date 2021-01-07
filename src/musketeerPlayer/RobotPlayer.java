@@ -1,5 +1,6 @@
 package musketeerplayer;
 import battlecode.common.*;
+import musketeerplayer.Util.*;
 
 public strictfp class RobotPlayer {
 
@@ -9,7 +10,15 @@ public strictfp class RobotPlayer {
         Robot bot = null;
         switch (rc.getType()) {
             case ENLIGHTENMENT_CENTER: bot = new EC(rc);          break;
-            case POLITICIAN:           bot = new Politician(rc);  break;
+            case POLITICIAN:  
+                if (rc.getEmpowerFactor(rc.getTeam(), 0) > Util.spawnKillThreshold) {
+                    bot = new SpawnKillPolitician(rc);
+                    break;
+                }
+                else {
+                    bot = new Politician(rc);
+                    break;
+                }
             case SLANDERER:            bot = new Slanderer(rc);   break;
             case MUCKRAKER:            bot = new Muckracker(rc);  break;
         }

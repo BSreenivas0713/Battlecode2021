@@ -13,15 +13,16 @@ public class EC extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        System.out.println("AI current influence: " + rc.getInfluence());
+        System.out.println("I am a " + rc.getType() + "; current influence: " + rc.getInfluence());
+        System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
         int currRoundNum = rc.getRoundNum();
         int currInfluence = rc.getInfluence();
-        int biddingInfluence = currInfluence / 20;
+        int biddingInfluence = currInfluence / 10;
         if (rc.canBid(biddingInfluence) && currRoundNum > 500) {
             rc.bid(biddingInfluence);
         }
-        else {
-            rc.bid(1);
+        else if (rc.canBid(currInfluence / 30)) {
+            rc.bid(currInfluence / 30);
         }
 
         RobotType toBuild;
@@ -42,42 +43,70 @@ public class EC extends Robot {
             int num_robots = rc.senseNearbyRobots(15).length;
             int naive_influence = num_robots * max_influence;
             influence = Math.min(naive_influence + 10, (int)(3 * rc.getInfluence()/4));
-            for (Direction dir : Util.directions) {
+            int i = 0;
+            Direction dir = null;
+            while (i < 8) {
+                dir = Util.randomDirection();
                 if (rc.canBuildRobot(RobotType.POLITICIAN, dir, influence)) {
                     rc.buildRobot(RobotType.POLITICIAN, dir, influence);
                     robotCounter+=1;
-                } else {
+                    break;
+                }
+                else {
+                    i++;
+                    break;
+                }
+            }
+        }
+        else if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
+            influence = 6*rc.getInfluence()/8;
+            int i = 0;
+            Direction dir = null;
+            while (i < 8) {
+                dir = Util.randomDirection();
+                if (rc.canBuildRobot(RobotType.POLITICIAN, dir, influence)) {
+                    rc.buildRobot(RobotType.POLITICIAN, dir, influence);
+                    robotCounter+=1;
+                    break;
+                }
+                else {
+                    i++;
                     break;
                 }
             }
         }
         else {
-            if (currRoundNum < 1000) {
-                if(robotCounter % 10 == 0){
-                    toBuild = RobotType.MUCKRAKER;
-                    influence = 50;
+            int slandererInfluence = Math.max(100, rc.getInfluence() / 10);
+            int normalInfluence = Math.max(50, rc.getInfluence() / 20);
+            if (currRoundNum < 2000) {
+                if(robotCounter % 9 == 0 || robotCounter % 9 == 2 || robotCounter % 9 == 4){
+                    toBuild = RobotType.SLANDERER;
+                    influence = slandererInfluence;
+                }
+                else if(robotCounter % 9 == 1 || robotCounter % 9 == 3 || robotCounter % 9 == 5){
+                    toBuild = RobotType.POLITICIAN;
+                    influence = normalInfluence;
                 }
                 else {
-                    toBuild = RobotType.SLANDERER;
-                    influence = 100;
-                }
-            } else if (currRoundNum < 2000) {
-                if (robotCounter % 5 == 0 || robotCounter % 5 == 1) {
                     toBuild = RobotType.MUCKRAKER;
-                    influence = 50;
-                } else {
-                    toBuild = RobotType.SLANDERER;
-                    influence = 50;
+                    influence = normalInfluence;
                 }
-            } else {
-                toBuild = RobotType.SLANDERER;
-                influence = 50;
+            } 
+            else {
+                toBuild = RobotType.MUCKRAKER;
+                influence = normalInfluence;
             }
-            for (Direction dir : Util.directions) {
+            int i = 0;
+            Direction dir = null;
+            while (i < 8) {
+                dir = Util.randomDirection();
                 if (rc.canBuildRobot(toBuild, dir, influence)) {
                     rc.buildRobot(toBuild, dir, influence);
                     robotCounter+=1;
-                } else {
+                    break;
+                }
+                else {
+                    i++;
                     break;
                 }
             }
