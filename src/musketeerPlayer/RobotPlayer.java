@@ -13,6 +13,11 @@ public strictfp class RobotPlayer {
         switch (rc.getType()) {
             case ENLIGHTENMENT_CENTER: bot = new EC(rc);          break;
             case POLITICIAN: 
+                if (rc.getEmpowerFactor(rc.getTeam(), 0) > Util.spawnKillThreshold && Math.random() < 0.5) {
+                    bot = new SpawnKillPolitician(rc);
+                    break;
+                }
+
                 int sensorRadius = rc.getType().sensorRadiusSquared;
                 RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
                 boolean willRush = false;
@@ -33,13 +38,8 @@ public strictfp class RobotPlayer {
                 if (willRush) {
                     break;
                 }
-
-                if (rc.getEmpowerFactor(rc.getTeam(), 0) > Util.spawnKillThreshold) {
-                    bot = new SpawnKillPolitician(rc);
-                    break;
-                }
                 else {
-                    boolean isExplorer = rc.getRoundNum() % 3 != 0;
+                    boolean isExplorer = rc.getRoundNum() % 3 == 0;
                     if (isExplorer) {
                         bot = new ExplorerPolitician(rc);
                         break;
