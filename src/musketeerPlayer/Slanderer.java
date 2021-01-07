@@ -8,6 +8,9 @@ public class Slanderer extends Robot {
     
     public Slanderer(RobotController r) {
         super(r);
+        if (rc.canSetFlag(1)) {
+            rc.setFlag(1);
+        }
     }
 
     public void takeTurn() throws GameActionException {
@@ -16,7 +19,7 @@ public class Slanderer extends Robot {
         System.out.println("I am a " + rc.getType() + "; current influence: " + rc.getInfluence());
         System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
-        if(main_direction == null){
+        if(main_direction == null) {
             main_direction = Util.randomDirection();
         }
         Team enemy = rc.getTeam().opponent();
