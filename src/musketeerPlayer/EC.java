@@ -58,31 +58,12 @@ public class EC extends Robot {
                }
            } 
         }
-        if(enemy_near) {
-            int num_robots = rc.senseNearbyRobots(15).length;
-            int naive_influence = num_robots * max_influence;
-            influence = Math.min(naive_influence + 10, (int)(3 * rc.getInfluence()/4));
-            int i = 0;
-            Direction dir = null;
-            while (i < 8) {
-                dir = Util.randomDirection();
-                if (rc.canBuildRobot(RobotType.POLITICIAN, dir, influence)) {
-                    rc.buildRobot(RobotType.POLITICIAN, dir, influence);
-                    robotCounter+=1;
-                    break;
-                }
-                else {
-                    i++;
-                    break;
-                }
-            }
-        }
-        else if (sendTroopsSemaphore > 0) {
+        if (sendTroopsSemaphore > 0) {
             int currFlag = rc.getFlag(rc.getID());
             toBuild = RobotType.POLITICIAN;
-            if (Comms.getIC(currFlag) == Comms.InformationCategory.ENEMY_EC) {
-                toBuild = RobotType.MUCKRAKER;
-            }
+            // if (Comms.getIC(currFlag) == Comms.InformationCategory.ENEMY_EC) {
+            //     toBuild = RobotType.MUCKRAKER;
+            // }
             influence = 50;
             int i = 0;
             Direction dir = null;
@@ -103,6 +84,25 @@ public class EC extends Robot {
                 try {
                     rc.setFlag(defaultFlag);
                 } catch (Exception e) {}
+            }
+        }
+        else if (enemy_near) {
+            int num_robots = rc.senseNearbyRobots(15).length;
+            int naive_influence = num_robots * max_influence;
+            influence = Math.min(naive_influence + 10, (int)(3 * rc.getInfluence()/4));
+            int i = 0;
+            Direction dir = null;
+            while (i < 8) {
+                dir = Util.randomDirection();
+                if (rc.canBuildRobot(RobotType.POLITICIAN, dir, influence)) {
+                    rc.buildRobot(RobotType.POLITICIAN, dir, influence);
+                    robotCounter+=1;
+                    break;
+                }
+                else {
+                    i++;
+                    break;
+                }
             }
         }
         else if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
