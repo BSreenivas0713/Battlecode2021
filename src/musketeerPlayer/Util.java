@@ -20,6 +20,7 @@ public class Util {
     };
 
     static final int spawnKillThreshold = 2;
+    static final int dOffset = 64;
 
     /**
      * Returns a random Direction.

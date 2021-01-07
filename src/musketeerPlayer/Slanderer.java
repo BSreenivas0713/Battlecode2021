@@ -17,6 +17,11 @@ public class Slanderer extends Robot {
             System.out.println(rc.getType() + " Exception");
             e.printStackTrace();
         }
+        defaultFlag = 1;
+    }
+
+    public int getDefaultFlag() {
+        return 1;
     }
 
     public void takeTurn() throws GameActionException {
