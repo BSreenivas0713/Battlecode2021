@@ -64,6 +64,10 @@ public strictfp class RobotPlayer {
                     prev = curr;
                 }
                 bot.takeTurn();
+
+                if (bot.changeTo != null) {
+                    bot = bot.changeTo;
+                }
                 // System.out.println("BC left at end: " + Clock.getBytecodesLeft());
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again

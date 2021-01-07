@@ -1,5 +1,6 @@
 package musketeerplayer;
 import battlecode.common.*;
+import java.util.Hashtable;
 
 public class Util {
     static final RobotType[] spawnableRobot = {
@@ -18,6 +19,18 @@ public class Util {
         Direction.WEST,
         Direction.NORTHWEST,
     };
+    static Hashtable<Direction, Direction> pathFinder = new Hashtable<Direction, Direction>();
+
+    static void initializePathFinder() {
+        pathFinder.put(Direction.NORTH, Direction.NORTHEAST);
+        pathFinder.put(Direction.NORTHEAST, Direction.EAST);
+        pathFinder.put(Direction.EAST, Direction.SOUTHEAST);
+        pathFinder.put(Direction.SOUTHEAST, Direction.SOUTH);
+        pathFinder.put(Direction.SOUTH, Direction.SOUTHWEST);
+        pathFinder.put(Direction.SOUTHWEST, Direction.WEST);
+        pathFinder.put(Direction.WEST, Direction.NORTHWEST);
+        pathFinder.put(Direction.NORTHWEST, Direction.NORTH);
+    }
 
     static final int spawnKillThreshold = 2;
     static final int dOffset = 64;
@@ -44,9 +57,9 @@ public class Util {
         return Math.pow(Math.abs(enemy.x - curr.x),2) + Math.pow(Math.abs(enemy.y - curr.y),2);
     }
     
-    static Direction findDirection(MapLocation curr, MapLocation enemy) {
-        int dy = curr.y - enemy.y;
-        int dx = curr.x - enemy.x;
+    static Direction findDirection(MapLocation dest, MapLocation src) {
+        int dy = dest.y - src.y;
+        int dx = dest.x - src.x;
         //setting angle
         double angle;
         if (dx == 0 && dy > 0) {
@@ -62,20 +75,9 @@ public class Util {
             angle = 360;
         }
         else {
-            angle = Math.toDegrees(Math.abs(Math.atan(dy/dx)));
+            angle = (int)Math.toDegrees(Math.atan2(dy, dx));
         }
-    
-        //adding angle offsets
-        if (dx < 0 && dy >= 0) {
-            angle += 90;
-        }
-        else if (dx < 0 && dy < 0) {
-            angle += 180;
-        }
-        else if (dx >= 0 && dy < 0) {
-            angle += 270;
-        }
-        angle = angle % 360;
+        angle = (angle + 360) % 360;
     
         //returning directions
         if (22.5 <= angle && angle < 67.5) {
