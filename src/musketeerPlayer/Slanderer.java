@@ -9,7 +9,6 @@ public class Slanderer extends Robot {
     public Slanderer(RobotController r) {
         super(r);
         defaultFlag = 1;
-        setFlag(defaultFlag);
     }
 
     public void takeTurn() throws GameActionException {

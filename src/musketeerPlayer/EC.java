@@ -26,17 +26,19 @@ public class EC extends Robot {
         System.out.println("I am a " + rc.getType() + "; current influence: " + rc.getInfluence());
         System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
         System.out.println("num of ec's found: " + ECflags.size());
-
-        RobotInfo[] sensable = rc.senseNearbyRobots(2, rc.getTeam());
+        
+        int sensorRadius = rc.getType().sensorRadiusSquared;
+        RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
         for(RobotInfo robot : sensable) {
             int id = robot.getID();
             if(rc.canGetFlag(id)) {
                 int flag = rc.getFlag(id);
-                if(Comms.getIC(flag) == InformationCategory.NEW_ROBOT) {
+                if(Comms.getIC(flag) == InformationCategory.NEW_ROBOT && !ids.contains(id)) {
                     ids.add(id);
                 }
             }
         }
+        System.out.println("num id's found: " + ids.size());
 
         int currRoundNum = rc.getRoundNum();
         int currInfluence = rc.getInfluence();
@@ -165,7 +167,9 @@ public class EC extends Robot {
         for(int id : ids) {
             if(rc.canGetFlag(id)) {
                 int flag = rc.getFlag(id);
-                if(flag > Comms.MIN_FLAG_MESSAGE && !ECflags.contains(flag)) {
+                Comms.InformationCategory flagIC = Comms.getIC(flag);
+                if(flag > Comms.MIN_FLAG_MESSAGE && !ECflags.contains(flag) && 
+                (flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC)) {
                     ECflags.add(flag);
                 }
             }
