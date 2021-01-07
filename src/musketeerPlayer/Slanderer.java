@@ -20,10 +20,6 @@ public class Slanderer extends Robot {
         defaultFlag = 1;
     }
 
-    public int getDefaultFlag() {
-        return 1;
-    }
-
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 

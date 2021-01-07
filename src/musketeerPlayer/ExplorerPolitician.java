@@ -10,6 +10,10 @@ public class ExplorerPolitician extends Robot {
         super(r);
     }
 
+    public ExplorerPolitician(RobotController r, int currDx, int currDy) {
+        super(r, currDx, currDy);
+    }
+
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
