@@ -2,9 +2,12 @@ package musketeerplayer;
 import battlecode.common.*;
 
 public class Comms {
+    public static final int MIN_FLAG_MESSAGE = 1000000;
+
     public enum InformationCategory {
         NEUTRAL_EC,
         ENEMY_EC,
+        NEW_ROBOT,
         UNKOWN
     }
 
@@ -21,6 +24,9 @@ public class Comms {
             case ENEMY_EC:
                 flag += 3;
                 break;
+            case NEW_ROBOT:
+                flag += 4;
+                break;
             default:
                 break;
         }
@@ -33,6 +39,7 @@ public class Comms {
         switch(flag/1000000) {
             case 2: return InformationCategory.NEUTRAL_EC;
             case 3: return InformationCategory.ENEMY_EC;
+            case 4: return InformationCategory.NEW_ROBOT;
             default: return InformationCategory.UNKOWN;
         }
     }
