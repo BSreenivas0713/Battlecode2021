@@ -5,6 +5,8 @@ import musketeerplayer.Util.*;
 
 public class ExplorerPolitician extends Robot {
     static Direction main_direction;
+    static boolean   toDetonate = false;
+
     
     public ExplorerPolitician(RobotController r) {
         super(r);
@@ -48,6 +50,21 @@ public class ExplorerPolitician extends Robot {
         
         if (powerful != null) {
             Direction toMove = Util.findDirection(powerful.getLocation(), rc.getLocation());
+            tryMove(toMove);
+        }
+        
+        RobotInfo weakest = null;
+        int min_influence = 0;
+        for (RobotInfo robot : sensable) {
+            int currInfluence = robot.getInfluence();
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && currInfluence < min_influence) {
+                weakest = robot;
+                min_influence = currInfluence;
+            }
+        }
+        
+        if (weakest != null) {
+            Direction toMove = Util.findDirection(weakest.getLocation(), rc.getLocation());
             tryMove(toMove);
         }
 

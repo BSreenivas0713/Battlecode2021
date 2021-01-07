@@ -5,31 +5,15 @@ import musketeerplayer.Util.*;
 
 public class Politician extends Robot {
     static Direction main_direction;
+    static boolean   toDetonate = false;
+
     
     public Politician(RobotController r) {
         super(r);
-        try {
-            if (rc.canSetFlag(0)) {
-                rc.setFlag(0);
-            }
-        }
-        catch (Exception e) {
-            System.out.println(rc.getType() + " Exception");
-            e.printStackTrace();
-        }
     }
 
     public Politician(RobotController r, int currDx, int currDy) {
         super(r, currDx, currDy);
-        try {
-            if (rc.canSetFlag(0)) {
-                rc.setFlag(0);
-            }
-        }
-        catch (Exception e) {
-            System.out.println(rc.getType() + " Exception");
-            e.printStackTrace();
-        }
     }
 
     public void takeTurn() throws GameActionException {
@@ -89,6 +73,22 @@ public class Politician extends Robot {
 
         if (bestSlanderer != null) {
             Direction toMove = Util.findDirection(bestSlanderer.getLocation(), rc.getLocation());
+            tryMove(toMove);
+        }
+        
+
+        RobotInfo weakest = null;
+        int min_influence = 0;
+        for (RobotInfo robot : sensable) {
+            int currInfluence = robot.getInfluence();
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && currInfluence < min_influence) {
+                weakest = robot;
+                min_influence = currInfluence;
+            }
+        }
+        
+        if (weakest != null) {
+            Direction toMove = Util.findDirection(weakest.getLocation(), rc.getLocation());
             tryMove(toMove);
         }
 

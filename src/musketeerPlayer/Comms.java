@@ -8,6 +8,7 @@ public class Comms {
         NEUTRAL_EC,
         ENEMY_EC,
         NEW_ROBOT,
+        DETONATE,
         UNKOWN
     }
 
@@ -27,6 +28,9 @@ public class Comms {
             case NEW_ROBOT:
                 flag += 4;
                 break;
+            case DETONATE:
+                flag += 5;
+                break;
             default:
                 break;
         }
@@ -40,6 +44,7 @@ public class Comms {
             case 2: return InformationCategory.NEUTRAL_EC;
             case 3: return InformationCategory.ENEMY_EC;
             case 4: return InformationCategory.NEW_ROBOT;
+            case 5: return InformationCategory.DETONATE;
             default: return InformationCategory.UNKOWN;
         }
     }
