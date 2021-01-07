@@ -1,13 +1,20 @@
 package musketeerplayer;
 import battlecode.common.*;
 
+import musketeerplayer.Comms.*;
 import musketeerplayer.Util.*;
+import java.util.ArrayList;
+
 
 public class EC extends Robot {
     static int robotCounter;
+    static ArrayList<Integer> ids;
+    static ArrayList<MapLocation> ecs;
 
     public EC(RobotController r) {
         super(r);
+        ids = new ArrayList<Integer>();
+        ecs = new ArrayList<MapLocation>();
     }
 
     public void takeTurn() throws GameActionException {
@@ -15,6 +22,15 @@ public class EC extends Robot {
 
         System.out.println("I am a " + rc.getType() + "; current influence: " + rc.getInfluence());
         System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+
+        int sensorRadius = rc.getType().sensorRadiusSquared;
+        RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
+        for(RobotInfo robot : sensable) {
+            if(!ids.contains(robot.getID())) {
+                ids.add(robot.getID());
+            }
+        }
+
         int currRoundNum = rc.getRoundNum();
         int currInfluence = rc.getInfluence();
         int biddingInfluence = currInfluence / 10;
@@ -108,6 +124,28 @@ public class EC extends Robot {
                 else {
                     i++;
                     break;
+                }
+            }
+        }
+
+        boolean flagSet = false;
+        for(int id : ids) {
+            if(rc.canGetFlag(id)) {
+                int flag = rc.getFlag(id);
+                if(flag > 1000000) {
+                    InformationCategory ic = Comms.getIC(flag);
+                    int[] dxdy = Comms.getDxDy(flag);
+                    MapLocation currLoc = rc.getLocation();
+                    MapLocation ecLoc = new MapLocation(dxdy[0] + currLoc.x - Robot.dOffset, dxdy[1] + currLoc.y - Robot.dOffset);
+                    
+                    if(!ecs.contains(ecLoc)) {
+                        ecs.add(ecLoc);
+
+                        if(!flagSet) {
+                            rc.setFlag(flag);
+                            flagSet = true;
+                        }
+                    }
                 }
             }
         }
