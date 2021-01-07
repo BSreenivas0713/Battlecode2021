@@ -42,7 +42,14 @@ public class RushPolitician extends Robot {
             }
         }
         main_direction = Util.findDirection(enemyLocation, rc.getLocation());
-        tryMove(main_direction);
+        int num_direction = 8;
+        while(num_direction != 0) {
+            if(tryMove(main_direction)) {
+                break;
+            }
+            main_direction = Util.pathFinder.get(main_direction);
+            num_direction--;
+        }
         broadcastECLocation();
     }
 }
