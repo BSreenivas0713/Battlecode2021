@@ -4,12 +4,12 @@ import battlecode.common.*;
 import musketeerplayer.Util.*;
 
 public class RushPolitician extends Robot {
-    static MapLocation enemy;
+    static MapLocation enemyLocation;
     static Direction main_direction;
     
     public RushPolitician(RobotController r, MapLocation enemyLoc) {
         super(r);
-        enemy = enemyLoc;
+        enemyLocation = enemyLoc;
     }
 
     public void takeTurn() throws GameActionException {
@@ -25,17 +25,24 @@ public class RushPolitician extends Robot {
         int actionRadius = rc.getType().actionRadiusSquared;
         RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
-        if ((attackable.length != 0 || neutrals.length != 0) && rc.canEmpower(actionRadius)) {
+        for(RobotInfo robot: neutrals) {
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && rc.canEmpower(actionRadius)){
             //System.out.println("empowering...");
             rc.empower(actionRadius);
             //System.out.println("empowered");
             return;
+            }
         }
-
-        while (!tryMove(main_direction) && rc.isReady()){
-            main_direction = Util.randomDirection();
+        for(RobotInfo robot: attackable) {
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && rc.canEmpower(actionRadius)){
+            //System.out.println("empowering...");
+            rc.empower(actionRadius);
+            //System.out.println("empowered");
+            return;
+            }
         }
-
+        main_direction = Util.findDirection(enemyLocation, rc.getLocation());
+        tryMove(main_direction);
         broadcastECLocation();
     }
 }
