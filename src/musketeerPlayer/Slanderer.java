@@ -8,6 +8,7 @@ public class Slanderer extends Robot {
     
     public Slanderer(RobotController r) {
         super(r);
+        rc.setFlag(1);
     }
 
     public void takeTurn() throws GameActionException {

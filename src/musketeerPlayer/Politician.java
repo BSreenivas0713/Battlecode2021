@@ -7,6 +7,7 @@ public class Politician extends Robot {
     static Direction main_direction;
     
     public Politician(RobotController r) {
+        rc.setFlag(0);
         super(r);
     }
 
@@ -49,7 +50,7 @@ public class Politician extends Robot {
 
         RobotInfo[] within6 = rc.senseNearbyRobots(6, rc.getTeam());
         for (RobotInfo robot : within6) {
-            if (robot.getType() == RobotType.SLANDERER) {
+            if (robot.getType() == RobotType.POLITICIAN && getFlag(robot.getID())) {
                 System.out.println("here");
                 return;
             }
