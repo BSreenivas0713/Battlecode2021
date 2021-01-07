@@ -13,8 +13,12 @@ public class Robot {
     static boolean flagSetOnPrevRound = false;
     static int defaultFlag = 0;
 
+    public static Robot changeTo = null;
+
     public Robot(RobotController r) {
         rc = r;
+        Util.initializePathFinder();
+
         int sensorRadius = rc.getType().sensorRadiusSquared;
         RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
         MapLocation currLoc = rc.getLocation();
@@ -29,6 +33,8 @@ public class Robot {
 
     public Robot(RobotController r, int currDx, int currDy) {
         rc = r;
+        Util.initializePathFinder();
+
         dx = currDx;
         dy = currDy;
     }
