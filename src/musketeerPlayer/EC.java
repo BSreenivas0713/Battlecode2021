@@ -68,7 +68,7 @@ public class EC extends Robot {
             // if (Comms.getIC(currFlag) == Comms.InformationCategory.ENEMY_EC) {
             //     toBuild = RobotType.MUCKRAKER;
             // }
-            influence = 50;
+            influence = Math.max(50,rc.getInfluence()/30);
             int i = 0;
             Direction dir = null;
             while (i < 8) {
