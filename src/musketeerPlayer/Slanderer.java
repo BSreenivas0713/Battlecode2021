@@ -4,6 +4,7 @@ import battlecode.common.*;
 import musketeerplayer.Util.*;
 
 public class Slanderer extends Robot {
+    static Direction main_direction;
     
     public Slanderer(RobotController r) {
         super(r);
@@ -11,6 +12,13 @@ public class Slanderer extends Robot {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
+
+        System.out.println("I am a " + rc.getType() + "; current influence: " + rc.getInfluence());
+        System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+
+        if(main_direction == null){
+            main_direction = Util.randomDirection();
+        }
         Team enemy = rc.getTeam().opponent();
         int sensorRadius = rc.getType().sensorRadiusSquared;
         RobotInfo[] enemiesInReach = rc.senseNearbyRobots(sensorRadius, enemy);
@@ -24,12 +32,15 @@ public class Slanderer extends Robot {
                 minRobot = robot;
             }
         }
-        Direction toMove = Util.randomDirection();
         if (minRobot != null) {
-            toMove = Util.findDirection(curr, minRobot.getLocation());
+            main_direction = Util.findDirection(curr, minRobot.getLocation());
         }
-    
-        if (tryMove(toMove));
-            // System.out.println("I moved!");
+
+        MapLocation target = rc.adjacentLocation(main_direction);
+        if (rc.onTheMap(target)) {
+            while (!tryMove(main_direction) && rc.isReady()) {
+                main_direction = Util.randomDirection();
+            }
+        }
     }
 }

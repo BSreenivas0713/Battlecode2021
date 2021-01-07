@@ -16,7 +16,7 @@ public class EC extends Robot {
         System.out.println("aux AI current influence: " + rc.getInfluence());
         int currRoundNum = rc.getRoundNum();
         int currInfluence = rc.getInfluence();
-        int biddingInfluence = currInfluence / 10;
+        int biddingInfluence = currInfluence / 20;
         if (rc.canBid(biddingInfluence) && currRoundNum > 500) {
             rc.bid(biddingInfluence);
         }

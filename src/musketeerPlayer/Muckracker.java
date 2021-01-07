@@ -14,6 +14,9 @@ public class Muckracker extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
+        System.out.println("I am a " + rc.getType() + "; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
+        System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
@@ -35,6 +38,21 @@ public class Muckracker extends Robot {
             if (rc.canExpose(powerful.location)) {
                 rc.expose(powerful.location);
             }
+        }
+        int sensingRadius = rc.getType().sensorRadiusSquared;
+        RobotInfo bestSlanderer = null;
+        bestInfluence = Integer.MIN_VALUE;
+        for (RobotInfo robot : rc.senseNearbyRobots(sensingRadius, enemy)) {
+            if (robot.getType() == RobotType.SLANDERER) {
+                int curr = robot.getInfluence();
+                if (curr > bestInfluence) {
+                    bestInfluence = curr;
+                    bestSlanderer = robot;
+                }
+            }
+        }
+        if (bestSlanderer != null) {
+            main_direction = Util.findDirection(bestSlanderer.getLocation(), rc.getLocation());
         }
 
         if(!muckraker_Found_EC){

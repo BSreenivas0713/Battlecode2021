@@ -70,7 +70,8 @@ def clientName = os.startsWith('windows') ? 'battlecode21-client-win' :
 // The dependencies of this project.
 dependencies {
     // The Battlecode engine.
-    implementation group: 'org.battlecode', name: 'battlecode21', version: versions.battlecode
+    // implementation group: 'org.battlecode', name: 'battlecode21', version: versions.battlecode
+    compile files('../battlecode21/engine/build/libs/engine.jar')
 
     // The Battlecode client.
     client group: 'org.battlecode', name: clientName, version: versions.battlecode
