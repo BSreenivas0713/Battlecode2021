@@ -7,8 +7,8 @@ public class Politician extends Robot {
     static Direction main_direction;
     
     public Politician(RobotController r) {
-        rc.setFlag(0);
         super(r);
+        rc.setFlag(0);
     }
 
     public void takeTurn() throws GameActionException {
@@ -50,7 +50,7 @@ public class Politician extends Robot {
 
         RobotInfo[] within6 = rc.senseNearbyRobots(6, rc.getTeam());
         for (RobotInfo robot : within6) {
-            if (robot.getType() == RobotType.POLITICIAN && getFlag(robot.getID())) {
+            if (robot.getType() == RobotType.POLITICIAN && rc.getFlag(robot.getID()) == 1) {
                 System.out.println("here");
                 return;
             }
