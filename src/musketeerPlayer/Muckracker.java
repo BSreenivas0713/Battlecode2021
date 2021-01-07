@@ -60,6 +60,7 @@ public class Muckracker extends Robot {
                 main_direction = Util.randomDirection();
             }
         }
-            //System.out.println("I moved!");
+         
+        broadcastECLocation();
     }
 }

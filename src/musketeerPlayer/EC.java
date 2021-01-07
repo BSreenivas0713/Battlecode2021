@@ -22,6 +22,7 @@ public class EC extends Robot {
 
         System.out.println("I am a " + rc.getType() + "; current influence: " + rc.getInfluence());
         System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        System.out.println("num of ec's found: " + ecs.size());
 
         int sensorRadius = rc.getType().sensorRadiusSquared;
         RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
