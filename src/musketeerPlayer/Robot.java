@@ -10,8 +10,8 @@ public class Robot {
 
     public static int dx = Util.dOffset;
     public static int dy = Util.dOffset;
-    static boolean flagSetOnPrevRound = false;
     static int defaultFlag = 0;
+    static boolean resetFlagOnNewTurn = true;
 
     public Robot(RobotController r) {
         rc = r;
@@ -25,6 +25,8 @@ public class Robot {
                 dy += currLoc.y - ecLoc.y;
             }
         }
+
+        setFlag(Comms.getFlag(InformationCategory.NEW_ROBOT, 0, 0));
     }
 
     public Robot(RobotController r, int currDx, int currDy) {
@@ -36,13 +38,8 @@ public class Robot {
     public void takeTurn() throws GameActionException {
         turnCount += 1;
         System.out.println("Flag set: " + rc.getFlag(rc.getID()));
-        if (rc.getType() != RobotType.ENLIGHTENMENT_CENTER) {
-            if (flagSetOnPrevRound) {
-                int newFlag = defaultFlag;
-                if (rc.canSetFlag(newFlag)) {
-                    rc.setFlag(newFlag);
-                }
-            }
+        if(rc.getFlag(rc.getID()) > Comms.MIN_FLAG_MESSAGE && resetFlagOnNewTurn) {
+            setFlag(defaultFlag);
         }
     }
 
@@ -120,14 +117,17 @@ public class Robot {
                     flag = Comms.getFlag(InformationCategory.NEUTRAL_EC, ecDX, ecDY);
                 }
 
-                if(rc.canSetFlag(flag)) {
-                    try {
-                        rc.setFlag(flag);
-                    } catch(Exception e) {}
-                }
+                setFlag(flag);
             }
         }
-        flagSetOnPrevRound = true;
         return res;
+    }
+
+    void setFlag(int flag) {
+        try {
+            if(rc.canSetFlag(flag)) {
+                rc.setFlag(flag);
+            }
+        } catch (Exception e) {}
     }
 }

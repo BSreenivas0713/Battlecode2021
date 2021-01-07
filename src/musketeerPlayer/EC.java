@@ -29,8 +29,12 @@ public class EC extends Robot {
 
         RobotInfo[] sensable = rc.senseNearbyRobots(2, rc.getTeam());
         for(RobotInfo robot : sensable) {
-            if(!ids.contains(robot.getID())) {
-                ids.add(robot.getID());
+            int id = robot.getID();
+            if(rc.canGetFlag(id)) {
+                int flag = rc.getFlag(id);
+                if(Comms.getIC(flag) == InformationCategory.NEW_ROBOT) {
+                    ids.add(id);
+                }
             }
         }
 
@@ -79,11 +83,10 @@ public class EC extends Robot {
                     break;
                 }
             }
+
             sendTroopsSemaphore--;
             if (sendTroopsSemaphore == 0) {
-                try {
-                    rc.setFlag(defaultFlag);
-                } catch (Exception e) {}
+                resetFlagOnNewTurn = true;
             }
         }
         else if (enemy_near) {
@@ -162,7 +165,7 @@ public class EC extends Robot {
         for(int id : ids) {
             if(rc.canGetFlag(id)) {
                 int flag = rc.getFlag(id);
-                if(flag > 1000000 && !ECflags.contains(flag)) {
+                if(flag > Comms.MIN_FLAG_MESSAGE && !ECflags.contains(flag)) {
                     ECflags.add(flag);
                 }
             }
@@ -171,11 +174,8 @@ public class EC extends Robot {
         if (!ECflags.isEmpty() && sendTroopsSemaphore == 0) {
             int currFlag = ECflags.remove();
             sendTroopsSemaphore = 6;
-            if (rc.canSetFlag(currFlag)) {
-                try {
-                    rc.setFlag(currFlag);
-                } catch (Exception e) {}
-            }
+            resetFlagOnNewTurn = false;
+            setFlag(currFlag);
         }
 
     }

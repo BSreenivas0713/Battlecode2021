@@ -8,20 +8,8 @@ public class Slanderer extends Robot {
     
     public Slanderer(RobotController r) {
         super(r);
-        try {
-            if (rc.canSetFlag(1)) {
-                rc.setFlag(1);
-            }
-        }
-        catch (Exception e) {
-            System.out.println(rc.getType() + " Exception");
-            e.printStackTrace();
-        }
         defaultFlag = 1;
-    }
-
-    public int getDefaultFlag() {
-        return 1;
+        setFlag(defaultFlag);
     }
 
     public void takeTurn() throws GameActionException {
