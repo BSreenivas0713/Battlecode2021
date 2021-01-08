@@ -17,7 +17,7 @@ public class SpawnKillPolitician extends Robot {
         System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         int actionRadius = rc.getType().actionRadiusSquared;
-        if (turnCount == 1 && rc.canEmpower(actionRadius)) {
+        if (rc.canEmpower(actionRadius)) {
             rc.empower(actionRadius);
         }
     }
