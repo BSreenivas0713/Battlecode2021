@@ -20,8 +20,19 @@ public class Util {
         Direction.NORTHWEST,
     };
 
-    static final int spawnKillThreshold = 2;
+    static final Direction[] defenderDirs = {
+        Direction.NORTHEAST,
+        Direction.SOUTHEAST,
+        Direction.SOUTHWEST,
+        Direction.NORTHWEST,
+    };
+
+    static final int spawnKillThreshold = 3;
     static final int dOffset = 64;
+    static final int phaseOne = 1000;
+    static final int phaseTwo = 2000;
+    static final int defenderPoliticianFrequency = 5;
+    static final int minRushInfluence = 200;
 
     /**
      * Returns a random Direction.

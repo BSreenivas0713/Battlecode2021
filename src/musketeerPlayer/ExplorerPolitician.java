@@ -30,77 +30,59 @@ public class ExplorerPolitician extends Robot {
         RobotInfo[] sensable = rc.senseNearbyRobots(sensingRadius, enemy);
         RobotInfo[] friendlySensable = rc.senseNearbyRobots(sensingRadius, rc.getTeam());
 
-        if(toDetonate) {
-            Direction toMove = Util.randomDirection();
-            for(RobotInfo robot: neutrals) {
-                if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
-                    if(rc.canEmpower(actionRadius)) {
-                        rc.empower(actionRadius);
-                    } else {
-                        toMove = rc.getLocation().directionTo(robot.getLocation());
-                    }
-                }
-            }
+        if(main_direction == null){
+            main_direction = Util.randomDirection();
+        }
+        if ((attackable.length != 0 || neutrals.length != 0) && rc.canEmpower(actionRadius)) {
+            //System.out.println("empowering...");
+            rc.empower(actionRadius);
+            //System.out.println("empowered");
+            return;
+        }
 
+        RobotInfo powerful = null;
+        int max_influence = 0;
+        for (RobotInfo robot : sensable) {
+            int currInfluence = robot.getInfluence();
+            if (robot.getType() == RobotType.MUCKRAKER && currInfluence > max_influence) {
+                powerful = robot;
+                max_influence = currInfluence;
+            }
+        }
+        
+        if (powerful != null) {
+            Direction toMove = rc.getLocation().directionTo(powerful.getLocation());
             tryMoveDest(toMove);
-        } else {
-            if(main_direction == null){
-                main_direction = Util.randomDirection();
+        }
+        
+        RobotInfo weakest = null;
+        int min_influence = 0;
+        for (RobotInfo robot : sensable) {
+            int currInfluence = robot.getInfluence();
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && currInfluence < min_influence) {
+                weakest = robot;
+                min_influence = currInfluence;
             }
-            if ((attackable.length != 0 || neutrals.length != 0) && rc.canEmpower(actionRadius)) {
-                //System.out.println("empowering...");
-                rc.empower(actionRadius);
-                //System.out.println("empowered");
-                return;
-            }
-    
-            RobotInfo powerful = null;
-            int max_influence = 0;
-            for (RobotInfo robot : sensable) {
-                int currInfluence = robot.getInfluence();
-                if (robot.getType() == RobotType.MUCKRAKER && currInfluence > max_influence) {
-                    powerful = robot;
-                    max_influence = currInfluence;
-                }
-            }
-            
-            if (powerful != null) {
-                Direction toMove = rc.getLocation().directionTo(powerful.getLocation());
-                tryMoveDest(toMove);
-            }
-            
-            RobotInfo weakest = null;
-            int min_influence = 0;
-            for (RobotInfo robot : sensable) {
-                int currInfluence = robot.getInfluence();
-                if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && currInfluence < min_influence) {
-                    weakest = robot;
-                    min_influence = currInfluence;
-                }
-            }
+        }
 
-            for (RobotInfo robot : friendlySensable) {
-                if(robot.getType() == RobotType.POLITICIAN && Comms.getIC(rc.getFlag(robot.getID())) == Comms.InformationCategory.DETONATE) {
-                    for(RobotInfo robot2 : neutrals) {
-                        if(robot2.getType() == RobotType.ENLIGHTENMENT_CENTER){
-                            toDetonate = true;
-                            break;
-                        }
+        for (RobotInfo robot : friendlySensable) {
+            if(robot.getType() == RobotType.POLITICIAN && Comms.getIC(rc.getFlag(robot.getID())) == Comms.InformationCategory.DETONATE) {
+                for(RobotInfo robot2 : neutrals) {
+                    if(robot2.getType() == RobotType.ENLIGHTENMENT_CENTER){
+                        changeTo = new RushPolitician(rc, robot2.getLocation(), true);
+                        return;
                     }
-
-                    if(toDetonate)
-                        break;
                 }
             }
-            
-            if (weakest != null) {
-                Direction toMove = rc.getLocation().directionTo(weakest.getLocation());
-                tryMoveDest(toMove);
-            }
-    
-            while (!tryMove(main_direction) && rc.isReady()){
-                main_direction = Util.randomDirection();
-            }
+        }
+        
+        if (weakest != null) {
+            Direction toMove = rc.getLocation().directionTo(weakest.getLocation());
+            tryMoveDest(toMove);
+        }
+
+        while (!tryMove(main_direction) && rc.isReady()){
+            main_direction = Util.randomDirection();
         }
 
         broadcastECLocation();

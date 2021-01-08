@@ -30,10 +30,14 @@ public class Muckracker extends Robot {
                 bestInfluence = curr;
                 powerful = robot;
             }
+        }
+        
+        for (RobotInfo robot : rc.senseNearbyRobots(2, enemy)) {
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
                 muckraker_Found_EC = true;
             }
         }
+
         if (powerful != null) {
             if (rc.canExpose(powerful.location)) {
                 rc.expose(powerful.location);

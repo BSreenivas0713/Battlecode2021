@@ -9,11 +9,24 @@ public class Comms {
         ENEMY_EC,
         NEW_ROBOT,
         DETONATE,
+        SUB_ROBOT,
         UNKOWN
+    }
+
+    public enum SubRobotType {
+        POL_DEFENDER,
+        POL_EXPLORER,
+        POL_BODYGUARD,
+        POL_SPAWNKILL
     }
 
     public static int addCoord(int flag, int dx, int dy) {
         return flag*1000000 + dx*1000 + dy;
+    }
+
+    // SUB_ROBOT
+    public static int getFlag(InformationCategory cat, SubRobotType type) {
+        return getFlag(cat, 0, type.ordinal());
     }
 
     public static int getFlag(InformationCategory cat) {
@@ -35,6 +48,9 @@ public class Comms {
             case DETONATE:
                 flag += 5;
                 break;
+            case SUB_ROBOT:
+                flag += 6;
+                break;
             default:
                 break;
         }
@@ -49,6 +65,7 @@ public class Comms {
             case 3: return InformationCategory.ENEMY_EC;
             case 4: return InformationCategory.NEW_ROBOT;
             case 5: return InformationCategory.DETONATE;
+            case 6: return InformationCategory.SUB_ROBOT;
             default: return InformationCategory.UNKOWN;
         }
     }
@@ -59,5 +76,10 @@ public class Comms {
         res[0] = flag / 1000;
         res[1] = flag % 1000;
         return res;
+    }
+
+    public static SubRobotType getSubRobotType(int flag) {
+        flag %= 1000000;
+        return SubRobotType.values()[flag];
     }
 }

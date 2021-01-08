@@ -13,44 +13,55 @@ public strictfp class RobotPlayer {
         switch (rc.getType()) {
             case ENLIGHTENMENT_CENTER: bot = new EC(rc);          break;
             case POLITICIAN: 
-                if (rc.getEmpowerFactor(rc.getTeam(), 0) > Util.spawnKillThreshold && Math.random() < 0.5) {
-                    bot = new SpawnKillPolitician(rc);
-                    break;
-                }
+                // if (rc.getEmpowerFactor(rc.getTeam(), 0) > Util.spawnKillThreshold) {
+                //     bot = new SpawnKillPolitician(rc);
+                //     break;
+                // }
 
                 int sensorRadius = rc.getType().sensorRadiusSquared;
                 RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
-                boolean willRush = false;
+                boolean botCreated = false;
                 for (RobotInfo robot : sensable) {
                     int botFlag = rc.getFlag(robot.getID());
                     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
-                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && botFlag > Comms.MIN_FLAG_MESSAGE &&
-                        (flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC)) {
-                        int[] dxdy = Comms.getDxDy(botFlag);
-                        MapLocation spawningLoc = robot.getLocation();
-                        MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
-                        
-                        bot = new RushPolitician(rc, enemyLoc);
-                        willRush = true;
-                        break;
+                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && botFlag > Comms.MIN_FLAG_MESSAGE) {
+                        System.out.println("Flag for creation: " + botFlag);
+                        switch(flagIC) {
+                            case NEUTRAL_EC:
+                            case ENEMY_EC:
+                                int[] dxdy = Comms.getDxDy(botFlag);
+                                MapLocation spawningLoc = robot.getLocation();
+                                MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
+                                
+                                bot = new RushPolitician(rc, enemyLoc);
+                                break;
+                            case SUB_ROBOT:
+                                Comms.SubRobotType type = Comms.getSubRobotType(botFlag);
+                                switch(type) {
+                                    case POL_DEFENDER:
+                                        bot = new DefenderPolitician(rc);
+                                        break;
+                                    case POL_EXPLORER:
+                                        bot = new ExplorerPolitician(rc);
+                                        break;
+                                    case POL_BODYGUARD:
+                                        bot = new Politician(rc);
+                                        break;
+                                }
+                                break;
+                        }
                     }
-                    //TODO: get rush politician to work, write rush muckraker.
-                    //make sure when a flag is set, spawning rush politicians is not the ONLY thing we do (soln: dont set flag always)
+
+                    if(bot != null)
+                        break;
                 }
-                if (willRush) {
+
+                if(bot != null)
                     break;
-                }
-                else {
-                    boolean isExplorer = rc.getRoundNum() % 3 == 0;
-                    if (isExplorer) {
-                        bot = new ExplorerPolitician(rc);
-                        break;
-                    }
-                    else {
-                        bot = new Politician(rc);
-                        break;
-                    }
-                }
+                //TODO: get rush politician to work, write rush muckraker.
+                //make sure when a flag is set, spawning rush politicians is not the ONLY thing we do (soln: dont set flag always)
+                bot = new Politician(rc);
+                break;
             case SLANDERER:            bot = new Slanderer(rc);   break;
             case MUCKRAKER:            bot = new Muckracker(rc);  break;
         }
@@ -58,13 +69,6 @@ public strictfp class RobotPlayer {
 
         while (true) {
             try {
-                RobotType curr = rc.getType();
-                if (prev != curr) {
-                    if (prev == RobotType.SLANDERER && curr == RobotType.POLITICIAN) {
-                        bot = new Politician(rc, bot.dx, bot.dy);
-                    }
-                    prev = curr;
-                }
                 bot.takeTurn();
 
                 if (bot.changeTo != null) {

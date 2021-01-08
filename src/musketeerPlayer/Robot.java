@@ -11,6 +11,7 @@ public class Robot {
     public static int dx = Util.dOffset;
     public static int dy = Util.dOffset;
     static int defaultFlag = 0;
+    static int nextFlag = 0;
     static boolean resetFlagOnNewTurn = true;
 
     public static Robot changeTo = null;
@@ -29,7 +30,7 @@ public class Robot {
             }
         }
 
-        setFlag(Comms.getFlag(InformationCategory.NEW_ROBOT));
+        nextFlag = Comms.getFlag(InformationCategory.NEW_ROBOT);
     }
 
     public Robot(RobotController r, int currDx, int currDy) {
@@ -42,9 +43,12 @@ public class Robot {
     public void takeTurn() throws GameActionException {
         turnCount += 1;
         System.out.println("Flag set: " + rc.getFlag(rc.getID()));
-        if(rc.getFlag(rc.getID()) > Comms.MIN_FLAG_MESSAGE && resetFlagOnNewTurn && turnCount > 2) {
-            setFlag(defaultFlag);
+        if(rc.getFlag(rc.getID()) != nextFlag) {
+            setFlag(nextFlag);
         }
+
+        if(resetFlagOnNewTurn && turnCount > 2)
+            nextFlag = defaultFlag;
     }
 
     /**
@@ -64,11 +68,12 @@ public class Robot {
         } else return false;
     }
 
-    static boolean tryMoveDest(Direction dir) throws GameActionException {
+    static boolean tryMoveDest(Direction target_dir) throws GameActionException {
         // System.out.println("Dest direction: " + dir);
-        int num_direction = 8;
-        while(num_direction != 0 && rc.isReady()) {
-            // System.out.println("target main direction: " + dir);
+        Direction[] dirs = {target_dir, target_dir.rotateRight(), target_dir.rotateLeft(), 
+            target_dir.rotateRight().rotateRight(), target_dir.rotateLeft().rotateLeft()};
+
+        for(Direction dir : dirs) {
             if(rc.canMove(dir)) {
                 rc.move(dir);
                 
@@ -77,10 +82,6 @@ public class Robot {
     
                 return true;
             }
-
-            dir = dir.rotateRight();
-            // System.out.println("new main direction: " + dir);
-            num_direction--;
         }
         
         return false;
@@ -113,7 +114,7 @@ public class Robot {
                     flag = Comms.getFlag(InformationCategory.NEUTRAL_EC, ecDX, ecDY);
                 }
 
-                setFlag(flag);
+                nextFlag = flag;
             }
         }
         return res;
