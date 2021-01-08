@@ -16,6 +16,10 @@ public class Comms {
         return flag*1000000 + dx*1000 + dy;
     }
 
+    public static int getFlag(InformationCategory cat) {
+        return getFlag(cat, 0, 0);
+    }
+
     public static int getFlag(InformationCategory cat, int dx, int dy) {
         int flag = 0;
         switch (cat) {
