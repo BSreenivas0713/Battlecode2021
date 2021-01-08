@@ -88,6 +88,8 @@ public class RushPolitician extends Robot {
         }
 
         main_direction = rc.getLocation().directionTo(enemyLocation);
-        tryMoveDest(main_direction);
+        if(!rc.getLocation().isWithinDistanceSquared(enemyLocation, 2)){
+            tryMoveDest(main_direction);
+        }
     }
 }

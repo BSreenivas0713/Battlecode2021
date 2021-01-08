@@ -24,6 +24,7 @@ public class Slanderer extends Robot {
         Team enemy = rc.getTeam().opponent();
         int sensorRadius = rc.getType().sensorRadiusSquared;
         RobotInfo[] enemiesInReach = rc.senseNearbyRobots(sensorRadius, enemy);
+        RobotInfo[] neutralECs = rc.senseNearbyRobots(sensorRadius, Team.NEUTRAL);
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
         MapLocation curr = rc.getLocation();
@@ -34,8 +35,22 @@ public class Slanderer extends Robot {
                 minRobot = robot;
             }
         }
+        
+        RobotInfo minNeutralRobot = null;
+        double minNeutralDistSquared = Integer.MAX_VALUE;
+        for (RobotInfo robot: neutralECs) {
+            double temp = curr.distanceSquaredTo(robot.getLocation());
+            if (temp < minNeutralDistSquared) {
+                minNeutralDistSquared = temp;
+                minNeutralRobot = robot;
+            }
+        }
+
         if (minRobot != null) {
             main_direction = curr.directionTo(minRobot.getLocation()).opposite();
+        }
+        else if (minNeutralRobot != null) {
+            main_direction = curr.directionTo(minNeutralRobot.getLocation()).opposite(); 
         }
 
         MapLocation target = rc.adjacentLocation(main_direction);
