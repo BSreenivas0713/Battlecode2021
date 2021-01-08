@@ -88,7 +88,7 @@ public class EC extends Robot {
             System.out.println("defending a rush");
             int num_robots = rc.senseNearbyRobots(15).length;
             int naive_influence = num_robots * max_influence;
-            influence = Math.min(naive_influence + 10, (int)(3 * rc.getInfluence()/4));
+            influence = Math.min(naive_influence + 10, 50);
             toBuild = RobotType.POLITICIAN;
         }
         else if (sendTroopsSemaphore > 0) {
@@ -107,7 +107,7 @@ public class EC extends Robot {
             }
         }
         else {
-            int slandererInfluence = Math.max(100, rc.getInfluence() / 10);
+            int slandererInfluence = Math.min(Math.max(100, rc.getInfluence() / 10), 1000);
             int normalInfluence = Math.max(50, rc.getInfluence() / 20);
             if (currRoundNum < 2000) {
                 System.out.println("default build troop behavior");
