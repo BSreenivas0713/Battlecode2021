@@ -37,43 +37,23 @@ public class RushPolitician extends Robot {
         RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         
-        if(toDetonate) {
-            for(RobotInfo robot : neutrals) {
-                if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && rc.canEmpower(actionRadius)){
-                    rc.empower(actionRadius);
-                }
+        for(RobotInfo robot : attackable) {
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
+                rc.canEmpower(actionRadius)){
+                //System.out.println("empowering...");
+                rc.empower(actionRadius);
+                //System.out.println("empowered");
+                return;
             }
         }
-        else {
-            for(RobotInfo robot : neutrals) {
-                if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
-                    int ECHealth = (int)(robot.getConviction() * 1.25);
-                    for(RobotInfo friendlyRobot : friendlies) {
-                        if(friendlyRobot.getType() == RobotType.POLITICIAN && 
-                           friendlyRobot.getLocation().isWithinDistanceSquared(robot.getLocation(), sensorRadius)) {
-                            ECHealth -= friendlyRobot.getInfluence();
-                            ECHealth += 10;
-                        }
-                    }
-                    if(ECHealth <= 0) {
-                        setFlag(Comms.getFlag(Comms.InformationCategory.DETONATE));
-                    }
-                }
-            }
-
-            for(RobotInfo robot : friendlies) {
-                if(robot.getType() == RobotType.POLITICIAN && Comms.getIC(rc.getFlag(robot.getID())) == Comms.InformationCategory.DETONATE) {
-                    toDetonate = true;
-                }
-            }
-            
-            for(RobotInfo robot : attackable) {
-                if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && rc.canEmpower(actionRadius)){
-                    //System.out.println("empowering...");
-                    rc.empower(actionRadius);
-                    //System.out.println("empowered");
-                    return;
-                }
+        
+        for(RobotInfo robot : neutrals) {
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
+                rc.canEmpower(actionRadius)){
+                //System.out.println("empowering...");
+                rc.empower(actionRadius);
+                //System.out.println("empowered");
+                return;
             }
         }
 

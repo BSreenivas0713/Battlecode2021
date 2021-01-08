@@ -13,8 +13,17 @@ public class Slanderer extends Robot {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
+        
+        if (rc.getType() != RobotType.SLANDERER) {
+            if(turnCount % 2 == 0) {
+                changeTo = new Politician(rc, dx, dy);
+            } else {
+                changeTo = new ExplorerPolitician(rc, dx, dy);
+            }
+            return;
+        }
 
-        System.out.println("I am a " + rc.getType() + "; current influence: " + rc.getInfluence());
+        System.out.println("I am a slanderer; current influence: " + rc.getInfluence());
         System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
         System.out.println("current flag: " + rc.getFlag(rc.getID()));
 
@@ -25,6 +34,7 @@ public class Slanderer extends Robot {
         int sensorRadius = rc.getType().sensorRadiusSquared;
         RobotInfo[] enemiesInReach = rc.senseNearbyRobots(sensorRadius, enemy);
         RobotInfo[] neutralECs = rc.senseNearbyRobots(sensorRadius, Team.NEUTRAL);
+        RobotInfo[] friendlySensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
         MapLocation curr = rc.getLocation();
@@ -45,12 +55,22 @@ public class Slanderer extends Robot {
                 minNeutralRobot = robot;
             }
         }
+        
+        RobotInfo friendlyEC = null;
+        for (RobotInfo robot: friendlySensable) {
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                friendlyEC = robot;
+            }
+        }
 
         if (minRobot != null) {
             main_direction = curr.directionTo(minRobot.getLocation()).opposite();
         }
         else if (minNeutralRobot != null) {
             main_direction = curr.directionTo(minNeutralRobot.getLocation()).opposite(); 
+        }
+        else if (friendlyEC != null) {
+            main_direction = curr.directionTo(friendlyEC.getLocation()).opposite(); 
         }
 
         MapLocation target = rc.adjacentLocation(main_direction);
