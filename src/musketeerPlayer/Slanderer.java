@@ -28,14 +28,14 @@ public class Slanderer extends Robot {
         double minDistSquared = Integer.MAX_VALUE;
         MapLocation curr = rc.getLocation();
         for (RobotInfo robot : enemiesInReach) {
-            double temp = Util.distanceSquared(curr, robot.getLocation());
+            double temp = curr.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
                 minRobot = robot;
             }
         }
         if (minRobot != null) {
-            main_direction = Util.findDirection(curr, minRobot.getLocation());
+            main_direction = curr.directionTo(minRobot.getLocation()).opposite();
         }
 
         MapLocation target = rc.adjacentLocation(main_direction);

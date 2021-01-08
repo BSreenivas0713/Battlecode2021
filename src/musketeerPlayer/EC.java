@@ -29,7 +29,7 @@ public class EC extends Robot {
                 robotCounter += 1;
                 break;
             }
-            main_direction = Util.pathFinder.get(main_direction);
+            main_direction = main_direction.rotateRight();
             num_direction--;
         }
     }

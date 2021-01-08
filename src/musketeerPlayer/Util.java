@@ -19,18 +19,6 @@ public class Util {
         Direction.WEST,
         Direction.NORTHWEST,
     };
-    static Hashtable<Direction, Direction> pathFinder = new Hashtable<Direction, Direction>();
-
-    static void initializePathFinder() {
-        pathFinder.put(Direction.NORTH, Direction.NORTHEAST);
-        pathFinder.put(Direction.NORTHEAST, Direction.EAST);
-        pathFinder.put(Direction.EAST, Direction.SOUTHEAST);
-        pathFinder.put(Direction.SOUTHEAST, Direction.SOUTH);
-        pathFinder.put(Direction.SOUTH, Direction.SOUTHWEST);
-        pathFinder.put(Direction.SOUTHWEST, Direction.WEST);
-        pathFinder.put(Direction.WEST, Direction.NORTHWEST);
-        pathFinder.put(Direction.NORTHWEST, Direction.NORTH);
-    }
 
     static final int spawnKillThreshold = 2;
     static final int dOffset = 64;
@@ -51,58 +39,5 @@ public class Util {
      */
     static RobotType randomSpawnableRobotType() {
         return spawnableRobot[(int) (Math.random() * spawnableRobot.length)];
-    }
-
-    static double distanceSquared(MapLocation curr, MapLocation enemy) {
-        return Math.pow(Math.abs(enemy.x - curr.x),2) + Math.pow(Math.abs(enemy.y - curr.y),2);
-    }
-    
-    static Direction findDirection(MapLocation dest, MapLocation src) {
-        int dy = dest.y - src.y;
-        int dx = dest.x - src.x;
-        //setting angle
-        double angle;
-        if (dx == 0 && dy > 0) {
-            angle = 90;
-        }
-        else if (dx < 0 && dy == 0) {
-            angle = 180;
-        }
-        else if (dx == 0 && dy < 0) {
-            angle = 270;
-        }
-        else if (dx > 0 && dy == 0) {
-            angle = 360;
-        }
-        else {
-            angle = (int)Math.toDegrees(Math.atan2(dy, dx));
-        }
-        angle = (angle + 360) % 360;
-    
-        //returning directions
-        if (22.5 <= angle && angle < 67.5) {
-            return Direction.NORTHEAST;
-        }
-        else if (67.5 <= angle && angle < 112.5) {
-            return Direction.NORTH;
-        }
-        else if (112.5 <= angle && angle < 157.5) {
-            return Direction.NORTHWEST;
-        }
-        else if (157.5 <= angle && angle < 202.5) {
-            return Direction.WEST;
-        }
-        else if (202.5 <= angle && angle < 247.5) {
-            return Direction.SOUTHWEST;
-        }
-        else if (247.5 <= angle && angle < 292.5) {
-            return Direction.SOUTH;
-        }
-        else if (292.5 <= angle && angle < 337.5) {
-            return Direction.SOUTHEAST;
-        }
-        else {
-            return Direction.EAST;
-        }
     }
 }

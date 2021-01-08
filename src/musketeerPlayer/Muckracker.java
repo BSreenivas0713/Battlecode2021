@@ -52,7 +52,7 @@ public class Muckracker extends Robot {
             }
         }
         if (bestSlanderer != null) {
-            main_direction = Util.findDirection(bestSlanderer.getLocation(), rc.getLocation());
+            main_direction = rc.getLocation().directionTo(bestSlanderer.getLocation());
         }
 
         if(!muckraker_Found_EC){

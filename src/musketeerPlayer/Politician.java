@@ -38,7 +38,7 @@ public class Politician extends Robot {
                     if(rc.canEmpower(actionRadius)) {
                         rc.empower(actionRadius);
                     } else {
-                        toMove = Util.findDirection(robot.getLocation(), rc.getLocation());
+                        toMove = rc.getLocation().directionTo(robot.getLocation());
                     }
                 }
             }
@@ -65,7 +65,7 @@ public class Politician extends Robot {
             }
             
             if (powerful != null) {
-                Direction toMove = Util.findDirection(powerful.getLocation(), rc.getLocation());
+                Direction toMove = rc.getLocation().directionTo(powerful.getLocation());
                 tryMoveDest(toMove);
             }
     
@@ -99,7 +99,7 @@ public class Politician extends Robot {
             }
     
             if (bestSlanderer != null) {
-                Direction toMove = Util.findDirection(bestSlanderer.getLocation(), rc.getLocation());
+                Direction toMove = rc.getLocation().directionTo(bestSlanderer.getLocation());
                 tryMoveDest(toMove);
             }
             
@@ -115,7 +115,7 @@ public class Politician extends Robot {
             }
             
             if (weakest != null) {
-                Direction toMove = Util.findDirection(weakest.getLocation(), rc.getLocation());
+                Direction toMove = rc.getLocation().directionTo(weakest.getLocation());
                 tryMoveDest(toMove);
             }
             

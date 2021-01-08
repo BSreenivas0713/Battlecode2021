@@ -17,7 +17,6 @@ public class Robot {
 
     public Robot(RobotController r) {
         rc = r;
-        Util.initializePathFinder();
 
         int sensorRadius = rc.getType().sensorRadiusSquared;
         RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
@@ -35,7 +34,6 @@ public class Robot {
 
     public Robot(RobotController r, int currDx, int currDy) {
         rc = r;
-        Util.initializePathFinder();
 
         dx = currDx;
         dy = currDy;
@@ -60,85 +58,28 @@ public class Robot {
         //System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
         if (rc.canMove(dir)) {
             rc.move(dir);
-
-            switch(dir) {
-                case NORTHEAST:
-                    dx++;
-                    dy++;
-                    break;
-                case NORTH:
-                    dy++;
-                    break;
-                case NORTHWEST:
-                    dx--;
-                    dy++;
-                    break;
-                case EAST:
-                    dx++;
-                    break;
-                case WEST:
-                    dx--;
-                    break;
-                case SOUTHEAST:
-                    dx++;
-                    dy--;
-                    break;
-                case SOUTHWEST:
-                    dx--;
-                    dy--;
-                    break;
-                case SOUTH:
-                    dy--;
-                    break;
-            }
-
+            dx += dir.getDeltaX();
+            dy += dir.getDeltaY();
             return true;
         } else return false;
     }
 
     static boolean tryMoveDest(Direction dir) throws GameActionException {
-        System.out.println("Dest direction: " + dir);
+        // System.out.println("Dest direction: " + dir);
         int num_direction = 8;
         while(num_direction != 0 && rc.isReady()) {
-            System.out.println("target main direction: " + dir);
+            // System.out.println("target main direction: " + dir);
             if(rc.canMove(dir)) {
                 rc.move(dir);
-
-                switch(dir) {
-                    case NORTHEAST:
-                        dx++;
-                        dy++;
-                        break;
-                    case NORTH:
-                        dy++;
-                        break;
-                    case NORTHWEST:
-                        dx--;
-                        dy++;
-                        break;
-                    case EAST:
-                        dx++;
-                        break;
-                    case WEST:
-                        dx--;
-                        break;
-                    case SOUTHEAST:
-                        dx++;
-                        dy--;
-                        break;
-                    case SOUTHWEST:
-                        dx--;
-                        dy--;
-                        break;
-                    case SOUTH:
-                        dy--;
-                        break;
-                }
+                
+                dx += dir.getDeltaX();
+                dy += dir.getDeltaY();
     
                 return true;
             }
-            dir = Util.pathFinder.get(dir);
-            System.out.println("new main direction: " + dir);
+
+            dir = dir.rotateRight();
+            // System.out.println("new main direction: " + dir);
             num_direction--;
         }
         
