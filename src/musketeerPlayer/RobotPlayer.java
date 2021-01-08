@@ -23,7 +23,9 @@ public strictfp class RobotPlayer {
                 boolean willRush = false;
                 for (RobotInfo robot : sensable) {
                     int botFlag = rc.getFlag(robot.getID());
-                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && botFlag > Comms.MIN_FLAG_MESSAGE) {
+                    Comms.InformationCategory flagIC = Comms.getIC(botFlag);
+                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && botFlag > Comms.MIN_FLAG_MESSAGE &&
+                        (flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC)) {
                         int[] dxdy = Comms.getDxDy(botFlag);
                         MapLocation spawningLoc = robot.getLocation();
                         MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);

@@ -23,7 +23,6 @@ public class RushPolitician extends Robot {
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
-        
 
         Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
@@ -38,7 +37,6 @@ public class RushPolitician extends Robot {
                     rc.empower(actionRadius);
                 }
             }
-
         }
         else {
             for(RobotInfo robot: neutrals) {
@@ -51,7 +49,7 @@ public class RushPolitician extends Robot {
                         }
                     }
                     if(ECHealth <= 0) {
-                        setFlag(Comms.getFlag(Comms.InformationCategory.DETONATE, 0, 0));
+                        setFlag(Comms.getFlag(Comms.InformationCategory.DETONATE));
                     }
                 }
             }
@@ -83,16 +81,6 @@ public class RushPolitician extends Robot {
         }
 
         main_direction = Util.findDirection(enemyLocation, rc.getLocation());
-        System.out.println("returned direction from util: " + main_direction);
-        int num_direction = 8;
-        while(num_direction != 0) {
-            System.out.println("target main direction: " + main_direction);
-            if(tryMove(main_direction) || !rc.isReady()) {
-                break;
-            }
-            main_direction = Util.pathFinder.get(main_direction);
-            System.out.println("new main direction: " + main_direction);
-            num_direction--;
-        }
+        tryMoveDest(main_direction);
     }
 }

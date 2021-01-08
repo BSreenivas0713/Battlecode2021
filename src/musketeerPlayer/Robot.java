@@ -30,7 +30,7 @@ public class Robot {
             }
         }
 
-        setFlag(Comms.getFlag(InformationCategory.NEW_ROBOT, 0, 0));
+        setFlag(Comms.getFlag(InformationCategory.NEW_ROBOT));
     }
 
     public Robot(RobotController r, int currDx, int currDy) {
@@ -94,6 +94,55 @@ public class Robot {
 
             return true;
         } else return false;
+    }
+
+    static boolean tryMoveDest(Direction dir) throws GameActionException {
+        System.out.println("Dest direction: " + dir);
+        int num_direction = 8;
+        while(num_direction != 0 && rc.isReady()) {
+            System.out.println("target main direction: " + dir);
+            if(rc.canMove(dir)) {
+                rc.move(dir);
+
+                switch(dir) {
+                    case NORTHEAST:
+                        dx++;
+                        dy++;
+                        break;
+                    case NORTH:
+                        dy++;
+                        break;
+                    case NORTHWEST:
+                        dx--;
+                        dy++;
+                        break;
+                    case EAST:
+                        dx++;
+                        break;
+                    case WEST:
+                        dx--;
+                        break;
+                    case SOUTHEAST:
+                        dx++;
+                        dy--;
+                        break;
+                    case SOUTHWEST:
+                        dx--;
+                        dy--;
+                        break;
+                    case SOUTH:
+                        dy--;
+                        break;
+                }
+    
+                return true;
+            }
+            dir = Util.pathFinder.get(dir);
+            System.out.println("new main direction: " + dir);
+            num_direction--;
+        }
+        
+        return false;
     }
 
     /**

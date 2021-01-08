@@ -82,7 +82,14 @@ public class EC extends Robot {
         if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && Math.random() < 0.5) {
             System.out.println("spawn killing politicians");
             influence = 6*rc.getInfluence()/8;
-            buildRobot(RobotType.POLITICIAN, influence);
+            toBuild = RobotType.POLITICIAN;
+        }
+        else if (enemy_near) {
+            System.out.println("defending a rush");
+            int num_robots = rc.senseNearbyRobots(15).length;
+            int naive_influence = num_robots * max_influence;
+            influence = Math.min(naive_influence + 10, (int)(3 * rc.getInfluence()/4));
+            toBuild = RobotType.POLITICIAN;
         }
         else if (sendTroopsSemaphore > 0) {
             System.out.println("building rush bots");
@@ -92,20 +99,12 @@ public class EC extends Robot {
             //     toBuild = RobotType.MUCKRAKER;
             // }
             influence = Math.max(50,rc.getInfluence()/30);
-            buildRobot(toBuild, influence);
 
             sendTroopsSemaphore--;
             if (sendTroopsSemaphore == 0) {
                 ECflags.remove();
                 resetFlagOnNewTurn = true;
             }
-        }
-        else if (enemy_near) {
-            System.out.println("defending a rush");
-            int num_robots = rc.senseNearbyRobots(15).length;
-            int naive_influence = num_robots * max_influence;
-            influence = Math.min(naive_influence + 10, (int)(3 * rc.getInfluence()/4));
-            buildRobot(RobotType.POLITICIAN, influence);
         }
         else {
             int slandererInfluence = Math.max(100, rc.getInfluence() / 10);
@@ -130,8 +129,9 @@ public class EC extends Robot {
                 toBuild = RobotType.MUCKRAKER;
                 influence = normalInfluence;
             }
-            buildRobot(toBuild, influence);
         }
+        
+        buildRobot(toBuild, influence);
 
         for(int id : ids) {
             if(rc.canGetFlag(id)) {
