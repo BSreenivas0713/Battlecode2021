@@ -13,6 +13,12 @@ public class RushPolitician extends Robot {
         enemyLocation = enemyLoc;
     }
 
+    public RushPolitician(RobotController r, MapLocation enemyLoc, boolean det) {
+        super(r);
+        enemyLocation = enemyLoc;
+        toDetonate = det;
+    }
+
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
@@ -32,18 +38,19 @@ public class RushPolitician extends Robot {
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         
         if(toDetonate) {
-            for(RobotInfo robot: neutrals) {
+            for(RobotInfo robot : neutrals) {
                 if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && rc.canEmpower(actionRadius)){
                     rc.empower(actionRadius);
                 }
             }
         }
         else {
-            for(RobotInfo robot: neutrals) {
+            for(RobotInfo robot : neutrals) {
                 if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
                     int ECHealth = (int)(robot.getConviction() * 1.25);
-                    for(RobotInfo friendlyRobot: friendlies) {
-                        if(friendlyRobot.getType() == RobotType.POLITICIAN && Util.distanceSquared(friendlyRobot.getLocation(), robot.getLocation()) <= sensorRadius) {
+                    for(RobotInfo friendlyRobot : friendlies) {
+                        if(friendlyRobot.getType() == RobotType.POLITICIAN && 
+                           friendlyRobot.getLocation().isWithinDistanceSquared(robot.getLocation(), sensorRadius)) {
                             ECHealth -= friendlyRobot.getInfluence();
                             ECHealth += 10;
                         }
@@ -54,13 +61,13 @@ public class RushPolitician extends Robot {
                 }
             }
 
-            for(RobotInfo robot: friendlies) {
+            for(RobotInfo robot : friendlies) {
                 if(robot.getType() == RobotType.POLITICIAN && Comms.getIC(rc.getFlag(robot.getID())) == Comms.InformationCategory.DETONATE) {
                     toDetonate = true;
                 }
             }
             
-            for(RobotInfo robot: attackable) {
+            for(RobotInfo robot : attackable) {
                 if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && rc.canEmpower(actionRadius)){
                     //System.out.println("empowering...");
                     rc.empower(actionRadius);
@@ -80,7 +87,7 @@ public class RushPolitician extends Robot {
             }
         }
 
-        main_direction = Util.findDirection(enemyLocation, rc.getLocation());
+        main_direction = rc.getLocation().directionTo(enemyLocation);
         tryMoveDest(main_direction);
     }
 }
