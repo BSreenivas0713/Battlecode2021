@@ -1,4 +1,4 @@
-package musketeerplayer;
+package stuckymucky;
 import battlecode.common.*;
 import java.util.Hashtable;
 
