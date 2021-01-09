@@ -13,8 +13,8 @@ public class SpawnKillPolitician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        System.out.println("I am a spawn kill politician; current influence: " + rc.getInfluence());
-        System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        if (Util.verbose) System.out.println("I am a spawn kill politician; current influence: " + rc.getInfluence());
+        if (Util.verbose) System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         int actionRadius = rc.getType().actionRadiusSquared;
         if(rc.getEmpowerFactor(rc.getTeam(), 0) > Util.spawnKillThreshold) {

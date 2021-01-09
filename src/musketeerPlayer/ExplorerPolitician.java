@@ -19,8 +19,8 @@ public class ExplorerPolitician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        System.out.println("I am a explorer politician; current influence: " + rc.getInfluence());
-        System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        if (Util.verbose) System.out.println("I am a explorer politician; current influence: " + rc.getInfluence());
+        if (Util.verbose) System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         Team enemy = rc.getTeam().opponent();
         int sensingRadius = rc.getType().sensorRadiusSquared;
@@ -34,9 +34,9 @@ public class ExplorerPolitician extends Robot {
             main_direction = Util.randomDirection();
         }
         if ((attackable.length != 0 || neutrals.length != 0) && rc.canEmpower(actionRadius)) {
-            //System.out.println("empowering...");
+            //if (Util.verbose) System.out.println("empowering...");
             rc.empower(actionRadius);
-            //System.out.println("empowered");
+            //if (Util.verbose) System.out.println("empowered");
             return;
         }
 

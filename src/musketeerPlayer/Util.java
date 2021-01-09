@@ -33,6 +33,9 @@ public class Util {
     static final int phaseTwo = 2000;
     static final int defenderPoliticianFrequency = 5;
     static final int minRushInfluence = 200;
+    static final int minECRushConviction = 150;
+
+    static final boolean verbose = false;
 
     /**
      * Returns a random Direction.

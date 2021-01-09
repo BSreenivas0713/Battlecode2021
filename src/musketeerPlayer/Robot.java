@@ -42,7 +42,7 @@ public class Robot {
 
     public void takeTurn() throws GameActionException {
         turnCount += 1;
-        System.out.println("Flag set: " + rc.getFlag(rc.getID()));
+        if (Util.verbose) System.out.println("Flag set: " + rc.getFlag(rc.getID()));
         if(rc.getFlag(rc.getID()) != nextFlag) {
             setFlag(nextFlag);
         }
@@ -59,7 +59,7 @@ public class Robot {
      * @throws GameActionException
      */
     static boolean tryMove(Direction dir) throws GameActionException {
-        //System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
+        //if (Util.verbose) System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
         if (rc.canMove(dir)) {
             rc.move(dir);
             dx += dir.getDeltaX();
@@ -69,7 +69,7 @@ public class Robot {
     }
 
     static boolean tryMoveDest(Direction target_dir) throws GameActionException {
-        // System.out.println("Dest direction: " + dir);
+        // if (Util.verbose) System.out.println("Dest direction: " + dir);
         Direction[] dirs = {target_dir, target_dir.rotateRight(), target_dir.rotateLeft(), 
             target_dir.rotateRight().rotateRight(), target_dir.rotateLeft().rotateLeft()};
 
@@ -98,7 +98,8 @@ public class Robot {
         RobotInfo[] sensable = rc.senseNearbyRobots(sensingRadius);
         for (RobotInfo robot : sensable) {
             if(robot.getTeam() != rc.getTeam() && 
-               robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+               robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
+               robot.getConviction() <= Util.minECRushConviction) {
                 res = true;
 
                 MapLocation currLoc = rc.getLocation();

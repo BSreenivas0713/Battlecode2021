@@ -22,9 +22,9 @@ public class RushPolitician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        System.out.println("I am a rush politician; current influence: " + rc.getInfluence());
-        System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
-        System.out.println("target map location: x:" + enemyLocation.x + ", y:" + enemyLocation.y);
+        if (Util.verbose) System.out.println("I am a rush politician; current influence: " + rc.getInfluence());
+        if (Util.verbose) System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        if (Util.verbose) System.out.println("target map location: x:" + enemyLocation.x + ", y:" + enemyLocation.y);
 
         if(main_direction == null){
             main_direction = Util.randomDirection();
@@ -40,9 +40,9 @@ public class RushPolitician extends Robot {
         for(RobotInfo robot : attackable) {
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
                 rc.canEmpower(actionRadius)){
-                //System.out.println("empowering...");
+                //if (Util.verbose) System.out.println("empowering...");
                 rc.empower(actionRadius);
-                //System.out.println("empowered");
+                //if (Util.verbose) System.out.println("empowered");
                 return;
             }
         }
@@ -50,9 +50,9 @@ public class RushPolitician extends Robot {
         for(RobotInfo robot : neutrals) {
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
                 rc.canEmpower(actionRadius)){
-                //System.out.println("empowering...");
+                //if (Util.verbose) System.out.println("empowering...");
                 rc.empower(actionRadius);
-                //System.out.println("empowered");
+                //if (Util.verbose) System.out.println("empowered");
                 return;
             }
         }

@@ -14,8 +14,8 @@ public class DefenderPolitician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        System.out.println("I am a defender politician; current influence: " + rc.getInfluence());
-        System.out.println("hasSeenEnemy: " + hasSeenEnemy);
+        if (Util.verbose) System.out.println("I am a defender politician; current influence: " + rc.getInfluence());
+        if (Util.verbose) System.out.println("hasSeenEnemy: " + hasSeenEnemy);
         
         Team enemy = rc.getTeam().opponent();
         int sensingRadius = rc.getType().sensorRadiusSquared;
@@ -24,9 +24,9 @@ public class DefenderPolitician extends Robot {
         RobotInfo[] sensable = rc.senseNearbyRobots(sensingRadius, enemy);
 
         if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
-            //System.out.println("empowering...");
+            //if (Util.verbose) System.out.println("empowering...");
             rc.empower(actionRadius);
-            //System.out.println("empowered");
+            //if (Util.verbose) System.out.println("empowered");
             return;
         }
 
