@@ -15,12 +15,15 @@ public class EC extends Robot {
         RUSHING,
         SAVING_FOR_RUSH,
         MAKING_GOLEM,
+        CLEANUP
     };
 
     static int robotCounter;
     static int sendTroopsSemaphore = 0;
     static RobotType toBuild;
     static int influence;
+
+    static int cleanUpCount;
 
     static int currRoundNum;
     static int currInfluence;
@@ -31,6 +34,8 @@ public class EC extends Robot {
     static ArrayDeque<Integer> ECdxdys;
 
     static State currentState;
+    static State prevState;
+
     static int requiredInfluence;
 
     static boolean needToMakeBodyguard = false;
@@ -85,6 +90,8 @@ public class EC extends Robot {
 
         findNearIds();
         checkForTowers();
+        if (currRoundNum > 500)
+            tryStartCleanup();
 
         int biddingInfluence = currInfluence / 20;
         if (rc.canBid(biddingInfluence) && currRoundNum > 1000) {
@@ -158,6 +165,10 @@ public class EC extends Robot {
                 toBuild = RobotType.POLITICIAN;
                 influence = 1;
                 break;
+            case CLEANUP:
+                toBuild = RobotType.POLITICIAN;
+                influence = Util.cleanupPoliticianInfluence;
+                signalRobotType(Comms.SubRobotType.POL_CLEANUP);
         }
     }
 
@@ -167,10 +178,13 @@ public class EC extends Robot {
         needToBuild = true;
         currRoundNum = rc.getRoundNum();
         currInfluence = rc.getInfluence();
+        cleanUpCount = 0;
 
         if(currentState == State.PHASE1 && turnCount > Util.phaseOne) {
             currentState = State.PHASE2;
         }
+
+        prevState = currentState;
     }
 
     public void findNearIds() throws GameActionException {
@@ -198,6 +212,8 @@ public class EC extends Robot {
                 Comms.InformationCategory flagIC = Comms.getIC(flag);
                 if((flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC) &&
                     !ECdxdys.contains(dxdy)) {
+                    cleanUpCount = -1;
+                    currentState = prevState;
                     ECflags.add(flag);
                     ECdxdys.add(dxdy);
                 }
@@ -207,6 +223,14 @@ public class EC extends Robot {
                     ECflags.offerFirst(flag);
                 }
             }
+        }
+        cleanUpCount++;
+    }
+
+    public void tryStartCleanup() throws GameActionException {
+        if (cleanUpCount > Util.startCleanupThreshold) {
+            prevState = currentState;
+            currentState = State.CLEANUP;
         }
     }
 

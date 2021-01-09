@@ -18,7 +18,7 @@ public class Comms {
         DETONATE,
         TARGET_ROBOT,
         ATTACKING,
-        ROBOT_TYPE,
+        ROBOT_TYPE
     }
 
     public enum SubRobotType {
@@ -28,6 +28,7 @@ public class Comms {
         POL_SPAWNKILL,
         POL_RUSH,
         POL_GOLEM,
+        POL_CLEANUP,
         SLANDERER,
         MUCKRAKER,
         EC

@@ -113,9 +113,7 @@ public class Robot {
     boolean broadcastECLocation() {
         boolean res = false;
 
-        int sensingRadius = rc.getType().sensorRadiusSquared;
-        Team enemy = rc.getTeam().opponent();
-        RobotInfo[] sensable = rc.senseNearbyRobots(sensingRadius);
+        RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius);
         for (RobotInfo robot : sensable) {
             if(robot.getTeam() != rc.getTeam() && 
                robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
