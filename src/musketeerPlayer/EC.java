@@ -57,7 +57,7 @@ public class EC extends Robot {
         //     toBuild = RobotType.POLITICIAN;
         // }
         if(createDefenderIfNeeded()) {} 
-        else if(tryDefendARush()) {}
+        //else if(tryDefendARush()) {}
         else if(trySendARush()) {}
         else {doMainStrategy();}
         if(needToBuild) {
@@ -113,7 +113,7 @@ public class EC extends Robot {
 
     public boolean createDefenderIfNeeded() throws GameActionException {
         Direction missingDefenderDirection = checkMissingDefender();
-        if(robotCounter % Util.defenderPoliticianFrequency == 4 && 
+        if(turnCount >=Util.timeBeforeDefenders && robotCounter % Util.defenderPoliticianFrequency == 4 && 
             missingDefenderDirection != null) {
             if (Util.verbose) System.out.println("building defender politician in direction: " + missingDefenderDirection);
             toBuild = RobotType.POLITICIAN;
