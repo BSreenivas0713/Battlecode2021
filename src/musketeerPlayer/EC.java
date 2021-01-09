@@ -14,7 +14,8 @@ public class EC extends Robot {
         PHASE2,
         RUSHING,
         SAVING_FOR_RUSH,
-        MAKING_GOLEM,
+        MAKING_GOLEM, // TOCONSIDER
+        MAKING_DEFENDERS
     };
 
     static int robotCounter;
@@ -34,6 +35,7 @@ public class EC extends Robot {
     static int requiredInfluence;
 
     static boolean needToMakeBodyguard = false;
+    static int lastRush = 0;
 
     // TODO: Better slanderer pathfinding. Wallscraping muckrakers. Better defense
     // IDEA: Big Defenders should not turn into exploreres unless they are out of range of our base
@@ -76,8 +78,6 @@ public class EC extends Robot {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-        
-        initializeGlobals();
 
         Util.vPrintln("I am a " + rc.getType() + "; current influence: " + currInfluence);
         Util.vPrintln("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
@@ -99,7 +99,7 @@ public class EC extends Robot {
         // }
         switch(currentState) {
             case PHASE1:
-                System.out.println("Phase1 state");
+                Util.vPrintln("Phase1 state");
                 if(currInfluence >= 150 && robotCounter % 5 == 0) {
                     toBuild = RobotType.SLANDERER;
                     influence = Math.min(1000, currInfluence);
@@ -115,7 +115,7 @@ public class EC extends Robot {
                 tryStartSavingForRush();
                 break;
             case PHASE2:
-                System.out.println("Phase2 state");
+                Util.vPrintln("Phase2 state");
                 if(needToMakeBodyguard) {
                     toBuild = RobotType.POLITICIAN;
                     influence = currInfluence;
@@ -132,10 +132,8 @@ public class EC extends Robot {
                     buildRobot(toBuild, influence);
                 }
 
-                // if(createDefenderIfNeeded()) {} 
-                // else if(tryDefendARush()) {}
-                // else {doMainStrategy();}
                 tryStartSavingForRush();
+                tryStartMakingDefenders();
                 break;
             case RUSHING:
                 trySendARush();
@@ -155,14 +153,27 @@ public class EC extends Robot {
                     currentState = State.RUSHING;
                 }
                 break;
-            case MAKING_GOLEM:
+            case MAKING_DEFENDERS:
+                // Consider staggering making defenders
+                boolean built = false;
                 toBuild = RobotType.POLITICIAN;
-                influence = 1;
+                influence = 20;
+
+                if(needToBuild) {
+                    signalRobotType(Comms.SubRobotType.POL_DEFENDER);
+                    built = buildRobot(toBuild, influence);
+                }
+
+                if(built && checkNumDefenders() + 2 >= Util.numDefenders) {
+                    currentState = State.PHASE2;
+                }
                 break;
         }
     }
 
     public void initializeGlobals() throws GameActionException {
+        super.initializeGlobals();
+
         toBuild = null;
         influence = 0;
         needToBuild = true;
@@ -175,7 +186,7 @@ public class EC extends Robot {
     }
 
     public void findNearIds() throws GameActionException {
-        Util.vPrintln("Finding nearby robots");
+        // Util.vPrintln("Finding nearby robots");
         int sensorRadius = rc.getType().sensorRadiusSquared;
         RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
         for(RobotInfo robot : sensable) {
@@ -212,10 +223,16 @@ public class EC extends Robot {
     }
 
     public void tryStartSavingForRush() throws GameActionException {
-        if (!ECflags.isEmpty() && sendTroopsSemaphore == 0) {
+        if (!ECflags.isEmpty() && sendTroopsSemaphore == 0 && turnCount > lastRush + Util.minTimeBetweenRushes) {
             int currFlag = ECflags.peek();
             requiredInfluence = (int)  Math.exp(Comms.getInf(currFlag) * Math.log(Comms.INF_LOG_BASE)) * 4 + 100;
             currentState = State.SAVING_FOR_RUSH;
+        }
+    }
+
+    public void tryStartMakingDefenders() throws GameActionException {
+        if(checkNumDefenders() < Util.numDefenders) {
+            currentState = State.MAKING_DEFENDERS;
         }
     }
 
@@ -231,7 +248,6 @@ public class EC extends Robot {
         } else {
             influence = (int) Math.ceil(Math.exp(Comms.getInf(currFlag) * Math.log(Comms.INF_LOG_BASE)) * 4);
         }
-
         
         if(buildRobot(toBuild, influence)) {
             sendTroopsSemaphore--;
@@ -242,27 +258,9 @@ public class EC extends Robot {
             ECdxdys.remove();
             resetFlagOnNewTurn = true;
             currentState = State.PHASE2;
+            lastRush = turnCount;
         }
         return true;
-    }
-
-    public boolean createDefenderIfNeeded() throws GameActionException {
-        Direction missingDefenderDirection = Direction.NORTH;//checkMissingDefender();
-        if(turnCount >=Util.timeBeforeDefenders && robotCounter % Util.defenderPoliticianFrequency == 4 && 
-            missingDefenderDirection != null) {
-            Util.vPrintln("building defender politician in direction: " + missingDefenderDirection);
-            toBuild = RobotType.POLITICIAN;
-            influence = Math.max(50, currInfluence / 20);
-            
-            if (rc.canBuildRobot(toBuild, missingDefenderDirection, influence)) {
-                signalRobotType(Comms.SubRobotType.POL_DEFENDER);
-                rc.buildRobot(toBuild, missingDefenderDirection, influence);
-                robotCounter += 1;
-                needToBuild = false;
-            }
-            return true;
-        }
-        return false;
     }
 
     public boolean tryDefendARush() throws GameActionException {
@@ -340,21 +338,22 @@ public class EC extends Robot {
         }
     }
 
-    boolean checkMissingGolems() throws GameActionException {
+    int checkNumDefenders() throws GameActionException {
         int count = 0;
         for(RobotInfo robot : friendlySensable) {
             if(rc.canGetFlag(robot.getID())) {
                 int flag = rc.getFlag(robot.getID());
                 Comms.InformationCategory flagIC = Comms.getIC(flag);
                 if(flagIC == Comms.InformationCategory.ROBOT_TYPE) {
-                    if(Comms.getSubRobotType(flag) == Comms.SubRobotType.POL_GOLEM) {
+                    if(Comms.getSubRobotType(flag) == Comms.SubRobotType.POL_DEFENDER) {
                         count++;
                     }
                 }
             }
         }
 
-        return count < Util.numGolems;
+        Util.vPrintln("Defenders around: " + count);
+        return count;
     }
 
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {
