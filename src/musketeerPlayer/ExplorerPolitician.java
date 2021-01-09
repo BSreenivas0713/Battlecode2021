@@ -19,7 +19,7 @@ public class ExplorerPolitician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        Util.vPrintln("I am a explorer politician; current influence: " + rc.getInfluence());
+        Util.vPrintln("I am an explorer politician; current influence: " + rc.getInfluence());
         Util.vPrintln("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
 

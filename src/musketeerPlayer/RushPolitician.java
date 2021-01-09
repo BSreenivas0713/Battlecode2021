@@ -60,7 +60,7 @@ public class RushPolitician extends Robot {
             MapLocation loc = robot.getLocation();
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 2) &&
                 loc.isWithinDistanceSquared(rc.getLocation(), actionRadius)) {
-                changeTo = new DefenderPolitician(rc, dx, dy);
+                changeTo = new GolemPolitician(rc, dx, dy);
                 return;
             }
         }
