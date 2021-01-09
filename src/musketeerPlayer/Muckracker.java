@@ -20,11 +20,9 @@ public class Muckracker extends Robot {
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
-        Team enemy = rc.getTeam().opponent();
-        int actionRadius = rc.getType().actionRadiusSquared;
         RobotInfo powerful = null;
         int bestInfluence = Integer.MIN_VALUE;
-        for (RobotInfo robot : rc.senseNearbyRobots(actionRadius, enemy)) {
+        for (RobotInfo robot : enemyAttackable) {
             int curr = robot.getInfluence();
             if (curr > bestInfluence && robot.type.canBeExposed()) {
                 bestInfluence = curr;

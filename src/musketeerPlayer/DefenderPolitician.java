@@ -21,13 +21,8 @@ public class DefenderPolitician extends Robot {
         if (Util.verbose) System.out.println("I am a defender politician; current influence: " + rc.getInfluence());
         if (Util.verbose) System.out.println("hasSeenEnemy: " + hasSeenEnemy);
         
-        Team enemy = rc.getTeam().opponent();
-        int sensingRadius = rc.getType().sensorRadiusSquared;
-        int actionRadius = rc.getType().actionRadiusSquared;
-        RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
-        RobotInfo[] sensable = rc.senseNearbyRobots(sensingRadius, enemy);
 
-        if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
+        if (enemyAttackable.length != 0 && rc.canEmpower(actionRadius)) {
             //if (Util.verbose) System.out.println("empowering...");
             rc.empower(actionRadius);
             //if (Util.verbose) System.out.println("empowered");
@@ -36,7 +31,7 @@ public class DefenderPolitician extends Robot {
 
         RobotInfo enemyRobot = null;
         int minDistance = Integer.MAX_VALUE;
-        for (RobotInfo robot : sensable) {
+        for (RobotInfo robot : enemySensable) {
             int dist = rc.getLocation().distanceSquaredTo(robot.location);
             if(dist < minDistance) {
                 enemyRobot = robot;
@@ -45,7 +40,7 @@ public class DefenderPolitician extends Robot {
             }
         }
 
-        if(hasSeenEnemy && sensable.length == 0) {
+        if(hasSeenEnemy && enemySensable.length == 0) {
             changeTo = new ExplorerPolitician(rc, dx, dy);
             return;
         }

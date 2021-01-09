@@ -30,14 +30,9 @@ public class RushPolitician extends Robot {
             main_direction = Util.randomDirection();
         }
 
-        Team enemy = rc.getTeam().opponent();
-        int actionRadius = rc.getType().actionRadiusSquared;
-        int sensorRadius = rc.getType().sensorRadiusSquared;
-        RobotInfo[] friendlies = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
-        RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         
-        for(RobotInfo robot : attackable) {
+        for(RobotInfo robot : enemyAttackable) {
             MapLocation loc = robot.getLocation();
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
                 enemyLocation.isWithinDistanceSquared(loc, 2) &&
@@ -61,7 +56,7 @@ public class RushPolitician extends Robot {
             }
         }
 
-        for (RobotInfo robot : friendlies) {
+        for (RobotInfo robot : friendlySensable) {
             MapLocation loc = robot.getLocation();
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 2) &&
                 loc.isWithinDistanceSquared(rc.getLocation(), actionRadius)) {

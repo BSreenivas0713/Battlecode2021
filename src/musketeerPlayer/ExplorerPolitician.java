@@ -7,7 +7,7 @@ public class ExplorerPolitician extends Robot {
     static Direction main_direction;
     static boolean   toDetonate = false;
 
-    
+    //TOCONSIDER: allow for these types to attack neutrals
     public ExplorerPolitician(RobotController r) {
         super(r);
     }
@@ -22,22 +22,16 @@ public class ExplorerPolitician extends Robot {
         if (Util.verbose) System.out.println("I am a explorer politician; current influence: " + rc.getInfluence());
         if (Util.verbose) System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
-        Team enemy = rc.getTeam().opponent();
-        int sensingRadius = rc.getType().sensorRadiusSquared;
-        int actionRadius = rc.getType().actionRadiusSquared;
-        RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
-        RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
-        RobotInfo[] sensable = rc.senseNearbyRobots(sensingRadius, enemy);
-        RobotInfo[] friendlySensable = rc.senseNearbyRobots(sensingRadius, rc.getTeam());
+
 
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
 
         
-        int min_attackable_conviction = rc.getConviction() / 3;
+        int min_attackable_conviction = (rc.getConviction()-10) / 3;
         int attackable_conviction = 0;
-        for (RobotInfo robot : attackable) {
+        for (RobotInfo robot : enemyAttackable) {
             attackable_conviction += robot.getConviction();
         }
 
@@ -49,8 +43,8 @@ public class ExplorerPolitician extends Robot {
         }
 
         RobotInfo powerful = null;
-        int max_influence = rc.getConviction() / 3;
-        for (RobotInfo robot : sensable) {
+        int max_influence = (rc.getConviction()-10) / 3;
+        for (RobotInfo robot : enemySensable) {
             int currInfluence = robot.getConviction();
             if (robot.getType() == RobotType.MUCKRAKER && currInfluence > max_influence) {
                 powerful = robot;
@@ -65,7 +59,7 @@ public class ExplorerPolitician extends Robot {
         
         RobotInfo weakest = null;
         int min_influence = 0;
-        for (RobotInfo robot : sensable) {
+        for (RobotInfo robot : enemySensable) {
             int currInfluence = robot.getInfluence();
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && currInfluence < min_influence) {
                 weakest = robot;
