@@ -14,7 +14,7 @@ public class EC extends Robot {
         PHASE2,
         RUSHING,
         SAVING_FOR_RUSH,
-        MAKING_DEFENSE,
+        MAKING_GOLEM,
     };
 
     static int robotCounter;
@@ -154,6 +154,10 @@ public class EC extends Robot {
                     nextFlag = ECflags.peek();
                     currentState = State.RUSHING;
                 }
+                break;
+            case MAKING_GOLEM:
+                toBuild = RobotType.POLITICIAN;
+                influence = 1;
                 break;
         }
     }
@@ -336,8 +340,21 @@ public class EC extends Robot {
         }
     }
 
-    boolean checkMissingDefender() throws GameActionException {
-        return false;
+    boolean checkMissingGolems() throws GameActionException {
+        int count = 0;
+        for(RobotInfo robot : friendlySensable) {
+            if(rc.canGetFlag(robot.getID())) {
+                int flag = rc.getFlag(robot.getID());
+                Comms.InformationCategory flagIC = Comms.getIC(flag);
+                if(flagIC == Comms.InformationCategory.ROBOT_TYPE) {
+                    if(Comms.getSubRobotType(flag) == Comms.SubRobotType.POL_GOLEM) {
+                        count++;
+                    }
+                }
+            }
+        }
+
+        return count < Util.numGolems;
     }
 
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {

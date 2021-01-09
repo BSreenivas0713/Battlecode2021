@@ -27,6 +27,7 @@ public class Comms {
         POL_BODYGUARD,
         POL_SPAWNKILL,
         POL_RUSH,
+        POL_GOLEM,
         SLANDERER,
         MUCKRAKER,
         EC

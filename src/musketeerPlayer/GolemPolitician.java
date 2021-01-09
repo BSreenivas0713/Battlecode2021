@@ -8,10 +8,12 @@ public class GolemPolitician extends Robot {
     
     public GolemPolitician(RobotController r) {
         super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_GOLEM);
     }
     
     public GolemPolitician(RobotController r, int dx, int dy) {
         super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_GOLEM);
     }
 
     public void takeTurn() throws GameActionException {
