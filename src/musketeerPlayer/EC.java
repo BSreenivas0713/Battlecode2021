@@ -36,7 +36,6 @@ public class EC extends Robot {
     static boolean needToMakeBodyguard = false;
 
     // TODO: Better slanderer pathfinding. Wallscraping muckrakers. Better defense
-    // IDEA: Big Defenders should not turn into exploreres unless they are out of range of our base
     // TODO: small defenders to protect the base, increase range of spending on big politicians(if money allows), implement spawn killing if it is worth it, 
     // TODO: better money management strategy(I.E don't just making 1000 slanderers quicker and quicker in late game)
     public EC(RobotController r) {
