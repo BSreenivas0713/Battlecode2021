@@ -40,11 +40,17 @@ public class Politician extends Robot {
         }
         RobotInfo powerful = null;
         int max_influence = 0;
+
+        MapLocation ECWithinSensable = null;
+
         for (RobotInfo robot : sensable) {
             int currInfluence = robot.getInfluence();
             if (robot.getType() == RobotType.MUCKRAKER && currInfluence > max_influence) {
                 powerful = robot;
                 max_influence = currInfluence;
+            }
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                ECWithinSensable = robot.getLocation();
             }
         }
         
@@ -53,8 +59,15 @@ public class Politician extends Robot {
             tryMoveDest(toMove);
         }
 
+        boolean within2ofEC = false;
+        for (RobotInfo robot : rc.senseNearbyRobots(2, rc.getTeam())) {
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                within2ofEC = true;
+            }
+        }
+
         for (RobotInfo robot : within6) {
-            if (robot.getType() == RobotType.POLITICIAN && rc.getFlag(robot.getID()) == 1) {
+            if (robot.getType() == RobotType.POLITICIAN && rc.getFlag(robot.getID()) == 1 && !within2ofEC) {
                 if (Util.verbose) System.out.println("within radius 6");
                 return;
             }
@@ -65,7 +78,9 @@ public class Politician extends Robot {
         for (RobotInfo robot : friendlySensable) {
             if (robot.getType() == RobotType.POLITICIAN && rc.getFlag(robot.getID()) == 1 && robot.getInfluence() > max_influence) {
                 if (Util.verbose) System.out.println("within sensing radius but not 6");
-                max_influence = robot.getInfluence();
+                if (ECWithinSensable == null || robot.getLocation().distanceSquaredTo(ECWithinSensable) > robot.getType().sensorRadiusSquared) {
+                    max_influence = robot.getInfluence();
+                }
                 bestSlanderer = robot;
             }
             

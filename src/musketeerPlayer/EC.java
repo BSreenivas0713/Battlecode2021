@@ -88,7 +88,7 @@ public class EC extends Robot {
         Direction missingDefenderDirection = checkMissingDefender();
         if(robotCounter % Util.defenderPoliticianFrequency == 4 && 
             missingDefenderDirection != null) {
-            if (Util.verbose) System.out.println("building defender politician");
+            if (Util.verbose) System.out.println("building defender politician in direction: " + missingDefenderDirection);
             toBuild = RobotType.POLITICIAN;
             influence = Math.max(50, rc.getInfluence() / 20);
             
@@ -105,7 +105,7 @@ public class EC extends Robot {
             int naive_influence = num_robots * max_influence;
             influence = Math.min(naive_influence + 10, 50);
             toBuild = RobotType.POLITICIAN;
-            signalRobotType(Comms.SubRobotType.POL_DEFENDER);
+            signalRobotType(Comms.SubRobotType.POL_EXPLORER);
         }
         else if (sendTroopsSemaphore > 0) {
             if (Util.verbose) System.out.println("building rush bots");
@@ -212,6 +212,7 @@ public class EC extends Robot {
     }
 
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {
-        nextFlag = Comms.getFlag(Comms.InformationCategory.SUB_ROBOT, type);
+        if (resetFlagOnNewTurn)
+            nextFlag = Comms.getFlag(Comms.InformationCategory.SUB_ROBOT, type);
     }
 }
