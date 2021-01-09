@@ -47,6 +47,9 @@ public strictfp class RobotPlayer {
                                     case POL_BODYGUARD:
                                         bot = new Politician(rc);
                                         break;
+                                    case POL_CLEANUP:
+                                        bot = new CleanupPolitician(rc);
+                                        break;
                                 }
                                 break;
                             default:
