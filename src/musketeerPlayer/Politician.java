@@ -17,8 +17,8 @@ public class Politician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        System.out.println("I am a normal politician; current influence: " + rc.getInfluence());
-        System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        if (Util.verbose) System.out.println("I am a normal politician; current influence: " + rc.getInfluence());
+        if (Util.verbose) System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         Team enemy = rc.getTeam().opponent();
         int sensingRadius = rc.getType().sensorRadiusSquared;
@@ -33,9 +33,9 @@ public class Politician extends Robot {
             main_direction = Util.randomDirection();
         }
         if ((attackable.length != 0 || neutrals.length != 0) && rc.canEmpower(actionRadius)) {
-            //System.out.println("empowering...");
+            //if (Util.verbose) System.out.println("empowering...");
             rc.empower(actionRadius);
-            //System.out.println("empowered");
+            //if (Util.verbose) System.out.println("empowered");
             return;
         }
         RobotInfo powerful = null;
@@ -55,7 +55,7 @@ public class Politician extends Robot {
 
         for (RobotInfo robot : within6) {
             if (robot.getType() == RobotType.POLITICIAN && rc.getFlag(robot.getID()) == 1) {
-                System.out.println("within radius 6");
+                if (Util.verbose) System.out.println("within radius 6");
                 return;
             }
         }
@@ -64,7 +64,7 @@ public class Politician extends Robot {
         max_influence = 0;
         for (RobotInfo robot : friendlySensable) {
             if (robot.getType() == RobotType.POLITICIAN && rc.getFlag(robot.getID()) == 1 && robot.getInfluence() > max_influence) {
-                System.out.println("within sensing radius but not 6");
+                if (Util.verbose) System.out.println("within sensing radius but not 6");
                 max_influence = robot.getInfluence();
                 bestSlanderer = robot;
             }

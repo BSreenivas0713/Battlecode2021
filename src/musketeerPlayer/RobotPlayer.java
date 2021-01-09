@@ -25,7 +25,7 @@ public strictfp class RobotPlayer {
                     int botFlag = rc.getFlag(robot.getID());
                     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
                     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && botFlag > Comms.MIN_FLAG_MESSAGE) {
-                        System.out.println("Flag for creation: " + botFlag);
+                        if (Util.verbose) System.out.println("Flag for creation: " + botFlag);
                         switch(flagIC) {
                             case NEUTRAL_EC:
                             case ENEMY_EC:
@@ -74,13 +74,13 @@ public strictfp class RobotPlayer {
                 if (bot.changeTo != null) {
                     bot = bot.changeTo;
                 }
-                // System.out.println("BC left at end: " + Clock.getBytecodesLeft());
+                // if (Util.verbose) System.out.println("BC left at end: " + Clock.getBytecodesLeft());
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
 
             } catch (Exception e) {
-                System.out.println(rc.getType() + " Exception");
+                if (Util.verbose) System.out.println(rc.getType() + " Exception");
                 e.printStackTrace();
             }
         }

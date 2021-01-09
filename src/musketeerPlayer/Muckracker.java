@@ -14,8 +14,8 @@ public class Muckracker extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        System.out.println("I am a " + rc.getType() + "; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
-        System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        if (Util.verbose) System.out.println("I am a " + rc.getType() + "; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
+        if (Util.verbose) System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         if(main_direction == null){
             main_direction = Util.randomDirection();
