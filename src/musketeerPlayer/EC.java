@@ -335,17 +335,8 @@ public class EC extends Robot {
         }
     }
 
-    Direction checkMissingDefender() throws GameActionException {
-        for(Direction dir : Util.defenderDirs) {
-            MapLocation loc = rc.getLocation().add(dir);
-            if(rc.onTheMap(loc)) {
-                RobotInfo robot = rc.senseRobotAtLocation(loc);
-                if(robot == null)
-                    return dir;
-            }
-        }
-
-        return null;
+    boolean checkMissingDefender() throws GameActionException {
+        
     }
 
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {
