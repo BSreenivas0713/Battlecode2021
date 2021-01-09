@@ -10,8 +10,8 @@ public class Robot {
 
     public static int dx = Util.dOffset;
     public static int dy = Util.dOffset;
-    static int defaultFlag = 0;
-    static int nextFlag = 0;
+    static int defaultFlag;
+    static int nextFlag;
     static boolean resetFlagOnNewTurn = true;
     static int sensorRadius;
     static int actionRadius;
@@ -60,11 +60,12 @@ public class Robot {
         }
         Util.vPrintln("Flag set: " + Integer.toBinaryString(rc.getFlag(rc.getID())));
 
-        if(resetFlagOnNewTurn && turnCount > 2)
+        if(resetFlagOnNewTurn)
             nextFlag = defaultFlag;
     }
 
     public void initializeGlobals() throws GameActionException {
+        System.out.println("Initializing sensable arrays");
         enemySensable = rc.senseNearbyRobots(sensorRadius, enemy);
         friendlySensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
         neutralSensable = rc.senseNearbyRobots(sensorRadius, Team.NEUTRAL);
