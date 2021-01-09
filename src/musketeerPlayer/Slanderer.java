@@ -23,9 +23,9 @@ public class Slanderer extends Robot {
             return;
         }
 
-        if (Util.verbose) System.out.println("I am a slanderer; current influence: " + rc.getInfluence());
-        if (Util.verbose) System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
-        if (Util.verbose) System.out.println("current flag: " + rc.getFlag(rc.getID()));
+        Util.vPrintln("I am a slanderer; current influence: " + rc.getInfluence());
+        Util.vPrintln("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        Util.vPrintln("current flag: " + rc.getFlag(rc.getID()));
 
         if(main_direction == null) {
             main_direction = Util.randomDirection();

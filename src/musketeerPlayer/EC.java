@@ -48,12 +48,12 @@ public class EC extends Robot {
     }
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
-        if(Util.verbose) System.out.println("building robot type: " + toBuild + " influence: " + influence);
+        Util.vPrintln("building robot type: " + toBuild + " influence: " + influence);
         Direction main_direction = Util.randomDirection();
         int num_direction = 8;
         while(num_direction != 0) {
             if (rc.canBuildRobot(toBuild, main_direction, influence)) {
-                if(Util.verbose) System.out.println("built robot");
+                Util.vPrintln("built robot");
                 rc.buildRobot(toBuild, main_direction, influence);
 
                 if(needToMakeBodyguard) {
@@ -78,10 +78,10 @@ public class EC extends Robot {
         
         initializeGlobals();
 
-        if (Util.verbose) System.out.println("I am a " + rc.getType() + "; current influence: " + currInfluence);
-        if (Util.verbose) System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
-        if (Util.verbose) System.out.println("num of ec's found: " + ECflags.size());
-        if (Util.verbose) System.out.println("state: " + currentState);
+        Util.vPrintln("I am a " + rc.getType() + "; current influence: " + currInfluence);
+        Util.vPrintln("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        Util.vPrintln("num of ec's found: " + ECflags.size());
+        Util.vPrintln("state: " + currentState);
 
         findNearIds();
         checkForTowers();
@@ -92,7 +92,7 @@ public class EC extends Robot {
         }
 
         // if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
-        //     if (Util.verbose) System.out.println("spawn killing politicians");
+        //     Util.vPrintln("spawn killing politicians");
         //     influence = 6*rc.getInfluence()/8;
         //     toBuild = RobotType.POLITICIAN;
         // }
@@ -170,7 +170,7 @@ public class EC extends Robot {
     }
 
     public void findNearIds() throws GameActionException {
-        if(Util.verbose) System.out.println("Finding nearby robots");
+        Util.vPrintln("Finding nearby robots");
         int sensorRadius = rc.getType().sensorRadiusSquared;
         RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
         for(RobotInfo robot : sensable) {
@@ -182,7 +182,7 @@ public class EC extends Robot {
                 }
             }
         }
-        if (Util.verbose) System.out.println("num id's found: " + ids.size());
+        Util.vPrintln("num id's found: " + ids.size());
     }
 
     public void checkForTowers() throws GameActionException {
@@ -215,7 +215,7 @@ public class EC extends Robot {
     }
 
     public boolean trySendARush() throws GameActionException {
-        if (Util.verbose) System.out.println("building rush bots");
+        Util.vPrintln("building rush bots");
         int currFlag = rc.getFlag(rc.getID());
         toBuild = RobotType.POLITICIAN;
         // if (Comms.getIC(currFlag) == Comms.InformationCategory.ENEMY_EC) {
@@ -245,7 +245,7 @@ public class EC extends Robot {
         Direction missingDefenderDirection = Direction.NORTH;//checkMissingDefender();
         if(turnCount >=Util.timeBeforeDefenders && robotCounter % Util.defenderPoliticianFrequency == 4 && 
             missingDefenderDirection != null) {
-            if (Util.verbose) System.out.println("building defender politician in direction: " + missingDefenderDirection);
+            Util.vPrintln("building defender politician in direction: " + missingDefenderDirection);
             toBuild = RobotType.POLITICIAN;
             influence = Math.max(50, currInfluence / 20);
             
@@ -274,7 +274,7 @@ public class EC extends Robot {
            } 
         } 
         if (enemy_near) {
-            if (Util.verbose) System.out.println("defending a rush");
+            Util.vPrintln("defending a rush");
             int num_robots = rc.senseNearbyRobots(15).length;
             int naive_influence = num_robots * max_influence;
             influence = Math.min(naive_influence + 10, 50);
@@ -289,7 +289,7 @@ public class EC extends Robot {
         int slandererInfluence = Math.min(Math.max(100, currInfluence / 10), 1000);
         int normalInfluence = Math.max(50, currInfluence / 20);
         if (currRoundNum < Util.phaseOne) {
-            if (Util.verbose) System.out.println("phase 1 default build troop behavior");
+            Util.vPrintln("phase 1 default build troop behavior");
             switch(robotCounter % 9) {
                 case 5:
                     toBuild = RobotType.MUCKRAKER;
@@ -312,7 +312,7 @@ public class EC extends Robot {
             }
         }
         else if(currRoundNum < Util.phaseTwo) {
-            if (Util.verbose) System.out.println("phase 2 default build troop behavior");
+            Util.vPrintln("phase 2 default build troop behavior");
             switch(robotCounter % 9) {
                 case 0: case 2: case 6:
                     toBuild = RobotType.MUCKRAKER;
@@ -329,14 +329,14 @@ public class EC extends Robot {
             }
         }
         else {
-            if (Util.verbose) System.out.println("build troop behavior after 2000 rounds");
+            Util.vPrintln("build troop behavior after 2000 rounds");
             toBuild = RobotType.MUCKRAKER;
             influence = normalInfluence;
         }
     }
 
     boolean checkMissingDefender() throws GameActionException {
-        
+        return false;
     }
 
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {

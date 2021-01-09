@@ -18,14 +18,14 @@ public class DefenderPolitician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        if (Util.verbose) System.out.println("I am a defender politician; current influence: " + rc.getInfluence());
-        if (Util.verbose) System.out.println("hasSeenEnemy: " + hasSeenEnemy);
+        Util.vPrintln("I am a defender politician; current influence: " + rc.getInfluence());
+        Util.vPrintln("hasSeenEnemy: " + hasSeenEnemy);
         
 
         if (enemyAttackable.length != 0 && rc.canEmpower(actionRadius)) {
-            //if (Util.verbose) System.out.println("empowering...");
+            //Util.vPrintln("empowering...");
             rc.empower(actionRadius);
-            //if (Util.verbose) System.out.println("empowered");
+            //Util.vPrintln("empowered");
             return;
         }
 

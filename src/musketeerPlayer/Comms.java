@@ -34,7 +34,7 @@ public class Comms {
         return (flag << BIT_IC_OFFSET) + (dx << BIT_DX_OFFSET) + dy;
     }
 
-    // SUB_ROBOT
+    // SUB_ROBOT / ROBOT_TYPE
     public static int getFlag(InformationCategory cat, SubRobotType type) {
         return getFlag(cat, 0, type.ordinal());
     }
