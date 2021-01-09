@@ -83,15 +83,6 @@ public class Politician extends Robot {
                 }
                 bestSlanderer = robot;
             }
-            
-            if(robot.getType() == RobotType.POLITICIAN && Comms.getIC(rc.getFlag(robot.getID())) == Comms.InformationCategory.DETONATE) {
-                for(RobotInfo robot2: neutrals) {
-                    if(robot2.getType() == RobotType.ENLIGHTENMENT_CENTER){
-                        changeTo = new RushPolitician(rc, robot2.getLocation(), true);
-                        return;
-                    }
-                }
-            }
         }
 
         if (bestSlanderer != null) {
