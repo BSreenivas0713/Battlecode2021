@@ -18,6 +18,7 @@ public class Comms {
         DETONATE,
         SUB_ROBOT,
         ATTACKING,
+        ROBOT_TYPE,
         UNKOWN
     }
 
@@ -25,7 +26,8 @@ public class Comms {
         POL_DEFENDER,
         POL_EXPLORER,
         POL_BODYGUARD,
-        POL_SPAWNKILL
+        POL_SPAWNKILL,
+        SLANDERER
     }
 
     public static int addCoord(int flag, int dx, int dy) {
