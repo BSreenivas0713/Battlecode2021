@@ -16,10 +16,9 @@ public class Comms {
         ENEMY_EC,
         NEW_ROBOT,
         DETONATE,
-        SUB_ROBOT,
+        TARGET_ROBOT,
         ATTACKING,
         ROBOT_TYPE,
-        UNKOWN
     }
 
     public enum SubRobotType {
@@ -27,14 +26,17 @@ public class Comms {
         POL_EXPLORER,
         POL_BODYGUARD,
         POL_SPAWNKILL,
-        SLANDERER
+        POL_RUSH,
+        SLANDERER,
+        MUCKRAKER,
+        EC
     }
 
     public static int addCoord(int flag, int dx, int dy) {
         return (flag << BIT_IC_OFFSET) + (dx << BIT_DX_OFFSET) + dy;
     }
 
-    // SUB_ROBOT / ROBOT_TYPE
+    // TARGET_ROBOT / ROBOT_TYPE
     public static int getFlag(InformationCategory cat, SubRobotType type) {
         return getFlag(cat, 0, type.ordinal());
     }

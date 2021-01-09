@@ -9,10 +9,12 @@ public class DefenderPolitician extends Robot {
     
     public DefenderPolitician(RobotController r) {
         super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_DEFENDER);
     }
     
     public DefenderPolitician(RobotController r, int dx, int dy) {
-        super(r);
+        super(r, dx, dy);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_DEFENDER);
     }
 
     public void takeTurn() throws GameActionException {

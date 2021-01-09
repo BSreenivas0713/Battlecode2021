@@ -10,10 +10,12 @@ public class ExplorerPolitician extends Robot {
     //TOCONSIDER: allow for these types to attack neutrals
     public ExplorerPolitician(RobotController r) {
         super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_EXPLORER);
     }
 
     public ExplorerPolitician(RobotController r, int currDx, int currDy) {
         super(r, currDx, currDy);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_EXPLORER);
     }
 
     public void takeTurn() throws GameActionException {
@@ -22,12 +24,9 @@ public class ExplorerPolitician extends Robot {
         Util.vPrintln("I am a explorer politician; current influence: " + rc.getInfluence());
         Util.vPrintln("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
-
-
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
-
         
         int min_attackable_conviction = (rc.getConviction()-10) / 3;
         int attackable_conviction = 0;

@@ -5,13 +5,16 @@ import musketeerplayer.Util.*;
 
 public class Politician extends Robot {
     static Direction main_direction;
+    static final int slandererFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
     
     public Politician(RobotController r) {
         super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_BODYGUARD);
     }
 
     public Politician(RobotController r, int currDx, int currDy) {
         super(r, currDx, currDy);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_BODYGUARD);
     }
 
     public void takeTurn() throws GameActionException {
@@ -70,8 +73,9 @@ public class Politician extends Robot {
         RobotInfo bestSlanderer = null;
         max_influence = 0;
         for (RobotInfo robot : friendlySensable) {
-            if (robot.getType() == RobotType.POLITICIAN && rc.canGetFlag(robot.getID()) && 
-                rc.getFlag(robot.getID()) == 1 && robot.getInfluence() > max_influence) {
+            if (rc.canGetFlag(robot.getID()) && 
+                rc.getFlag(robot.getID()) == slandererFlag && 
+                robot.getInfluence() > max_influence) {
                 Util.vPrintln("within sensing radius but not 6");
                 if (ECWithinSensable == null || robot.getLocation().distanceSquaredTo(ECWithinSensable) > robot.getType().sensorRadiusSquared) {
                     max_influence = robot.getInfluence();

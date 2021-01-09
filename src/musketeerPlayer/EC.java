@@ -14,7 +14,7 @@ public class EC extends Robot {
         PHASE2,
         RUSHING,
         SAVING_FOR_RUSH,
-        MAKING_DEFENSE, 
+        MAKING_DEFENSE,
     };
 
     static int robotCounter;
@@ -45,6 +45,7 @@ public class EC extends Robot {
         ECflags = new ArrayDeque<Integer>();
         ECdxdys = new ArrayDeque<Integer>();
         currentState = State.PHASE1;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
     }
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
@@ -341,7 +342,7 @@ public class EC extends Robot {
 
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {
         if (resetFlagOnNewTurn) {
-            nextFlag = Comms.getFlag(Comms.InformationCategory.SUB_ROBOT, type);
+            nextFlag = Comms.getFlag(Comms.InformationCategory.TARGET_ROBOT, type);
             resetFlagOnNewTurn = false;
         }
     }
