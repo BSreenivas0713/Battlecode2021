@@ -9,6 +9,7 @@ public class Muckracker extends Robot {
 
     public Muckracker(RobotController r) {
         super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
     }
 
     public void takeTurn() throws GameActionException {

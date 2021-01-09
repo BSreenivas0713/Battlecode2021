@@ -11,12 +11,14 @@ public class RushPolitician extends Robot {
     public RushPolitician(RobotController r, MapLocation enemyLoc) {
         super(r);
         enemyLocation = enemyLoc;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_RUSH);
     }
 
     public RushPolitician(RobotController r, MapLocation enemyLoc, boolean det) {
         super(r);
         enemyLocation = enemyLoc;
         toDetonate = det;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_RUSH);
     }
 
     public void takeTurn() throws GameActionException {
