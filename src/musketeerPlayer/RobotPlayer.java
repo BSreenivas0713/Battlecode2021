@@ -24,7 +24,7 @@ public strictfp class RobotPlayer {
                 for (RobotInfo robot : sensable) {
                     int botFlag = rc.getFlag(robot.getID());
                     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
-                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && flagIC != Comms.InformationCategory.EMPTY) {
+                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                         Util.vPrintln("Flag for creation: " + botFlag);
                         switch(flagIC) {
                             case NEUTRAL_EC:
@@ -35,7 +35,7 @@ public strictfp class RobotPlayer {
                                 
                                 bot = new RushPolitician(rc, enemyLoc);
                                 break;
-                            case SUB_ROBOT:
+                            case TARGET_ROBOT:
                                 Comms.SubRobotType type = Comms.getSubRobotType(botFlag);
                                 switch(type) {
                                     case POL_DEFENDER:
@@ -60,8 +60,7 @@ public strictfp class RobotPlayer {
 
                 if(bot != null)
                     break;
-                //TODO: get rush politician to work, write rush muckraker.
-                //make sure when a flag is set, spawning rush politicians is not the ONLY thing we do (soln: dont set flag always)
+                //TODO: write rush muckraker.
                 bot = new Politician(rc);
                 break;
             case SLANDERER:            bot = new Slanderer(rc);   break;

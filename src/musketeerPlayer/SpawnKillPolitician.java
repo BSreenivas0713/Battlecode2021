@@ -8,6 +8,7 @@ public class SpawnKillPolitician extends Robot {
     
     public SpawnKillPolitician(RobotController r) {
         super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_SPAWNKILL);
     }
 
     public void takeTurn() throws GameActionException {
