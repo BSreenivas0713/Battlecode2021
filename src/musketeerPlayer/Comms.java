@@ -2,14 +2,22 @@ package musketeerplayer;
 import battlecode.common.*;
 
 public class Comms {
-    public static final int MIN_FLAG_MESSAGE = 1 << 6;
+    public static final double INF_LOG_BASE = 1.35;
+    static final int BIT_IC_OFFSET = 19;
+    static final int BIT_MASK_IC = 0x1F << BIT_IC_OFFSET;
+    static final int BIT_DX_OFFSET = 7;
+    static final int BIT_MASK_COORD = 0x7F;
+    static final int BIT_MASK_COORDS = 0x3FFF;
+    static final int BIT_INF_OFFSET = 14;
 
     public enum InformationCategory {
+        EMPTY,
         NEUTRAL_EC,
         ENEMY_EC,
         NEW_ROBOT,
         DETONATE,
         SUB_ROBOT,
+        ATTACKING,
         UNKOWN
     }
 
@@ -21,7 +29,7 @@ public class Comms {
     }
 
     public static int addCoord(int flag, int dx, int dy) {
-        return flag*1 << 6 + dx*1 << 3 + dy;
+        return (flag << BIT_IC_OFFSET) + (dx << BIT_DX_OFFSET) + dy;
     }
 
     // SUB_ROBOT
@@ -33,53 +41,34 @@ public class Comms {
         return getFlag(cat, 0, 0);
     }
 
-    public static int getFlag(InformationCategory cat, int dx, int dy) {
-        int flag = 0;
-        switch (cat) {
-            case NEUTRAL_EC:
-                flag += 2;
-                break;
-            case ENEMY_EC:
-                flag += 3;
-                break;
-            case NEW_ROBOT:
-                flag += 4;
-                break;
-            case DETONATE:
-                flag += 5;
-                break;
-            case SUB_ROBOT:
-                flag += 6;
-                break;
-            default:
-                break;
-        }
+    // NEUTRAL_EC / ENEMY_EC
+    public static int getFlag(InformationCategory cat, int inf, int dx, int dy) {
+        int flag = cat.ordinal();
+        return (flag << BIT_IC_OFFSET) + (inf << BIT_INF_OFFSET) + (dx << BIT_DX_OFFSET) + dy;
+    }
 
+    public static int getFlag(InformationCategory cat, int dx, int dy) {
+        int flag = cat.ordinal();
         flag = addCoord(flag, dx, dy);
         return flag;
     }
 
     public static InformationCategory getIC(int flag) {
-        switch(flag/1000000) {
-            case 2: return InformationCategory.NEUTRAL_EC;
-            case 3: return InformationCategory.ENEMY_EC;
-            case 4: return InformationCategory.NEW_ROBOT;
-            case 5: return InformationCategory.DETONATE;
-            case 6: return InformationCategory.SUB_ROBOT;
-            default: return InformationCategory.UNKOWN;
-        }
+        return InformationCategory.values()[(flag >> BIT_IC_OFFSET)];
     }
 
     public static int[] getDxDy(int flag) {
         int[] res = new int[2];
-        flag %= 1000000;
-        res[0] = flag / 1000;
-        res[1] = flag % 1000;
+        res[0] = (flag >> BIT_DX_OFFSET) & BIT_MASK_COORD;
+        res[1] = flag & BIT_MASK_COORD;
         return res;
     }
 
+    public static int getInf(int flag) {
+        return (flag & ~BIT_MASK_IC) >> BIT_INF_OFFSET;
+    }
+
     public static SubRobotType getSubRobotType(int flag) {
-        flag %= 1000000;
-        return SubRobotType.values()[flag];
+        return SubRobotType.values()[(flag & ~BIT_MASK_IC)];
     }
 }

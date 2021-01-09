@@ -32,12 +32,12 @@ public class Politician extends Robot {
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
-        if ((attackable.length != 0 || neutrals.length != 0) && rc.canEmpower(actionRadius)) {
-            //if (Util.verbose) System.out.println("empowering...");
+
+        if((attackable.length >= 3 || neutrals.length != 0) && rc.canEmpower(actionRadius)) {
             rc.empower(actionRadius);
-            //if (Util.verbose) System.out.println("empowered");
             return;
         }
+
         RobotInfo powerful = null;
         int max_influence = 0;
 
@@ -76,7 +76,8 @@ public class Politician extends Robot {
         RobotInfo bestSlanderer = null;
         max_influence = 0;
         for (RobotInfo robot : friendlySensable) {
-            if (robot.getType() == RobotType.POLITICIAN && rc.getFlag(robot.getID()) == 1 && robot.getInfluence() > max_influence) {
+            if (robot.getType() == RobotType.POLITICIAN && rc.canGetFlag(robot.getID()) && 
+                rc.getFlag(robot.getID()) == 1 && robot.getInfluence() > max_influence) {
                 if (Util.verbose) System.out.println("within sensing radius but not 6");
                 if (ECWithinSensable == null || robot.getLocation().distanceSquaredTo(ECWithinSensable) > robot.getType().sensorRadiusSquared) {
                     max_influence = robot.getInfluence();
@@ -90,7 +91,6 @@ public class Politician extends Robot {
             tryMoveDest(toMove);
         }
         
-
         RobotInfo weakest = null;
         int min_influence = 0;
         for (RobotInfo robot : sensable) {

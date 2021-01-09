@@ -42,10 +42,10 @@ public class Robot {
 
     public void takeTurn() throws GameActionException {
         turnCount += 1;
-        if (Util.verbose) System.out.println("Flag set: " + rc.getFlag(rc.getID()));
         if(rc.getFlag(rc.getID()) != nextFlag) {
             setFlag(nextFlag);
         }
+        if (Util.verbose) System.out.println("Flag set: " + Integer.toBinaryString(rc.getFlag(rc.getID())));
 
         if(resetFlagOnNewTurn && turnCount > 2)
             nextFlag = defaultFlag;
@@ -109,10 +109,11 @@ public class Robot {
                 int ecDY = dy + ecLoc.y - currLoc.y;
 
                 int flag = 0;
+                int inf = (int) Math.min(31, Math.ceil(Math.log(robot.getInfluence()) / Math.log(Comms.INF_LOG_BASE)));
                 if(robot.getTeam() == enemy) {
-                    flag = Comms.getFlag(InformationCategory.ENEMY_EC, ecDX, ecDY);
+                    flag = Comms.getFlag(InformationCategory.ENEMY_EC, inf, ecDX, ecDY);
                 } else {
-                    flag = Comms.getFlag(InformationCategory.NEUTRAL_EC, ecDX, ecDY);
+                    flag = Comms.getFlag(InformationCategory.NEUTRAL_EC, inf, ecDX, ecDY);
                 }
 
                 nextFlag = flag;

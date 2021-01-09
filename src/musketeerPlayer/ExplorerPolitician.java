@@ -33,7 +33,15 @@ public class ExplorerPolitician extends Robot {
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
-        if ((attackable.length != 0 || neutrals.length != 0) && rc.canEmpower(actionRadius)) {
+
+        
+        int min_attackable_conviction = rc.getConviction() / 3;
+        int attackable_conviction = 0;
+        for (RobotInfo robot : attackable) {
+            attackable_conviction += robot.getConviction();
+        }
+
+        if (attackable_conviction >= min_attackable_conviction && rc.canEmpower(actionRadius)) {
             //if (Util.verbose) System.out.println("empowering...");
             rc.empower(actionRadius);
             //if (Util.verbose) System.out.println("empowered");
@@ -41,9 +49,9 @@ public class ExplorerPolitician extends Robot {
         }
 
         RobotInfo powerful = null;
-        int max_influence = 0;
+        int max_influence = rc.getConviction() / 3;
         for (RobotInfo robot : sensable) {
-            int currInfluence = robot.getInfluence();
+            int currInfluence = robot.getConviction();
             if (robot.getType() == RobotType.MUCKRAKER && currInfluence > max_influence) {
                 powerful = robot;
                 max_influence = currInfluence;
