@@ -20,20 +20,14 @@ public class Politician extends Robot {
         if (Util.verbose) System.out.println("I am a normal politician; current influence: " + rc.getInfluence());
         if (Util.verbose) System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
-        Team enemy = rc.getTeam().opponent();
-        int sensingRadius = rc.getType().sensorRadiusSquared;
-        int actionRadius = rc.getType().actionRadiusSquared;
-        RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
-        RobotInfo[] sensable = rc.senseNearbyRobots(sensingRadius, enemy);
         RobotInfo[] within6 = rc.senseNearbyRobots(6, rc.getTeam());
-        RobotInfo[] friendlySensable = rc.senseNearbyRobots(sensingRadius, rc.getTeam());
 
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
 
-        if((attackable.length >= 3 || neutrals.length != 0) && rc.canEmpower(actionRadius)) {
+        if((enemyAttackable.length >= 3 || neutrals.length != 0) && rc.canEmpower(actionRadius)) {
             rc.empower(actionRadius);
             return;
         }
@@ -43,7 +37,7 @@ public class Politician extends Robot {
 
         MapLocation ECWithinSensable = null;
 
-        for (RobotInfo robot : sensable) {
+        for (RobotInfo robot : enemySensable) {
             int currInfluence = robot.getInfluence();
             if (robot.getType() == RobotType.MUCKRAKER && currInfluence > max_influence) {
                 powerful = robot;
@@ -93,7 +87,7 @@ public class Politician extends Robot {
         
         RobotInfo weakest = null;
         int min_influence = 0;
-        for (RobotInfo robot : sensable) {
+        for (RobotInfo robot : enemySensable) {
             int currInfluence = robot.getInfluence();
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && currInfluence < min_influence) {
                 weakest = robot;

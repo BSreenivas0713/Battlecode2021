@@ -30,15 +30,12 @@ public class Slanderer extends Robot {
         if(main_direction == null) {
             main_direction = Util.randomDirection();
         }
-        Team enemy = rc.getTeam().opponent();
-        int sensorRadius = rc.getType().sensorRadiusSquared;
-        RobotInfo[] enemiesInReach = rc.senseNearbyRobots(sensorRadius, enemy);
+
         RobotInfo[] neutralECs = rc.senseNearbyRobots(sensorRadius, Team.NEUTRAL);
-        RobotInfo[] friendlySensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
         MapLocation curr = rc.getLocation();
-        for (RobotInfo robot : enemiesInReach) {
+        for (RobotInfo robot : enemySensable) {
             double temp = curr.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;

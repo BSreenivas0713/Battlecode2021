@@ -17,19 +17,18 @@ public class Robot {
     static int actionRadius;
     static Team enemy;
     static RobotInfo[] enemySensable;
-    static RobotInfo[] friendlySensble;
+    static RobotInfo[] friendlySensable;
     static RobotInfo[] neutralSensable;
-    static RobotInfo[] attackable;
+    static RobotInfo[] enemyAttackable;
 
     public static Robot changeTo = null;
 
     public Robot(RobotController r) {
+        rc = r;
         enemy = rc.getTeam().opponent();
         sensorRadius = rc.getType().sensorRadiusSquared;
         actionRadius = rc.getType().actionRadiusSquared;
-        rc = r;
         defaultFlag = 0;
-        int sensorRadius = rc.getType().sensorRadiusSquared;
         RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
         MapLocation currLoc = rc.getLocation();
         for (RobotInfo robot : sensable) {
@@ -67,9 +66,9 @@ public class Robot {
 
     public void initializeGlobals() throws GameActionException {
         enemySensable = rc.senseNearbyRobots(sensorRadius, enemy);
-        friendlySensble = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
+        friendlySensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
         neutralSensable = rc.senseNearbyRobots(sensorRadius, Team.NEUTRAL);
-        attackable  = rc.senseNearbyRobots(actionRadius, enemy);
+        enemyAttackable  = rc.senseNearbyRobots(actionRadius, enemy);
     }
 
     /**
