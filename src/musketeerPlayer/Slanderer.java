@@ -8,7 +8,7 @@ public class Slanderer extends Robot {
     
     public Slanderer(RobotController r) {
         super(r);
-        defaultFlag = 1;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
     }
 
     public void takeTurn() throws GameActionException {
