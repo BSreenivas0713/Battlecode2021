@@ -18,7 +18,7 @@ public class Robot {
 
     public Robot(RobotController r) {
         rc = r;
-
+        defaultFlag = 0;
         int sensorRadius = rc.getType().sensorRadiusSquared;
         RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
         MapLocation currLoc = rc.getLocation();
@@ -35,7 +35,7 @@ public class Robot {
 
     public Robot(RobotController r, int currDx, int currDy) {
         rc = r;
-
+        defaultFlag = 0;
         dx = currDx;
         dy = currDy;
     }

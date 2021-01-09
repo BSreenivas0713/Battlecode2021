@@ -2,7 +2,7 @@ package musketeerplayer;
 import battlecode.common.*;
 
 public class Comms {
-    public static final int MIN_FLAG_MESSAGE = 1000000;
+    public static final int MIN_FLAG_MESSAGE = 1 << 6;
 
     public enum InformationCategory {
         NEUTRAL_EC,
@@ -21,7 +21,7 @@ public class Comms {
     }
 
     public static int addCoord(int flag, int dx, int dy) {
-        return flag*1000000 + dx*1000 + dy;
+        return flag*1 << 6 + dx*1 << 3 + dy;
     }
 
     // SUB_ROBOT
