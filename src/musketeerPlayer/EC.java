@@ -13,7 +13,8 @@ public class EC extends Robot {
         PHASE1,
         PHASE2,
         RUSHING,
-        SAVING_FOR_RUSH
+        SAVING_FOR_RUSH,
+        MAKING_DEFENSE, 
     };
 
     static int robotCounter;
@@ -35,6 +36,9 @@ public class EC extends Robot {
     static boolean needToMakeBodyguard = false;
 
     // TODO: Better slanderer pathfinding. Wallscraping muckrakers. Better defense
+    // IDEA: Big Defenders should not turn into exploreres unless they are out of range of our base
+    // TODO: small defenders to protect the base, increase range of spending on big politicians(if money allows), implement spawn killing if it is worth it, 
+    // TODO: better money management strategy(I.E don't just making 1000 slanderers quicker and quicker in late game)
     public EC(RobotController r) {
         super(r);
         ids = new ArrayList<Integer>();
@@ -238,7 +242,7 @@ public class EC extends Robot {
     }
 
     public boolean createDefenderIfNeeded() throws GameActionException {
-        Direction missingDefenderDirection = checkMissingDefender();
+        Direction missingDefenderDirection = Direction.NORTH;//checkMissingDefender();
         if(turnCount >=Util.timeBeforeDefenders && robotCounter % Util.defenderPoliticianFrequency == 4 && 
             missingDefenderDirection != null) {
             if (Util.verbose) System.out.println("building defender politician in direction: " + missingDefenderDirection);

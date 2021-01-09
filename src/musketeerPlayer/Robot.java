@@ -13,10 +13,20 @@ public class Robot {
     static int defaultFlag = 0;
     static int nextFlag = 0;
     static boolean resetFlagOnNewTurn = true;
+    static int sensorRadius;
+    static int actionRadius;
+    static Team enemy;
+    static RobotInfo[] enemySensable;
+    static RobotInfo[] friendlySensble;
+    static RobotInfo[] neutralSensable;
+    static RobotInfo[] attackable;
 
     public static Robot changeTo = null;
 
     public Robot(RobotController r) {
+        enemy = rc.getTeam().opponent();
+        sensorRadius = rc.getType().sensorRadiusSquared;
+        actionRadius = rc.getType().actionRadiusSquared;
         rc = r;
         defaultFlag = 0;
         int sensorRadius = rc.getType().sensorRadiusSquared;
@@ -34,6 +44,9 @@ public class Robot {
     }
 
     public Robot(RobotController r, int currDx, int currDy) {
+        enemy = rc.getTeam().opponent();
+        sensorRadius = rc.getType().sensorRadiusSquared;
+        actionRadius = rc.getType().actionRadiusSquared;
         rc = r;
         defaultFlag = 0;
         dx = currDx;
@@ -41,6 +54,7 @@ public class Robot {
     }
 
     public void takeTurn() throws GameActionException {
+        initializeGlobals();
         turnCount += 1;
         if(rc.getFlag(rc.getID()) != nextFlag) {
             setFlag(nextFlag);
@@ -49,6 +63,13 @@ public class Robot {
 
         if(resetFlagOnNewTurn && turnCount > 2)
             nextFlag = defaultFlag;
+    }
+
+    public void initializeGlobals() throws GameActionException {
+        enemySensable = rc.senseNearbyRobots(sensorRadius, enemy);
+        friendlySensble = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
+        neutralSensable = rc.senseNearbyRobots(sensorRadius, Team.NEUTRAL);
+        attackable  = rc.senseNearbyRobots(actionRadius, enemy);
     }
 
     /**
