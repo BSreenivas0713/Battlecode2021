@@ -35,7 +35,7 @@ public class Util {
     static final int minRushInfluence = 200;
     static final int minECRushConviction = 150;
 
-    static final boolean verbose = false;
+    static final boolean verbose = true;
 
     /**
      * Returns a random Direction.
