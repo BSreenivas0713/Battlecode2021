@@ -35,7 +35,8 @@ public class Util {
     static final int minRushInfluence = 200;
     static final int minECRushConviction = 150;
     static final int timeBeforeDefenders = 50;
-    static final int numGolems = 4;
+    static final int numDefenders = 4;
+    static final int minTimeBetweenRushes = 50;
 
     static final boolean verbose = true;
 

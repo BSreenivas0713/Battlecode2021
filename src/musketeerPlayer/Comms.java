@@ -15,9 +15,7 @@ public class Comms {
         NEUTRAL_EC,
         ENEMY_EC,
         NEW_ROBOT,
-        DETONATE,
         TARGET_ROBOT,
-        ATTACKING,
         ROBOT_TYPE,
     }
 
