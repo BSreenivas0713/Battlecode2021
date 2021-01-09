@@ -51,5 +51,43 @@ public class DefenderPolitician extends Robot {
             Direction toMove = rc.getLocation().directionTo(enemyRobot.getLocation());
             tryMoveDest(toMove);
         }
+
+        int distToClosestDefender = 500;
+        MapLocation closestDefenderLoc = null;
+        int distToEC = 500;
+        MapLocation ECLoc = null;
+        for (RobotInfo robot: friendlySensable) {
+            if(rc.canGetFlag(robot.getID())) {
+                if(rc.getFlag(robot.getID()) == defaultFlag) {
+                    int distToCurrDefender = rc.getLocation().distanceSquaredTo(robot.getLocation());
+                    if(distToCurrDefender < distToClosestDefender) {
+                        distToClosestDefender = distToCurrDefender;
+                        closestDefenderLoc = robot.getLocation();
+                    }
+                }
+            }
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                boolean seenCenter = false;
+                for(RobotInfo secondRobot: rc.senseNearbyRobots(actionRadius, rc.getTeam())) {
+                    if(secondRobot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                        seenCenter = true;
+                        distToEC = rc.getLocation().distanceSquaredTo(robot.getLocation());
+                        ECLoc = robot.getLocation();
+                    }
+                }
+                if(!seenCenter) {
+                    Direction toMove = rc.getLocation().directionTo(robot.getLocation());
+                    tryMoveDest(toMove);
+                }
+            }
+        }
+        if(distToEC <= 2) {
+            Direction toMove = rc.getLocation().directionTo(ECLoc).opposite();
+            tryMoveDest(toMove);
+        }
+        if(closestDefenderLoc != null) {
+            Direction toMove = rc.getLocation().directionTo(closestDefenderLoc).opposite();
+            tryMoveDest(toMove);
+        }
     }
 }

@@ -33,15 +33,21 @@ public class GolemPolitician extends Robot {
             Util.vPrintln("empowered");
             return;
         }
-
+        
+        int distToEC = 500;
         boolean sensesEC = false;
+        MapLocation ECLoc = null;
+        MapLocation closestGolemLoc = null; 
+        int distToClosestGolem = 500;
         for (RobotInfo robot: friendlySensable) {
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 sensesEC = true;
                 boolean seenCenter = false;
-                for(RobotInfo secondRobot: friendlySensable) {
+                for(RobotInfo secondRobot: rc.senseNearbyRobots(actionRadius, rc.getTeam())) {
                     if(secondRobot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                         seenCenter = true;
+                        distToEC = rc.getLocation().distanceSquaredTo(robot.getLocation());
+                        ECLoc = robot.getLocation();
                     }
                 }
                 if(!seenCenter) {
@@ -49,8 +55,16 @@ public class GolemPolitician extends Robot {
                     tryMoveDest(toMove);
                 }
             }
+            else if(rc.canGetFlag(robot.getID())) {
+                if(rc.getFlag(robot.getID()) == defaultFlag) {
+                    int distToCurrGolem = rc.getLocation().distanceSquaredTo(robot.getLocation());
+                    if(distToCurrGolem < distToClosestGolem) {
+                        distToClosestGolem = distToCurrGolem;
+                        closestGolemLoc = robot.getLocation();
+                    }
+                }
+            }
         }
-        Util.vPrintln("Do I see an EC: " + sensesEC);
         RobotInfo enemyRobot = null;
         int maxEnemyConviction = min_attackable_conviction - 1;
         for (RobotInfo robot : enemySensable) {
@@ -64,7 +78,14 @@ public class GolemPolitician extends Robot {
             Direction toMove = rc.getLocation().directionTo(enemyRobot.getLocation());
             tryMoveDest(toMove);
         }
-
+        if(distToEC <= 2) {
+            Direction toMove = rc.getLocation().directionTo(ECLoc).opposite();
+            tryMoveDest(toMove);
+        }
+        if(closestGolemLoc != null) {
+            Direction toMove = rc.getLocation().directionTo(closestGolemLoc).opposite();
+            tryMoveDest(toMove);
+        }
         if (!sensesEC) {
             changeTo = new ExplorerPolitician(rc, dx, dy);
             return;
