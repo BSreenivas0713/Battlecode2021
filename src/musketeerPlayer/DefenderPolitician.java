@@ -10,6 +10,10 @@ public class DefenderPolitician extends Robot {
     public DefenderPolitician(RobotController r) {
         super(r);
     }
+    
+    public DefenderPolitician(RobotController r, int dx, int dy) {
+        super(r);
+    }
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();

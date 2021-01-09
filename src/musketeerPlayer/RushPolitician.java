@@ -38,8 +38,10 @@ public class RushPolitician extends Robot {
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         
         for(RobotInfo robot : attackable) {
+            MapLocation loc = robot.getLocation();
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
-                rc.canEmpower(actionRadius)){
+                enemyLocation.isWithinDistanceSquared(loc, 2) &&
+                rc.canEmpower(actionRadius)) {
                 //if (Util.verbose) System.out.println("empowering...");
                 rc.empower(actionRadius);
                 //if (Util.verbose) System.out.println("empowered");
@@ -48,8 +50,10 @@ public class RushPolitician extends Robot {
         }
         
         for(RobotInfo robot : neutrals) {
+            MapLocation loc = robot.getLocation();
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
-                rc.canEmpower(actionRadius)){
+                enemyLocation.isWithinDistanceSquared(loc, 2) &&
+                rc.canEmpower(actionRadius)) {
                 //if (Util.verbose) System.out.println("empowering...");
                 rc.empower(actionRadius);
                 //if (Util.verbose) System.out.println("empowered");
@@ -58,11 +62,10 @@ public class RushPolitician extends Robot {
         }
 
         for (RobotInfo robot : friendlies) {
-            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.equals(robot.getLocation())) {
-                changeTo = new ExplorerPolitician(rc, dx, dy);
-                if (rc.getRoundNum() % 3 == 0) {
-                    changeTo = new Politician(rc, dx, dy);
-                }
+            MapLocation loc = robot.getLocation();
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 2) &&
+                loc.isWithinDistanceSquared(rc.getLocation(), actionRadius)) {
+                changeTo = new DefenderPolitician(rc, dx, dy);
                 return;
             }
         }

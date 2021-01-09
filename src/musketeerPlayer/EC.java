@@ -5,75 +5,168 @@ import musketeerplayer.Comms.*;
 import musketeerplayer.Util.*;
 import java.util.ArrayList;
 import java.util.ArrayDeque;
+import java.util.stream.Stream;
 
 
 public class EC extends Robot {
+    static enum State {
+        PHASE1,
+        PHASE2,
+        RUSHING,
+        SAVING_FOR_RUSH
+    };
+
     static int robotCounter;
     static int sendTroopsSemaphore = 0;
     static RobotType toBuild;
     static int influence;
+
     static int currRoundNum;
     static int currInfluence;
     static boolean needToBuild;
-    static ArrayList<Integer> ids;
-    static ArrayDeque<Integer> ECflags;
 
+    static ArrayList<Integer> ids; // TODO USE HASHSET
+    static ArrayDeque<Integer> ECflags;
+    static ArrayDeque<Integer> ECdxdys;
+
+    static State currentState;
+    static int requiredInfluence;
+
+    static boolean needToMakeBodyguard = false;
+
+    // TODO: Better slanderer pathfinding. Wallscraping muckrakers. Better defense
     public EC(RobotController r) {
         super(r);
         ids = new ArrayList<Integer>();
         ECflags = new ArrayDeque<Integer>();
+        ECdxdys = new ArrayDeque<Integer>();
+        currentState = State.PHASE1;
     }
-    public void buildRobot(RobotType toBuild, int influence) throws GameActionException {
+
+    public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
+        if(Util.verbose) System.out.println("building robot type: " + toBuild + " influence: " + influence);
         Direction main_direction = Util.randomDirection();
         int num_direction = 8;
         while(num_direction != 0) {
             if (rc.canBuildRobot(toBuild, main_direction, influence)) {
+                if(Util.verbose) System.out.println("built robot");
                 rc.buildRobot(toBuild, main_direction, influence);
+
+                if(needToMakeBodyguard) {
+                    needToMakeBodyguard = false;
+                }
+                if(toBuild == RobotType.SLANDERER) {
+                    needToMakeBodyguard = true;
+                }
+                resetFlagOnNewTurn = true;
                 robotCounter += 1;
-                break;
+                return true;
             }
             main_direction = main_direction.rotateRight();
             num_direction--;
         }
+
+        return false;
     }
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-        if (Util.verbose) System.out.println("I am a " + rc.getType() + "; current influence: " + rc.getInfluence());
+        
+        initializeGlobals();
+
+        if (Util.verbose) System.out.println("I am a " + rc.getType() + "; current influence: " + currInfluence);
         if (Util.verbose) System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
         if (Util.verbose) System.out.println("num of ec's found: " + ECflags.size());
-        initializeGobals();
+        if (Util.verbose) System.out.println("state: " + currentState);
+
         findNearIds();
-        // if (rc.canBid(biddingInfluence) && currRoundNum > 500) {
-        //     rc.bid(biddingInfluence);
-        // }
-        // else if (rc.canBid(currInfluence / 30)) {
-        //     rc.bid(currInfluence / 30);
-        // }
+        checkForTowers();
+
+        int biddingInfluence = currInfluence / 20;
+        if (rc.canBid(biddingInfluence) && currRoundNum > 1000) {
+            rc.bid(biddingInfluence);
+        }
 
         // if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
         //     if (Util.verbose) System.out.println("spawn killing politicians");
         //     influence = 6*rc.getInfluence()/8;
         //     toBuild = RobotType.POLITICIAN;
         // }
-        if(createDefenderIfNeeded()) {} 
-        //else if(tryDefendARush()) {}
-        else if(trySendARush()) {}
-        else {doMainStrategy();}
-        if(needToBuild) {
-            buildRobot(toBuild, influence);
+        switch(currentState) {
+            case PHASE1:
+                System.out.println("Phase1 state");
+                if(currInfluence >= 150 && robotCounter % 5 == 0) {
+                    toBuild = RobotType.SLANDERER;
+                    influence = Math.min(1000, currInfluence);
+                } else {
+                    toBuild = RobotType.MUCKRAKER;
+                    influence = 1;
+                }
+                
+                if(needToBuild) {
+                    buildRobot(toBuild, influence);
+                }
+                
+                tryStartSavingForRush();
+                break;
+            case PHASE2:
+                System.out.println("Phase2 state");
+                if(needToMakeBodyguard) {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = currInfluence;
+                    signalRobotType(Comms.SubRobotType.POL_BODYGUARD);
+                } else if(7 * currInfluence / 8 >= 150 && robotCounter % 5 == 0) {
+                    toBuild = RobotType.SLANDERER;
+                    influence = Math.min(1000, 7 * currInfluence / 8);
+                } else {
+                    toBuild = RobotType.MUCKRAKER;
+                    influence = 1;
+                }
+                
+                if(needToBuild) {
+                    buildRobot(toBuild, influence);
+                }
+
+                // if(createDefenderIfNeeded()) {} 
+                // else if(tryDefendARush()) {}
+                // else {doMainStrategy();}
+                tryStartSavingForRush();
+                break;
+            case RUSHING:
+                trySendARush();
+                break;
+            case SAVING_FOR_RUSH:
+                toBuild = RobotType.MUCKRAKER;
+                influence = 1;
+                
+                if(needToBuild) {
+                    buildRobot(toBuild, influence);
+                }
+
+                if(requiredInfluence < currInfluence) {
+                    sendTroopsSemaphore = 1;
+                    resetFlagOnNewTurn = false;
+                    nextFlag = ECflags.peek();
+                    currentState = State.RUSHING;
+                }
+                break;
         }
-        checkForTowers();
-        tryStartRush();
     }
-    public void initializeGobals() throws GameActionException {
+
+    public void initializeGlobals() throws GameActionException {
         toBuild = null;
         influence = 0;
         needToBuild = true;
-        int currRoundNum = rc.getRoundNum();
-        int currInfluence = rc.getInfluence();
+        currRoundNum = rc.getRoundNum();
+        currInfluence = rc.getInfluence();
+
+        if(currentState == State.PHASE1 && turnCount > Util.phaseOne) {
+            currentState = State.PHASE2;
         }
+    }
+
     public void findNearIds() throws GameActionException {
+        if(Util.verbose) System.out.println("Finding nearby robots");
         int sensorRadius = rc.getType().sensorRadiusSquared;
         RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
         for(RobotInfo robot : sensable) {
@@ -87,28 +180,61 @@ public class EC extends Robot {
         }
         if (Util.verbose) System.out.println("num id's found: " + ids.size());
     }
+
     public void checkForTowers() throws GameActionException {
         ids.removeIf(robotID -> !rc.canGetFlag(robotID));
         for(int id : ids) {
             if(rc.canGetFlag(id)) {
                 int flag = rc.getFlag(id);
+                int dxdy = flag & Comms.BIT_MASK_COORDS;
                 Comms.InformationCategory flagIC = Comms.getIC(flag);
-                if(flag > Comms.MIN_FLAG_MESSAGE && !ECflags.contains(flag) && 
-                (flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC)) {
+                if((flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC) &&
+                    !ECdxdys.contains(dxdy)) {
                     ECflags.add(flag);
+                    ECdxdys.add(dxdy);
+                }
+
+                if(!ECdxdys.isEmpty() && ECdxdys.peek() == dxdy) {
+                    ECflags.remove();
+                    ECflags.offerFirst(flag);
                 }
             }
         }
     }
 
-    public void tryStartRush() throws GameActionException {
+    public void tryStartSavingForRush() throws GameActionException {
         if (!ECflags.isEmpty() && sendTroopsSemaphore == 0) {
-        int currFlag = ECflags.peek();
-        sendTroopsSemaphore = 6;
-        resetFlagOnNewTurn = false;
-        nextFlag = currFlag;
-        // setFlag(currFlag);
+            int currFlag = ECflags.peek();
+            requiredInfluence = (int)  Math.exp(Comms.getInf(currFlag) * Math.log(Comms.INF_LOG_BASE)) * 4 + 100;
+            currentState = State.SAVING_FOR_RUSH;
         }
+    }
+
+    public boolean trySendARush() throws GameActionException {
+        if (Util.verbose) System.out.println("building rush bots");
+        int currFlag = rc.getFlag(rc.getID());
+        toBuild = RobotType.POLITICIAN;
+        // if (Comms.getIC(currFlag) == Comms.InformationCategory.ENEMY_EC) {
+        //     toBuild = RobotType.MUCKRAKER;
+        // }
+        if(sendTroopsSemaphore != 1) {
+            influence = 20;
+        } else {
+            influence = (int) Math.ceil(Math.exp(Comms.getInf(currFlag) * Math.log(Comms.INF_LOG_BASE)) * 4);
+        }
+
+        
+        if(buildRobot(toBuild, influence)) {
+            sendTroopsSemaphore--;
+        }
+
+        if (sendTroopsSemaphore == 0) {
+            ECflags.remove();
+            ECdxdys.remove();
+            resetFlagOnNewTurn = true;
+            currentState = State.PHASE2;
+        }
+        return true;
     }
 
     public boolean createDefenderIfNeeded() throws GameActionException {
@@ -117,7 +243,7 @@ public class EC extends Robot {
             missingDefenderDirection != null) {
             if (Util.verbose) System.out.println("building defender politician in direction: " + missingDefenderDirection);
             toBuild = RobotType.POLITICIAN;
-            influence = Math.max(50, rc.getInfluence() / 20);
+            influence = Math.max(50, currInfluence / 20);
             
             if (rc.canBuildRobot(toBuild, missingDefenderDirection, influence)) {
                 signalRobotType(Comms.SubRobotType.POL_DEFENDER);
@@ -155,29 +281,9 @@ public class EC extends Robot {
         return false;
     }
 
-    public boolean trySendARush() throws GameActionException {
-        if (sendTroopsSemaphore > 0) {
-            if (Util.verbose) System.out.println("building rush bots");
-            int currFlag = rc.getFlag(rc.getID());
-            toBuild = RobotType.POLITICIAN;
-            // if (Comms.getIC(currFlag) == Comms.InformationCategory.ENEMY_EC) {
-            //     toBuild = RobotType.MUCKRAKER;
-            // }
-            influence = Math.max(50,rc.getInfluence()/30);
-
-            sendTroopsSemaphore--;
-            if (sendTroopsSemaphore == 0) {
-                ECflags.remove();
-                resetFlagOnNewTurn = true;
-            }
-            return true;
-        }
-        return false;
-    }
-
     public void doMainStrategy() throws GameActionException {
-        int slandererInfluence = Math.min(Math.max(100, rc.getInfluence() / 10), 1000);
-        int normalInfluence = Math.max(50, rc.getInfluence() / 20); 
+        int slandererInfluence = Math.min(Math.max(100, currInfluence / 10), 1000);
+        int normalInfluence = Math.max(50, currInfluence / 20);
         if (currRoundNum < Util.phaseOne) {
             if (Util.verbose) System.out.println("phase 1 default build troop behavior");
             switch(robotCounter % 9) {
@@ -239,7 +345,9 @@ public class EC extends Robot {
     }
 
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {
-        if (resetFlagOnNewTurn)
+        if (resetFlagOnNewTurn) {
             nextFlag = Comms.getFlag(Comms.InformationCategory.SUB_ROBOT, type);
+            resetFlagOnNewTurn = false;
+        }
     }
 }

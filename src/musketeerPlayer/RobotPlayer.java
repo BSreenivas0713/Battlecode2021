@@ -24,7 +24,7 @@ public strictfp class RobotPlayer {
                 for (RobotInfo robot : sensable) {
                     int botFlag = rc.getFlag(robot.getID());
                     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
-                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && botFlag > Comms.MIN_FLAG_MESSAGE) {
+                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && flagIC != Comms.InformationCategory.EMPTY) {
                         if (Util.verbose) System.out.println("Flag for creation: " + botFlag);
                         switch(flagIC) {
                             case NEUTRAL_EC:
@@ -48,6 +48,8 @@ public strictfp class RobotPlayer {
                                         bot = new Politician(rc);
                                         break;
                                 }
+                                break;
+                            default:
                                 break;
                         }
                     }
