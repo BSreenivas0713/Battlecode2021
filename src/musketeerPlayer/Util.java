@@ -55,4 +55,8 @@ public class Util {
     static RobotType randomSpawnableRobotType() {
         return spawnableRobot[(int) (Math.random() * spawnableRobot.length)];
     }
+
+    static void vPrintln(String str) {
+        if(verbose) System.out.println(str);
+    }
 }

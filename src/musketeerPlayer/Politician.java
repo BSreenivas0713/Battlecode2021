@@ -17,8 +17,8 @@ public class Politician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        if (Util.verbose) System.out.println("I am a normal politician; current influence: " + rc.getInfluence());
-        if (Util.verbose) System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        Util.vPrintln("I am a normal politician; current influence: " + rc.getInfluence());
+        Util.vPrintln("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         RobotInfo[] within6 = rc.senseNearbyRobots(6, rc.getTeam());
@@ -62,7 +62,7 @@ public class Politician extends Robot {
 
         for (RobotInfo robot : within6) {
             if (robot.getType() == RobotType.POLITICIAN && rc.getFlag(robot.getID()) == 1 && !within2ofEC) {
-                if (Util.verbose) System.out.println("within radius 6");
+                Util.vPrintln("within radius 6");
                 return;
             }
         }
@@ -72,7 +72,7 @@ public class Politician extends Robot {
         for (RobotInfo robot : friendlySensable) {
             if (robot.getType() == RobotType.POLITICIAN && rc.canGetFlag(robot.getID()) && 
                 rc.getFlag(robot.getID()) == 1 && robot.getInfluence() > max_influence) {
-                if (Util.verbose) System.out.println("within sensing radius but not 6");
+                Util.vPrintln("within sensing radius but not 6");
                 if (ECWithinSensable == null || robot.getLocation().distanceSquaredTo(ECWithinSensable) > robot.getType().sensorRadiusSquared) {
                     max_influence = robot.getInfluence();
                 }

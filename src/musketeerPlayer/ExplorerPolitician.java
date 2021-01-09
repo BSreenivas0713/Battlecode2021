@@ -19,8 +19,8 @@ public class ExplorerPolitician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        if (Util.verbose) System.out.println("I am a explorer politician; current influence: " + rc.getInfluence());
-        if (Util.verbose) System.out.println("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        Util.vPrintln("I am a explorer politician; current influence: " + rc.getInfluence());
+        Util.vPrintln("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
 
 
@@ -36,9 +36,9 @@ public class ExplorerPolitician extends Robot {
         }
 
         if (attackable_conviction >= min_attackable_conviction && rc.canEmpower(actionRadius)) {
-            //if (Util.verbose) System.out.println("empowering...");
+            //Util.vPrintln("empowering...");
             rc.empower(actionRadius);
-            //if (Util.verbose) System.out.println("empowered");
+            //Util.vPrintln("empowered");
             return;
         }
 

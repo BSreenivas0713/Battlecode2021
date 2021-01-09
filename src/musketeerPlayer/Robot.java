@@ -58,7 +58,7 @@ public class Robot {
         if(rc.getFlag(rc.getID()) != nextFlag) {
             setFlag(nextFlag);
         }
-        if (Util.verbose) System.out.println("Flag set: " + Integer.toBinaryString(rc.getFlag(rc.getID())));
+        Util.vPrintln("Flag set: " + Integer.toBinaryString(rc.getFlag(rc.getID())));
 
         if(resetFlagOnNewTurn && turnCount > 2)
             nextFlag = defaultFlag;
@@ -79,7 +79,7 @@ public class Robot {
      * @throws GameActionException
      */
     static boolean tryMove(Direction dir) throws GameActionException {
-        //if (Util.verbose) System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
+        //Util.vPrintln("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
         if (rc.canMove(dir)) {
             rc.move(dir);
             dx += dir.getDeltaX();
@@ -89,7 +89,7 @@ public class Robot {
     }
 
     static boolean tryMoveDest(Direction target_dir) throws GameActionException {
-        // if (Util.verbose) System.out.println("Dest direction: " + dir);
+        // Util.vPrintln("Dest direction: " + dir);
         Direction[] dirs = {target_dir, target_dir.rotateRight(), target_dir.rotateLeft(), 
             target_dir.rotateRight().rotateRight(), target_dir.rotateLeft().rotateLeft()};
 
