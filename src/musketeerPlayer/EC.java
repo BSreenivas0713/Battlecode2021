@@ -5,6 +5,7 @@ import musketeerplayer.Comms.*;
 import musketeerplayer.Util.*;
 import java.util.ArrayList;
 import java.util.ArrayDeque;
+import java.util.PriorityQueue;
 import java.util.stream.Stream;
 
 
@@ -31,15 +32,42 @@ public class EC extends Robot {
     static boolean needToBuild;
     static boolean muckrackerNear;
 
+    static class RushFlag implements Comparable<RushFlag> {
+        int requiredInfluence;
+        int dx;
+        int dy;
+        int flag;
+
+        RushFlag(int r, int x, int y, int f) {
+            requiredInfluence = r;
+            dx = x;
+            dy = y;
+            flag = f;
+        }
+
+        public int compareTo(RushFlag other) {
+            return Integer.compare(requiredInfluence, other.requiredInfluence);
+        }
+
+        public boolean equals(Object o) { 
+            if (o == this) { 
+                return true; 
+            } 
+        
+            if (!(o instanceof RushFlag)) { 
+                return false; 
+            }
+            RushFlag other = (RushFlag) o;
+            return dx == other.dx && dy == other.dy;
+        }
+    }
+
     static ArrayList<Integer> ids; // TODO USE HASHSET
-    static ArrayDeque<Integer> ECflags;
-    static ArrayDeque<Integer> ECdxdys;
+    static PriorityQueue<RushFlag> ECflags;
     static ArrayDeque<State> stateStack;
 
     static State currentState;
     static State prevState;
-
-    static int requiredInfluence;
 
     static boolean needToMakeBodyguard = false;
     static int lastRush = 0;
@@ -56,8 +84,7 @@ public class EC extends Robot {
     public EC(RobotController r) {
         super(r);
         ids = new ArrayList<Integer>();
-        ECflags = new ArrayDeque<Integer>();
-        ECdxdys = new ArrayDeque<Integer>();
+        ECflags = new PriorityQueue<RushFlag>();
         stateStack = new ArrayDeque<State>();
         currentState = State.PHASE1;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
@@ -151,10 +178,12 @@ public class EC extends Robot {
                 trySendARush();
                 break;
             case SAVING_FOR_RUSH:
+                RushFlag targetEC = ECflags.peek();
+                int requiredInfluence = targetEC.requiredInfluence;
+                int[] currDxDy = {targetEC.dx, targetEC.dy};
                 toBuild = RobotType.MUCKRAKER;
                 influence = 1;
-                int[] CurrDxDy =  Comms.getDxDy(ECdxdys.peek());
-                Util.vPrintln("Required Influence: " + requiredInfluence + "; DxDy: " + (CurrDxDy[0] - Util.dOffset) +  ", " + (CurrDxDy[1] - Util.dOffset));
+                Util.vPrintln("Required Influence: " + requiredInfluence + "; DxDy: " + (currDxDy[0] - Util.dOffset) +  ", " + (currDxDy[1] - Util.dOffset));
                 if(needToBuild) {
                     buildRobot(toBuild, influence);
                 }
@@ -162,7 +191,7 @@ public class EC extends Robot {
                 if(requiredInfluence < currInfluence) {
                     sendTroopsSemaphore = 1;
                     resetFlagOnNewTurn = false;
-                    nextFlag = ECflags.peek();
+                    nextFlag = targetEC.flag;
                     currentState = State.RUSHING;
                 }
                 tryStartMakingDefenders();
@@ -239,19 +268,24 @@ public class EC extends Robot {
                 int dxdy = flag & Comms.BIT_MASK_COORDS;
                 Comms.InformationCategory flagIC = Comms.getIC(flag);
                 if((flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC)) {
-                    if(!ECdxdys.isEmpty() && ECdxdys.peek() == dxdy) {
-                        ECflags.remove();
-                        ECflags.offerFirst(flag);
-                        requiredInfluence = (int)  Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE)) * 4;  
-                        Util.vPrintln("required influence updated as follows: " + requiredInfluence); 
+                    int currReqInf = (int)  Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE)) * 4;
+                    int[] currDxDy = Comms.getDxDy(dxdy);
+                    RushFlag rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag);
+
+                    if(ECflags.contains(rushFlag)) {
+                        ECflags.remove(rushFlag);
                     }
-                    else {
-                        Util.vPrintln("no update made.");
-                    }
-                    if(!ECdxdys.contains(dxdy)) {
-                    ECflags.add(flag);
-                    ECdxdys.add(dxdy);
-                    }
+                    ECflags.add(rushFlag);
+
+                    // if(!ECdxdys.isEmpty() && ECdxdys.peek().equals(rushFlag)) {
+                    //     ECflags.remove();
+                    //     ECflags.offerFirst(flag);
+                    //     requiredInfluence = (int)  Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE)) * 4;  
+                    //     Util.vPrintln("required influence updated as follows: " + requiredInfluence); 
+                    // }
+                    // else {
+                    //     Util.vPrintln("no update made.");
+                    // }
                     cleanUpCount = -1;
                     currentState = prevState;
                 }
@@ -271,8 +305,6 @@ public class EC extends Robot {
 
     public boolean tryStartSavingForRush() throws GameActionException {
         if (!ECflags.isEmpty() && sendTroopsSemaphore == 0 && turnCount > lastRush + Util.minTimeBetweenRushes) {
-            int currFlag = ECflags.peek();
-            requiredInfluence = (int)  Math.exp(Comms.getInf(currFlag) * Math.log(Comms.INF_LOG_BASE)) * 4;
             stateStack.push(currentState);
             currentState = State.SAVING_FOR_RUSH;
             return true;
@@ -299,7 +331,7 @@ public class EC extends Robot {
         if(sendTroopsSemaphore != 1) {
             influence = 20;
         } else {
-            influence = requiredInfluence;
+            influence = ECflags.peek().requiredInfluence;
         }
         
         if(buildRobot(toBuild, influence)) {
@@ -308,7 +340,6 @@ public class EC extends Robot {
 
         if (sendTroopsSemaphore == 0) {
             ECflags.remove();
-            ECdxdys.remove();
             resetFlagOnNewTurn = true;
             currentState = stateStack.pop();
             lastRush = turnCount;
