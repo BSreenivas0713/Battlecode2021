@@ -266,6 +266,7 @@ public class EC extends Robot {
 
     public void checkForTowers() throws GameActionException {
         ids.removeIf(robotID -> !rc.canGetFlag(robotID));
+        int i = 0;
         for(int id : ids) {
             if(rc.canGetFlag(id)) {
                 int flag = rc.getFlag(id);
@@ -290,13 +291,17 @@ public class EC extends Robot {
                     ECflags.remove(rushFlag);
                 }
             }
+            i++;
+            if (i >= 100) {
+                break;
+            }
         }
         cleanUpCount++;
     }
 
     public boolean tryStartCleanup() throws GameActionException {
         Util.vPrintln("Cleanup count: " + cleanUpCount);
-        if (cleanUpCount > Util.startCleanupThreshold) {
+        if (cleanUpCount > Util.startCleanupThreshold && currentState != State.CLEANUP) {
             stateStack.push(currentState);
             currentState = State.CLEANUP;
             return true;

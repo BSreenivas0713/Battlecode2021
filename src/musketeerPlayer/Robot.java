@@ -69,7 +69,6 @@ public class Robot {
     }
 
     public void initializeGlobals() throws GameActionException {
-        System.out.println("Initializing sensable arrays");
         enemySensable = rc.senseNearbyRobots(sensorRadius, enemy);
         friendlySensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
         neutralSensable = rc.senseNearbyRobots(sensorRadius, Team.NEUTRAL);
