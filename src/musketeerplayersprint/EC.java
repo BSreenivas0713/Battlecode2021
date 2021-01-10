@@ -219,16 +219,16 @@ public class EC extends Robot {
                 }
                 break;
             case CLEANUP:
-                if(currInfluence >= 100 && robotCounter % 2 == 0) {
+                if(currInfluence >= 100 && robotCounter % 2 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
                     influence = currInfluence / 2;
                 }
-                else {
+                else if(currInfluence >= 100) {
                     toBuild = RobotType.POLITICIAN;
                     influence = Util.cleanupPoliticianInfluence;
                     signalRobotType(Comms.SubRobotType.POL_CLEANUP);
                 } 
-                if(needToBuild) {
+                if(needToBuild && toBuild != null) {
                     buildRobot(toBuild, influence);
                 }
                 break;
