@@ -5,7 +5,6 @@ import musketeerplayer.Util.*;
 
 public class Muckracker extends Robot {
     static Direction main_direction;
-    static boolean muckraker_Found_EC;
 
     public Muckracker(RobotController r) {
         super(r);
@@ -30,7 +29,7 @@ public class Muckracker extends Robot {
                 powerful = robot;
             }
         }
-
+        boolean muckraker_Found_EC = false;
         MapLocation nearbyEC = null;
         for (RobotInfo robot : enemyAttackable) {
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
