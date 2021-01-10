@@ -136,6 +136,7 @@ public class EC extends Robot {
                 rc.bid(biddingInfluence);
             }
         }
+        currInfluence = rc.getInfluence();
         muckrackerNear = checkIfMuckrakerNear();
         // if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
         //     Util.vPrintln("spawn killing politicians");
@@ -281,7 +282,7 @@ public class EC extends Robot {
                 int dxdy = flag & Comms.BIT_MASK_COORDS;
                 Comms.InformationCategory flagIC = Comms.getIC(flag);
                 if((flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC)) {
-                    int currReqInf = (int)  Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE)) * 4;
+                    int currReqInf = (int)  Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE)) * 4 + 10;
                     int[] currDxDy = Comms.getDxDy(dxdy);
                     RushFlag rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag);
 
@@ -331,7 +332,8 @@ public class EC extends Robot {
         }
         return false;
     }
-
+    
+    // WE wILL NOT BE MAKING DEFENDERS
     public boolean tryStartMakingDefenders() throws GameActionException {
         // if(checkNumDefenders() < Util.numDefenders) {
         //     stateStack.push(currentState);
