@@ -27,7 +27,7 @@ public class GolemPolitician extends Robot {
             attackable_conviction += robot.getConviction();
         }
 
-        if (attackable_conviction >= min_attackable_conviction && rc.canEmpower(actionRadius)) {
+        if ((attackable_conviction >= min_attackable_conviction || enemyAttackable.length >= 3) && rc.canEmpower(actionRadius)) {
             // Util.vPrintln("empowering...");
             rc.empower(actionRadius);
             Util.vPrintln("empowered");
