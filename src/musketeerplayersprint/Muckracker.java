@@ -36,6 +36,12 @@ public class Muckracker extends Robot {
                 muckraker_Found_EC = true;
             }
         }
+        // int ECInfluence = Integer.MAX_VALUE;
+        // if() {
+        // if(rc.senseRobotAtLocation(home) == RobotInfo.ENLIGHTENMENT_CENTER) {
+        //     ECInfluence = home.
+        // }
+        // }
 
         if (powerful != null) {
             if (rc.canExpose(powerful.location)) {
@@ -47,12 +53,13 @@ public class Muckracker extends Robot {
         bestInfluence = Integer.MIN_VALUE;
         for (RobotInfo robot : rc.senseNearbyRobots(sensingRadius, enemy)) {
             if (robot.getType() == RobotType.SLANDERER) {
-                int curr = robot.getInfluence();
+                int curr = robot.getConviction();
                 if (curr > bestInfluence) {
                     bestInfluence = curr;
                     bestSlanderer = robot;
                 }
             }
+            // if (robot.getType() == RobotType.POLITICIAN && (robot.getConviction() >= 100 || ))
         }
         if (bestSlanderer != null) {
             main_direction = rc.getLocation().directionTo(bestSlanderer.getLocation());
