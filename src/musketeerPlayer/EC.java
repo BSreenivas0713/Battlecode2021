@@ -153,7 +153,8 @@ public class EC extends Robot {
             case SAVING_FOR_RUSH:
                 toBuild = RobotType.MUCKRAKER;
                 influence = 1;
-                
+                int[] CurrDxDy =  Comms.getDxDy(ECdxdys.peek());
+                Util.vPrintln("Required Influence: " + requiredInfluence + "; DxDy: " + (CurrDxDy[0] - Util.dOffset) +  ", " + (CurrDxDy[1] - Util.dOffset));
                 if(needToBuild) {
                     buildRobot(toBuild, influence);
                 }
@@ -237,17 +238,22 @@ public class EC extends Robot {
                 int flag = rc.getFlag(id);
                 int dxdy = flag & Comms.BIT_MASK_COORDS;
                 Comms.InformationCategory flagIC = Comms.getIC(flag);
-                if((flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC) &&
-                    !ECdxdys.contains(dxdy)) {
-                    cleanUpCount = -1;
-                    currentState = prevState;
+                if((flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC)) {
+                    if(!ECdxdys.isEmpty() && ECdxdys.peek() == dxdy) {
+                        ECflags.remove();
+                        ECflags.offerFirst(flag);
+                        requiredInfluence = (int)  Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE)) * 4;  
+                        Util.vPrintln("required influence updated as follows: " + requiredInfluence); 
+                    }
+                    else {
+                        Util.vPrintln("no update made.");
+                    }
+                    if(!ECdxdys.contains(dxdy)) {
                     ECflags.add(flag);
                     ECdxdys.add(dxdy);
-                }
-
-                if(!ECdxdys.isEmpty() && ECdxdys.peek() == dxdy) {
-                    ECflags.remove();
-                    ECflags.offerFirst(flag);
+                    }
+                    cleanUpCount = -1;
+                    currentState = prevState;
                 }
             }
         }
@@ -266,7 +272,7 @@ public class EC extends Robot {
     public boolean tryStartSavingForRush() throws GameActionException {
         if (!ECflags.isEmpty() && sendTroopsSemaphore == 0 && turnCount > lastRush + Util.minTimeBetweenRushes) {
             int currFlag = ECflags.peek();
-            requiredInfluence = (int)  Math.exp(Comms.getInf(currFlag) * Math.log(Comms.INF_LOG_BASE)) * 4 + 100;
+            requiredInfluence = (int)  Math.exp(Comms.getInf(currFlag) * Math.log(Comms.INF_LOG_BASE)) * 4;
             stateStack.push(currentState);
             currentState = State.SAVING_FOR_RUSH;
             return true;
@@ -293,7 +299,7 @@ public class EC extends Robot {
         if(sendTroopsSemaphore != 1) {
             influence = 20;
         } else {
-            influence = (int) Math.ceil(Math.exp(Comms.getInf(currFlag) * Math.log(Comms.INF_LOG_BASE)) * 4);
+            influence = requiredInfluence;
         }
         
         if(buildRobot(toBuild, influence)) {
