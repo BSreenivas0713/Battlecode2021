@@ -75,9 +75,14 @@ public class EC extends Robot {
     // TODO: implement spawn killing if it is worth it, 
     // TODO: better money management strategy(I.E don't just making 1000 slanderers quicker and quicker in late game)
     // TODO: Slanderers should store the location of their current base, and try not to wander too far away from it(MAYBE??)
+<<<<<<< Updated upstream
     // TODO: DO NOT RUSH if you do not have AT LEAST 2 or 3 Slanderes as the money creation is too slow and the tower basically just stops doing anything productive
     // TODO(DONE): DO NOT Build a slanderer if there is an enemy Muckraker in range of the EC
     // TODO: make defenders even while trying to send a rush
+=======
+    // TODO: Muckrakers need to go towards enemy towers
+    // TODO: slanderers during cleanup
+>>>>>>> Stashed changes
 
     public EC(RobotController r) {
         super(r);
@@ -333,11 +338,11 @@ public class EC extends Robot {
     }
 
     public boolean tryStartMakingDefenders() throws GameActionException {
-        if(checkNumDefenders() < Util.numDefenders) {
-            stateStack.push(currentState);
-            currentState = State.MAKING_DEFENDERS;
-            return true;
-        }
+        // if(checkNumDefenders() < Util.numDefenders) {
+        //     stateStack.push(currentState);
+        //     currentState = State.MAKING_DEFENDERS;
+        //     return true;
+        // }
         return false;
     }
 
