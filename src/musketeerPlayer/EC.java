@@ -163,7 +163,7 @@ public class EC extends Robot {
                     toBuild = RobotType.POLITICIAN;
                     influence = currInfluence;
                     signalRobotType(Comms.SubRobotType.POL_BODYGUARD);
-                } else if(7 * currInfluence / 8 >= 150 && robotCounter % 5 == 0 && !muckrackerNear) {
+                } else if(7 * currInfluence / 8 >= 149 && robotCounter % 5 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
                     influence = Math.min(1000, 7 * currInfluence / 8);
                 } else {
