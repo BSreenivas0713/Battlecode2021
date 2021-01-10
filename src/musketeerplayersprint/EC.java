@@ -186,19 +186,19 @@ public class EC extends Robot {
             case SAVING_FOR_RUSH:
                 RushFlag targetEC = ECflags.peek();
                 int requiredInfluence = targetEC.requiredInfluence;
+                if(requiredInfluence < currInfluence && rc.isReady()) {
+                    sendTroopsSemaphore = 1;
+                    resetFlagOnNewTurn = false;
+                    nextFlag = targetEC.flag;
+                    currentState = State.RUSHING;
+                    break;
+                }
                 int[] currDxDy = {targetEC.dx, targetEC.dy};
                 toBuild = RobotType.MUCKRAKER;
                 influence = 1;
                 Util.vPrintln("Required Influence: " + requiredInfluence + "; DxDy: " + (currDxDy[0] - Util.dOffset) +  ", " + (currDxDy[1] - Util.dOffset));
                 if(needToBuild) {
                     buildRobot(toBuild, influence);
-                }
-
-                if(requiredInfluence < currInfluence && rc.isReady()) {
-                    sendTroopsSemaphore = 1;
-                    resetFlagOnNewTurn = false;
-                    nextFlag = targetEC.flag;
-                    currentState = State.RUSHING;
                 }
                 tryStartRemovingBlockage();
                 tryStartMakingDefenders();
@@ -367,7 +367,7 @@ public class EC extends Robot {
             }
         }
         Util.vPrintln("num enemies surrounding: " + num_enemies_near);
-        if (num_enemies_near >= 4) {
+        if (num_enemies_near >= 7) {
             stateStack.push(currentState);
             currentState = State.REMOVING_BLOCKAGE;
             return true;
