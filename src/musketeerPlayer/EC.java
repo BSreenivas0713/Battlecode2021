@@ -25,7 +25,7 @@ public class EC extends Robot {
     static RobotType toBuild;
     static int influence;
 
-    static int cleanUpCount;
+    static int cleanUpCount = 0;
 
     static int currRoundNum;
     static int currInfluence;
@@ -214,7 +214,14 @@ public class EC extends Robot {
             case CLEANUP:
                 toBuild = RobotType.POLITICIAN;
                 influence = Util.cleanupPoliticianInfluence;
-                signalRobotType(Comms.SubRobotType.POL_CLEANUP);
+                if(needToBuild) {
+                    signalRobotType(Comms.SubRobotType.POL_CLEANUP);
+                    buildRobot(toBuild, influence);
+                }
+                break;
+            default:
+                Util.vPrintln("Maxwell screwed up");
+                break;
         }
     }
 
@@ -226,13 +233,10 @@ public class EC extends Robot {
         needToBuild = true;
         currRoundNum = rc.getRoundNum();
         currInfluence = rc.getInfluence();
-        cleanUpCount = 0;
 
         if(currentState == State.PHASE1 && turnCount > Util.phaseOne) {
             currentState = State.PHASE2;
         }
-
-        prevState = currentState;
     }
     
     public boolean checkIfMuckrakerNear() throws GameActionException {
@@ -287,7 +291,9 @@ public class EC extends Robot {
                     //     Util.vPrintln("no update made.");
                     // }
                     cleanUpCount = -1;
-                    currentState = prevState;
+                    if (currentState == State.CLEANUP) {
+                        currentState = stateStack.pop();
+                    }
                 }
             }
         }
@@ -295,8 +301,9 @@ public class EC extends Robot {
     }
 
     public boolean tryStartCleanup() throws GameActionException {
+        Util.vPrintln("Cleanup count: " + cleanUpCount);
         if (cleanUpCount > Util.startCleanupThreshold) {
-            prevState = currentState;
+            stateStack.push(currentState);
             currentState = State.CLEANUP;
             return true;
         }
