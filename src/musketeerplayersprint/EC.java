@@ -293,15 +293,19 @@ public class EC extends Robot {
                 int dxdy = flag & Comms.BIT_MASK_COORDS;
                 Comms.InformationCategory flagIC = Comms.getIC(flag);
                 if((flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC)) {
-                    if (Comms.getInf(flag) <= Util.minECRushConviction) {
+                    int neededInf = Comms.getInf(flag);
+                    if (neededInf <= Util.minECRushConviction || rc.getInfluence() >= neededInf * 3 / 4) {
                         int currReqInf = (int)  Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE)) * 4 + 10;
                         int[] currDxDy = Comms.getDxDy(dxdy);
                         RushFlag rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag);
-
                         if(ECflags.contains(rushFlag)) {
                             ECflags.remove(rushFlag);
                         }
                         ECflags.add(rushFlag);
+                        cleanUpCount = -1;
+                        if (currentState == State.CLEANUP) {
+                            currentState = stateStack.pop();
+                        }
                     }
 
                     // if(!ECdxdys.isEmpty() && ECdxdys.peek().equals(rushFlag)) {
@@ -313,10 +317,6 @@ public class EC extends Robot {
                     // else {
                     //     Util.vPrintln("no update made.");
                     // }
-                    cleanUpCount = -1;
-                    if (currentState == State.CLEANUP) {
-                        currentState = stateStack.pop();
-                    }
                 }
             }
             // i++;
