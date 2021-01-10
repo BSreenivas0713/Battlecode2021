@@ -60,6 +60,11 @@ public class Slanderer extends Robot {
             }
         }
 
+        boolean moveBack = false;
+        if (!curr.isWithinDistanceSquared(home, 2 * sensorRadius)) {
+            moveBack = true;
+        }
+
         if (minRobot != null) {
             main_direction = curr.directionTo(minRobot.getLocation()).opposite();
         }
@@ -68,6 +73,8 @@ public class Slanderer extends Robot {
         }
         else if (friendlyEC != null) {
             main_direction = curr.directionTo(friendlyEC.getLocation()).opposite(); 
+        } else if (moveBack == true) {
+            main_direction = curr.directionTo(home).opposite();
         }
 
         MapLocation target = rc.adjacentLocation(main_direction);
