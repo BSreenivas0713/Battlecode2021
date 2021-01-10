@@ -190,7 +190,7 @@ public class EC extends Robot {
                     buildRobot(toBuild, influence);
                 }
 
-                if(requiredInfluence < currInfluence) {
+                if(requiredInfluence < currInfluence && rc.isReady()) {
                     sendTroopsSemaphore = 1;
                     resetFlagOnNewTurn = false;
                     nextFlag = targetEC.flag;
