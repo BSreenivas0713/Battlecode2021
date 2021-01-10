@@ -302,7 +302,7 @@ public class EC extends Robot {
 
     public boolean tryStartCleanup() throws GameActionException {
         Util.vPrintln("Cleanup count: " + cleanUpCount);
-        if (cleanUpCount > Util.startCleanupThreshold) {
+        if (cleanUpCount > Util.startCleanupThreshold && currentState != State.CLEANUP) {
             stateStack.push(currentState);
             currentState = State.CLEANUP;
             return true;
