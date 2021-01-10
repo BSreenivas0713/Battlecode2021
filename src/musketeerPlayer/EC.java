@@ -266,6 +266,7 @@ public class EC extends Robot {
 
     public void checkForTowers() throws GameActionException {
         ids.removeIf(robotID -> !rc.canGetFlag(robotID));
+        int i = 0;
         for(int id : ids) {
             if(rc.canGetFlag(id)) {
                 int flag = rc.getFlag(id);
@@ -295,6 +296,10 @@ public class EC extends Robot {
                         currentState = stateStack.pop();
                     }
                 }
+            }
+            i++;
+            if (i >= 100) {
+                break;
             }
         }
         cleanUpCount++;
