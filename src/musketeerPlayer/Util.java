@@ -26,7 +26,7 @@ public class Util {
     static final int phaseTwo = 2000;
     static final int defenderPoliticianFrequency = 5;
     static final int minRushInfluence = 200;
-    static final int minECRushConviction = 150;
+    static final int minECRushConviction = 10000;
     static final int timeBeforeDefenders = 50;
     static final int startCleanupThreshold = 100;
     static final int cleanupPoliticianInfluence = 20;

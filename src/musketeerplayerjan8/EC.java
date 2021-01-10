@@ -94,7 +94,7 @@ public class EC extends Robot {
         // }
         switch(currentState) {
             case PHASE1:
-                System.out.println("Phase1 state");
+                // System.out.println("Phase1 state");
                 if(currInfluence >= 150 && robotCounter % 5 == 0) {
                     toBuild = RobotType.SLANDERER;
                     influence = Math.min(1000, currInfluence);
@@ -110,7 +110,7 @@ public class EC extends Robot {
                 tryStartSavingForRush();
                 break;
             case PHASE2:
-                System.out.println("Phase2 state");
+                // System.out.println("Phase2 state");
                 if(needToMakeBodyguard) {
                     toBuild = RobotType.POLITICIAN;
                     influence = currInfluence;

@@ -30,11 +30,26 @@ public class Muckracker extends Robot {
                 powerful = robot;
             }
         }
-        
-        for (RobotInfo robot : rc.senseNearbyRobots(2, enemy)) {
+
+        MapLocation nearbyEC = null;
+        for (RobotInfo robot : enemyAttackable) {
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
                 muckraker_Found_EC = true;
+                nearbyEC = robot.getLocation();
             }
+        }
+
+        int muckrakersNearEC = 0;
+        if (muckraker_Found_EC) {
+            for (RobotInfo robot : friendlySensable) {
+                if (robot.getType() == RobotType.MUCKRAKER &&
+                robot.getLocation().isWithinDistanceSquared(nearbyEC, actionRadius)) {
+                    muckrakersNearEC++;
+                }
+            }
+        }
+        if (muckrakersNearEC >= 4) {
+            muckraker_Found_EC = false;
         }
 
         if (powerful != null) {
