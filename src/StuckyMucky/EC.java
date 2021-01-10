@@ -31,9 +31,9 @@ public class EC extends Robot {
             }
             main_direction = main_direction.rotateRight();
             num_direction--;
-            if(influence != 1) {
-                buildRobot(RobotType.MUCKRAKER, 1);
-            }
+            // if(influence != 1) {
+            //     buildRobot(RobotType.MUCKRAKER, 1);
+            // }
         }
     }
 
