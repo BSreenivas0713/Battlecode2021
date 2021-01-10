@@ -29,7 +29,7 @@ public class Util {
     static final int minECRushConviction = 10000;
     static final int timeBeforeDefenders = 50;
     static final int startCleanupThreshold = 100;
-    static final int cleanupPoliticianInfluence = 20;
+    static final int cleanupPoliticianInfluence = 34;
     static final int numDefenders = 4;
     static final int minTimeBetweenRushes = 0;
 

@@ -78,6 +78,7 @@ public class EC extends Robot {
     // TODO: better money management strategy(I.E don't just making 1000 slanderers quicker and quicker in late game)
     // TODO: Muckrakers need to go towards enemy towers
     // TODO: slanderers during cleanup
+    // TODO: change the new player to only build defenders if 6 our of 8 surrounding squares are taken by enemy
     public EC(RobotController r) {
         super(r);
         ids = new ArrayList<Integer>();
@@ -129,6 +130,11 @@ public class EC extends Robot {
         int biddingInfluence = currInfluence / 20;
         if (rc.canBid(biddingInfluence) && currRoundNum > 500) {
             rc.bid(biddingInfluence);
+        } else {
+            biddingInfluence = Math.max(currInfluence / 100, 1);
+            if (rc.canBid(biddingInfluence)) {
+                rc.bid(biddingInfluence);
+            }
         }
         muckrackerNear = checkIfMuckrakerNear();
         // if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
@@ -211,10 +217,15 @@ public class EC extends Robot {
                 }
                 break;
             case CLEANUP:
-                toBuild = RobotType.POLITICIAN;
-                influence = Util.cleanupPoliticianInfluence;
-                if(needToBuild) {
+                if(robotCounter % 2 == 0) {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = Util.cleanupPoliticianInfluence;
                     signalRobotType(Comms.SubRobotType.POL_CLEANUP);
+                } else {
+                    toBuild = RobotType.SLANDERER;
+                    influence = Math.min(100, currInfluence / 2);
+                }
+                if(needToBuild) {
                     buildRobot(toBuild, influence);
                 }
                 break;
