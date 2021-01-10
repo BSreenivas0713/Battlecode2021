@@ -1,4 +1,4 @@
-package musketeerplayer;
+package musketeerplayerjan8;
 import battlecode.common.*;
 import java.util.Hashtable;
 
@@ -20,6 +20,13 @@ public class Util {
         Direction.NORTHWEST,
     };
 
+    static final Direction[] defenderDirs = {
+        Direction.NORTHEAST,
+        Direction.SOUTHEAST,
+        Direction.SOUTHWEST,
+        Direction.NORTHWEST,
+    };
+
     static final int spawnKillThreshold = 3;
     static final int dOffset = 64;
     static final int phaseOne = 50;
@@ -28,12 +35,8 @@ public class Util {
     static final int minRushInfluence = 200;
     static final int minECRushConviction = 150;
     static final int timeBeforeDefenders = 50;
-    static final int startCleanupThreshold = 100;
-    static final int cleanupPoliticianInfluence = 20;
-    static final int numDefenders = 4;
-    static final int minTimeBetweenRushes = 0;
 
-    static final boolean verbose = true;
+    static final boolean verbose = false;
 
     /**
      * Returns a random Direction.
@@ -51,9 +54,5 @@ public class Util {
      */
     static RobotType randomSpawnableRobotType() {
         return spawnableRobot[(int) (Math.random() * spawnableRobot.length)];
-    }
-
-    static void vPrintln(String str) {
-        if(verbose) System.out.println(str);
     }
 }
