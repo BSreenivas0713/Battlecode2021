@@ -212,10 +212,15 @@ public class EC extends Robot {
                 }
                 break;
             case CLEANUP:
-                toBuild = RobotType.POLITICIAN;
-                influence = Util.cleanupPoliticianInfluence;
-                if(needToBuild) {
+                if(robotCounter % 2 == 0) {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = Util.cleanupPoliticianInfluence;
                     signalRobotType(Comms.SubRobotType.POL_CLEANUP);
+                } else {
+                    toBuild = RobotType.SLANDERER;
+                    influence = Math.min(100, currInfluence / 2);
+                }
+                if(needToBuild) {
                     buildRobot(toBuild, influence);
                 }
                 break;
