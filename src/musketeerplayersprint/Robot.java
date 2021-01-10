@@ -124,7 +124,7 @@ public class Robot {
                         res = true;
                         nextFlag = Comms.getFlag(InformationCategory.FRIENDLY_EC);
                     }
-                } else if(robot.getConviction() <= Util.minECRushConviction) {
+                } else {
                     res = true;
     
                     MapLocation currLoc = rc.getLocation();
