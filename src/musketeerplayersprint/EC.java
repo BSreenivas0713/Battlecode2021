@@ -16,7 +16,8 @@ public class EC extends Robot {
         SAVING_FOR_RUSH,
         CLEANUP,
         MAKING_GOLEM, // TOCONSIDER
-        MAKING_DEFENDERS
+        MAKING_DEFENDERS,
+        REMOVING_BLOCKAGE
     };
 
     static int robotCounter;
@@ -176,7 +177,8 @@ public class EC extends Robot {
                 if(needToBuild) {
                     buildRobot(toBuild, influence);
                 }                
-                if (!tryStartMakingDefenders()) {tryStartSavingForRush();}
+                if (tryStartRemovingBlockage()) {}   
+                else if (!tryStartMakingDefenders()) {tryStartSavingForRush();}
                 break;
             case RUSHING:
                 trySendARush();
@@ -192,12 +194,13 @@ public class EC extends Robot {
                     buildRobot(toBuild, influence);
                 }
 
-                if(requiredInfluence < currInfluence) {
+                if(requiredInfluence < currInfluence && rc.isReady()) {
                     sendTroopsSemaphore = 1;
                     resetFlagOnNewTurn = false;
                     nextFlag = targetEC.flag;
                     currentState = State.RUSHING;
                 }
+                tryStartRemovingBlockage();
                 tryStartMakingDefenders();
                 break;
             case MAKING_DEFENDERS:
@@ -226,6 +229,14 @@ public class EC extends Robot {
                 }
                 if(needToBuild) {
                     buildRobot(toBuild, influence);
+                }
+                break;
+            case REMOVING_BLOCKAGE:
+                toBuild = RobotType.POLITICIAN;
+                influence = 20;
+                signalRobotType(Comms.SubRobotType.POL_DEFENDER);
+                if(needToBuild && buildRobot(toBuild, influence)) {
+                    currentState = stateStack.pop();
                 }
                 break;
             default:
@@ -343,9 +354,30 @@ public class EC extends Robot {
         return false;
     }
 
+    public boolean tryStartRemovingBlockage() throws GameActionException {
+        int num_enemies_near = 0;
+        MapLocation currLoc = rc.getLocation();
+        for (Direction dir : Util.directions) {
+            MapLocation surroundingLoc = currLoc.add(dir);
+            if (rc.onTheMap(surroundingLoc)){
+                RobotInfo surroundingBot = rc.senseRobotAtLocation(surroundingLoc);
+                if (surroundingBot != null && surroundingBot.getTeam() == enemy) {
+                    num_enemies_near++;
+                }
+            }
+        }
+        Util.vPrintln("num enemies surrounding: " + num_enemies_near);
+        if (num_enemies_near >= 4) {
+            stateStack.push(currentState);
+            currentState = State.REMOVING_BLOCKAGE;
+            return true;
+        }
+        return false;
+    }
+
     public boolean trySendARush() throws GameActionException {
         Util.vPrintln("building rush bots");
-        int currFlag = rc.getFlag(rc.getID());
+        // int currFlag = rc.getFlag(rc.getID());
         toBuild = RobotType.POLITICIAN;
         // if (Comms.getIC(currFlag) == Comms.InformationCategory.ENEMY_EC) {
         //     toBuild = RobotType.MUCKRAKER;
