@@ -130,6 +130,11 @@ public class EC extends Robot {
         int biddingInfluence = currInfluence / 20;
         if (rc.canBid(biddingInfluence) && currRoundNum > 500) {
             rc.bid(biddingInfluence);
+        } else {
+            biddingInfluence = Math.max(currInfluence / 100, 1);
+            if (rc.canBid(biddingInfluence)) {
+                rc.bid(biddingInfluence);
+            }
         }
         muckrackerNear = checkIfMuckrakerNear();
         // if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
