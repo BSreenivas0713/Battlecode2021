@@ -128,7 +128,7 @@ public class EC extends Robot {
             tryStartCleanup();
 
         int biddingInfluence = currInfluence / 20;
-        if (rc.canBid(biddingInfluence) && currRoundNum > 1000) {
+        if (rc.canBid(biddingInfluence) && currRoundNum > 500) {
             rc.bid(biddingInfluence);
         } else {
             biddingInfluence = Math.max(currInfluence / 100, 1);
@@ -221,7 +221,7 @@ public class EC extends Robot {
                     signalRobotType(Comms.SubRobotType.POL_CLEANUP);
                 } else {
                     toBuild = RobotType.SLANDERER;
-                    influence = Math.min(100, currInfluence / 2);
+                    influence = currInfluence / 2;
                 }
                 if(needToBuild) {
                     buildRobot(toBuild, influence);
