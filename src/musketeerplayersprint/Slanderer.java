@@ -74,7 +74,7 @@ public class Slanderer extends Robot {
         else if (friendlyEC != null) {
             main_direction = curr.directionTo(friendlyEC.getLocation()).opposite(); 
         } else if (moveBack == true) {
-            main_direction = curr.directionTo(home).opposite();
+            main_direction = curr.directionTo(home);
         }
 
         MapLocation target = rc.adjacentLocation(main_direction);

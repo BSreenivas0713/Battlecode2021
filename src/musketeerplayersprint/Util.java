@@ -40,7 +40,7 @@ public class Util {
     static final int numDefenders = 4;
     static final int minTimeBetweenRushes = 0;
 
-    static final boolean verbose = false;
+    static final boolean verbose = true;
 
     /**
      * Returns a random Direction.
