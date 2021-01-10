@@ -77,7 +77,6 @@ public class EC extends Robot {
     // TODO: implement spawn killing if it is worth it, 
     // TODO: better money management strategy(I.E don't just making 1000 slanderers quicker and quicker in late game)
     // TODO: Muckrakers need to go towards enemy towers
-    // TODO: slanderers during cleanup
     // TODO: change the new player to only build defenders if 6 our of 8 surrounding squares are taken by enemy
     public EC(RobotController r) {
         super(r);
