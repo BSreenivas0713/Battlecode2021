@@ -29,10 +29,12 @@ public class EC extends Robot {
     static int currRoundNum;
     static int currInfluence;
     static boolean needToBuild;
+    static boolean muckrackerNear;
 
     static ArrayList<Integer> ids; // TODO USE HASHSET
     static ArrayDeque<Integer> ECflags;
     static ArrayDeque<Integer> ECdxdys;
+    static ArrayDeque<State> stateStack;
 
     static State currentState;
     static State prevState;
@@ -43,13 +45,20 @@ public class EC extends Robot {
     static int lastRush = 0;
 
     // TODO: Better slanderer pathfinding. Wallscraping muckrakers. Better defense
-    // TODO: small defenders to protect the base, increase range of spending on big politicians(if money allows), implement spawn killing if it is worth it, 
+    // TODO: implement spawn killing if it is worth it, 
     // TODO: better money management strategy(I.E don't just making 1000 slanderers quicker and quicker in late game)
+    // TODO: Slanderers should store the location of their current base, and try not to wander too far away from it(MAYBE??)
+    // TODO: DO NOT RUSH if you do not have AT LEAST 2 or 3 Slanderes as the money creation is too slow and the tower basically just stops doing anything productive
+    // TODO(DONE): DO NOT Build a slanderer if there is an enemy Muckraker in range of the EC
+    // TODO: make defenders even while trying to send a rush
+    // TODO: Cleanup
+
     public EC(RobotController r) {
         super(r);
         ids = new ArrayList<Integer>();
         ECflags = new ArrayDeque<Integer>();
         ECdxdys = new ArrayDeque<Integer>();
+        stateStack = new ArrayDeque<State>();
         currentState = State.PHASE1;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
     }
@@ -97,7 +106,7 @@ public class EC extends Robot {
         if (rc.canBid(biddingInfluence) && currRoundNum > 1000) {
             rc.bid(biddingInfluence);
         }
-
+        muckrackerNear = checkIfMuckrakerNear();
         // if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
         //     Util.vPrintln("spawn killing politicians");
         //     influence = 6*rc.getInfluence()/8;
@@ -106,7 +115,7 @@ public class EC extends Robot {
         switch(currentState) {
             case PHASE1:
                 Util.vPrintln("Phase1 state");
-                if(currInfluence >= 150 && robotCounter % 5 == 0) {
+                if(currInfluence >= 150 && robotCounter % 5 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
                     influence = Math.min(1000, currInfluence);
                 } else {
@@ -117,7 +126,6 @@ public class EC extends Robot {
                 if(needToBuild) {
                     buildRobot(toBuild, influence);
                 }
-                
                 tryStartSavingForRush();
                 break;
             case PHASE2:
@@ -126,7 +134,7 @@ public class EC extends Robot {
                     toBuild = RobotType.POLITICIAN;
                     influence = currInfluence;
                     signalRobotType(Comms.SubRobotType.POL_BODYGUARD);
-                } else if(7 * currInfluence / 8 >= 150 && robotCounter % 5 == 0) {
+                } else if(7 * currInfluence / 8 >= 150 && robotCounter % 5 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
                     influence = Math.min(1000, 7 * currInfluence / 8);
                 } else {
@@ -136,10 +144,8 @@ public class EC extends Robot {
                 
                 if(needToBuild) {
                     buildRobot(toBuild, influence);
-                }
-
-                tryStartSavingForRush();
-                tryStartMakingDefenders();
+                }                
+                if (!tryStartMakingDefenders()) {tryStartSavingForRush();}
                 break;
             case RUSHING:
                 trySendARush();
@@ -158,6 +164,7 @@ public class EC extends Robot {
                     nextFlag = ECflags.peek();
                     currentState = State.RUSHING;
                 }
+                tryStartMakingDefenders();
                 break;
             case MAKING_DEFENDERS:
                 // Consider staggering making defenders
@@ -171,7 +178,7 @@ public class EC extends Robot {
                 }
 
                 if(built && checkNumDefenders() + 2 >= Util.numDefenders) {
-                    currentState = State.PHASE2;
+                    currentState = stateStack.pop();
                 }
                 break;
             case CLEANUP:
@@ -197,7 +204,16 @@ public class EC extends Robot {
 
         prevState = currentState;
     }
-
+    
+    public boolean checkIfMuckrakerNear() throws GameActionException {
+        for(RobotInfo robot: rc.senseNearbyRobots(RobotType.MUCKRAKER.actionRadiusSquared, enemy)) {
+            if(robot.getType() == RobotType.MUCKRAKER) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     public void findNearIds() throws GameActionException {
         // Util.vPrintln("Finding nearby robots");
         int sensorRadius = rc.getType().sensorRadiusSquared;
@@ -238,25 +254,33 @@ public class EC extends Robot {
         cleanUpCount++;
     }
 
-    public void tryStartCleanup() throws GameActionException {
+    public boolean tryStartCleanup() throws GameActionException {
         if (cleanUpCount > Util.startCleanupThreshold) {
             prevState = currentState;
             currentState = State.CLEANUP;
+            return true;
         }
+        return false;
     }
 
-    public void tryStartSavingForRush() throws GameActionException {
+    public boolean tryStartSavingForRush() throws GameActionException {
         if (!ECflags.isEmpty() && sendTroopsSemaphore == 0 && turnCount > lastRush + Util.minTimeBetweenRushes) {
             int currFlag = ECflags.peek();
             requiredInfluence = (int)  Math.exp(Comms.getInf(currFlag) * Math.log(Comms.INF_LOG_BASE)) * 4 + 100;
+            stateStack.push(currentState);
             currentState = State.SAVING_FOR_RUSH;
+            return true;
         }
+        return false;
     }
 
-    public void tryStartMakingDefenders() throws GameActionException {
+    public boolean tryStartMakingDefenders() throws GameActionException {
         if(checkNumDefenders() < Util.numDefenders) {
+            stateStack.push(currentState);
             currentState = State.MAKING_DEFENDERS;
+            return true;
         }
+        return false;
     }
 
     public boolean trySendARush() throws GameActionException {
@@ -280,7 +304,7 @@ public class EC extends Robot {
             ECflags.remove();
             ECdxdys.remove();
             resetFlagOnNewTurn = true;
-            currentState = State.PHASE2;
+            currentState = stateStack.pop();
             lastRush = turnCount;
         }
         return true;
