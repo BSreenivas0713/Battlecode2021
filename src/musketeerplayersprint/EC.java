@@ -147,7 +147,7 @@ public class EC extends Robot {
         switch(currentState) {
             case PHASE1:
                 Util.vPrintln("Phase1 state");
-                if(currInfluence >= 150 && robotCounter % 5 == 0 && !muckrackerNear) {
+                if(currInfluence >= 149 && robotCounter % 5 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
                     influence = Math.min(1000, currInfluence);
                 } else {
@@ -219,14 +219,15 @@ public class EC extends Robot {
                 }
                 break;
             case CLEANUP:
-                if(robotCounter % 2 == 0) {
-                    toBuild = RobotType.POLITICIAN;
-                    influence = Util.cleanupPoliticianInfluence;
-                    signalRobotType(Comms.SubRobotType.POL_CLEANUP);
-                } else {
+                if(currInfluence >= 100 && robotCounter %2 == 0) {
                     toBuild = RobotType.SLANDERER;
                     influence = currInfluence / 2;
                 }
+                else {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = Util.cleanupPoliticianInfluence;
+                    signalRobotType(Comms.SubRobotType.POL_CLEANUP);
+                } 
                 if(needToBuild) {
                     buildRobot(toBuild, influence);
                 }
@@ -293,9 +294,10 @@ public class EC extends Robot {
                 int dxdy = flag & Comms.BIT_MASK_COORDS;
                 Comms.InformationCategory flagIC = Comms.getIC(flag);
                 if((flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC)) {
-                    int neededInf = Comms.getInf(flag);
-                    if (neededInf <= Util.minECRushConviction || rc.getInfluence() >= neededInf * 3 / 4) {
-                        int currReqInf = (int)  Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE)) * 4 + 10;
+                    int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
+                    int currReqInf = (int)  neededInf * 4 + 10;
+                    if (neededInf <= Util.minECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
+                        Util.vPrintln("Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                         int[] currDxDy = Comms.getDxDy(dxdy);
                         RushFlag rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag);
                         if(ECflags.contains(rushFlag)) {
