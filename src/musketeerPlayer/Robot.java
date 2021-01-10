@@ -13,6 +13,8 @@ public class Robot {
     static int defaultFlag;
     static int nextFlag;
     static boolean resetFlagOnNewTurn = true;
+    static MapLocation home;
+
     static int sensorRadius;
     static int actionRadius;
     static Team enemy;
@@ -36,6 +38,7 @@ public class Robot {
                 MapLocation ecLoc = robot.getLocation();
                 dx += currLoc.x - ecLoc.x;
                 dy += currLoc.y - ecLoc.y;
+                home = ecLoc;
             }
         }
 
@@ -50,6 +53,7 @@ public class Robot {
         defaultFlag = 0;
         dx = currDx;
         dy = currDy;
+        home = rc.getLocation().translate(-currDx, -currDy);
     }
 
     public void takeTurn() throws GameActionException {
@@ -116,26 +120,31 @@ public class Robot {
 
         RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius);
         for (RobotInfo robot : sensable) {
-            if(robot.getTeam() != rc.getTeam() && 
-               robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
-               robot.getConviction() <= Util.minECRushConviction) {
-                res = true;
-
-                MapLocation currLoc = rc.getLocation();
-                MapLocation ecLoc = robot.getLocation();
-
-                int ecDX = dx + ecLoc.x - currLoc.x;
-                int ecDY = dy + ecLoc.y - currLoc.y;
-
-                int flag = 0;
-                int inf = (int) Math.min(31, Math.ceil(Math.log(robot.getInfluence()) / Math.log(Comms.INF_LOG_BASE)));
-                if(robot.getTeam() == enemy) {
-                    flag = Comms.getFlag(InformationCategory.ENEMY_EC, inf, ecDX, ecDY);
-                } else {
-                    flag = Comms.getFlag(InformationCategory.NEUTRAL_EC, inf, ecDX, ecDY);
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                if(robot.getTeam() == rc.getTeam()) {
+                    if(!robot.getLocation().equals(home)) {
+                        res = true;
+                        nextFlag = Comms.getFlag(InformationCategory.FRIENDLY_EC);
+                    }
+                } else if(robot.getConviction() <= Util.minECRushConviction) {
+                    res = true;
+    
+                    MapLocation currLoc = rc.getLocation();
+                    MapLocation ecLoc = robot.getLocation();
+    
+                    int ecDX = dx + ecLoc.x - currLoc.x;
+                    int ecDY = dy + ecLoc.y - currLoc.y;
+    
+                    int flag = 0;
+                    int inf = (int) Math.min(31, Math.ceil(Math.log(robot.getInfluence()) / Math.log(Comms.INF_LOG_BASE)));
+                    if(robot.getTeam() == enemy) {
+                        flag = Comms.getFlag(InformationCategory.ENEMY_EC, inf, ecDX, ecDY);
+                    } else {
+                        flag = Comms.getFlag(InformationCategory.NEUTRAL_EC, inf, ecDX, ecDY);
+                    }
+    
+                    nextFlag = flag;
                 }
-
-                nextFlag = flag;
             }
         }
         return res;
