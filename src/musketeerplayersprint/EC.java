@@ -164,7 +164,7 @@ public class EC extends Robot {
                 Util.vPrintln("Phase2 state");
                 if(needToMakeBodyguard) {
                     toBuild = RobotType.POLITICIAN;
-                    influence = currInfluence;
+                    influence = Math.min(currInfluence / 4, 20);
                     signalRobotType(Comms.SubRobotType.POL_BODYGUARD);
                 } else if(7 * currInfluence / 8 >= 150 && robotCounter % 5 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;

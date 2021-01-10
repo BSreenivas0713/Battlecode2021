@@ -29,7 +29,7 @@ public class Politician extends Robot {
             main_direction = Util.randomDirection();
         }
 
-        if((enemyAttackable.length >= 3 || neutrals.length != 0) && rc.canEmpower(actionRadius)) {
+        if((enemyAttackable.length >= 1 || neutrals.length != 0) && rc.canEmpower(actionRadius)) {
             rc.empower(actionRadius);
             return;
         }
@@ -101,6 +101,10 @@ public class Politician extends Robot {
         if (weakest != null) {
             Direction toMove = rc.getLocation().directionTo(weakest.getLocation());
             tryMoveDest(toMove);
+        }
+
+        if (!rc.getLocation().isWithinDistanceSquared(home, 2 * sensorRadius)) {
+            tryMoveDest(rc.getLocation().directionTo(home));
         }
         
         while (!tryMove(main_direction) && rc.isReady()){
