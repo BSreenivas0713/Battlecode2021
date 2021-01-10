@@ -271,29 +271,23 @@ public class EC extends Robot {
                 int flag = rc.getFlag(id);
                 int dxdy = flag & Comms.BIT_MASK_COORDS;
                 Comms.InformationCategory flagIC = Comms.getIC(flag);
+                
                 if((flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC)) {
                     int currReqInf = (int)  Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE)) * 4;
                     int[] currDxDy = Comms.getDxDy(dxdy);
                     RushFlag rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag);
 
-                    if(ECflags.contains(rushFlag)) {
-                        ECflags.remove(rushFlag);
-                    }
+                    ECflags.remove(rushFlag);
                     ECflags.add(rushFlag);
 
-                    // if(!ECdxdys.isEmpty() && ECdxdys.peek().equals(rushFlag)) {
-                    //     ECflags.remove();
-                    //     ECflags.offerFirst(flag);
-                    //     requiredInfluence = (int)  Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE)) * 4;  
-                    //     Util.vPrintln("required influence updated as follows: " + requiredInfluence); 
-                    // }
-                    // else {
-                    //     Util.vPrintln("no update made.");
-                    // }
                     cleanUpCount = -1;
                     if (currentState == State.CLEANUP) {
                         currentState = stateStack.pop();
                     }
+                } else if(flagIC == Comms.InformationCategory.FRIENDLY_EC) {
+                    int[] currDxDy = Comms.getDxDy(dxdy);
+                    RushFlag rushFlag = new RushFlag(0, currDxDy[0], currDxDy[1], 0);
+                    ECflags.remove(rushFlag);
                 }
             }
         }
