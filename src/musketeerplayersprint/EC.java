@@ -78,7 +78,6 @@ public class EC extends Robot {
     // TODO: DO NOT RUSH if you do not have AT LEAST 2 or 3 Slanderes as the money creation is too slow and the tower basically just stops doing anything productive
     // TODO(DONE): DO NOT Build a slanderer if there is an enemy Muckraker in range of the EC
     // TODO: make defenders even while trying to send a rush
-    // TODO: Cleanup
 
     public EC(RobotController r) {
         super(r);
@@ -131,6 +130,11 @@ public class EC extends Robot {
         int biddingInfluence = currInfluence / 20;
         if (rc.canBid(biddingInfluence) && currRoundNum > 1000) {
             rc.bid(biddingInfluence);
+        } else {
+            biddingInfluence = Math.max(currInfluence / 100, 1);
+            if (rc.canBid(biddingInfluence)) {
+                rc.bid(biddingInfluence);
+            }
         }
         muckrackerNear = checkIfMuckrakerNear();
         // if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
@@ -211,10 +215,15 @@ public class EC extends Robot {
                 }
                 break;
             case CLEANUP:
-                toBuild = RobotType.POLITICIAN;
-                influence = Util.cleanupPoliticianInfluence;
-                if(needToBuild) {
+                if(robotCounter % 2 == 0) {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = Util.cleanupPoliticianInfluence;
                     signalRobotType(Comms.SubRobotType.POL_CLEANUP);
+                } else {
+                    toBuild = RobotType.SLANDERER;
+                    influence = Math.min(100, currInfluence / 2);
+                }
+                if(needToBuild) {
                     buildRobot(toBuild, influence);
                 }
                 break;
@@ -265,7 +274,7 @@ public class EC extends Robot {
 
     public void checkForTowers() throws GameActionException {
         ids.removeIf(robotID -> !rc.canGetFlag(robotID));
-        int i = 0;
+        // int i = 0;
         for(int id : ids) {
             if(rc.canGetFlag(id)) {
                 int flag = rc.getFlag(id);
@@ -296,10 +305,10 @@ public class EC extends Robot {
                     }
                 }
             }
-            i++;
-            if (i >= 100) {
-                break;
-            }
+            // i++;
+            // if (i >= 100) {
+            //     break;
+            // }
         }
         cleanUpCount++;
     }
