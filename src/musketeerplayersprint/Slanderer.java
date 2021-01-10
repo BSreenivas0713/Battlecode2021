@@ -65,6 +65,22 @@ public class Slanderer extends Robot {
             moveBack = true;
         }
 
+        double maxPass = 0;
+        Direction maxDir = null;
+        Direction tempDir = Util.randomDirection();
+        double currPass;
+        int i = 0;
+        while (i < 8) {
+            currPass = rc.sensePassability(curr.add(tempDir));
+            if (currPass > maxPass) {
+                maxPass = currPass;
+                maxDir = tempDir;
+            }
+            i++;
+            tempDir = tempDir.rotateRight();
+        }
+        main_direction = maxDir;
+
         if (minRobot != null) {
             main_direction = curr.directionTo(minRobot.getLocation()).opposite();
         }
