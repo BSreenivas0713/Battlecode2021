@@ -109,8 +109,8 @@ public class Robot {
                     MapLocation currLoc = rc.getLocation();
                     MapLocation ecLoc = robot.getLocation();
     
-                    int ecDX = ecLoc.x - home.x;
-                    int ecDY = ecLoc.y - home.y;
+                    int ecDX = ecLoc.x - home.x + Util.dOffset;
+                    int ecDY = ecLoc.y - home.y + Util.dOffset;
     
                     int flag = 0;
                     int inf = (int) Math.min(31, Math.ceil(Math.log(robot.getInfluence()) / Math.log(Comms.INF_LOG_BASE)));

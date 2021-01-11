@@ -19,9 +19,9 @@ public strictfp class RobotPlayer {
                 // }
 
                 int sensorRadius = rc.getType().sensorRadiusSquared;
-                RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
+                RobotInfo[] sensableWithin2 = rc.senseNearbyRobots(2, rc.getTeam());
                 boolean botCreated = false;
-                for (RobotInfo robot : sensable) {
+                for (RobotInfo robot : sensableWithin2) {
                     int botFlag = rc.getFlag(robot.getID());
                     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
                     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
