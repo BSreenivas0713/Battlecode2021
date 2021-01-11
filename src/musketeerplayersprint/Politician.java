@@ -2,6 +2,8 @@ package musketeerplayersprint;
 import battlecode.common.*;
 
 import musketeerplayersprint.Util.*;
+import musketeerplayersprint.Debug.*;
+
 public class Politician extends Robot {
     static Direction main_direction;
     static final int slandererFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
@@ -14,8 +16,8 @@ public class Politician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        Util.vPrintln("I am a normal politician; current influence: " + rc.getInfluence());
-        Util.vPrintln("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        Debug.println(Debug.info, "I am a normal politician; current influence: " + rc.getInfluence());
+        Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         RobotInfo[] within6 = rc.senseNearbyRobots(6, rc.getTeam());
@@ -59,7 +61,7 @@ public class Politician extends Robot {
 
         for (RobotInfo robot : within6) {
             if (robot.getType() == RobotType.POLITICIAN && rc.getFlag(robot.getID()) == 1 && !within2ofEC) {
-                Util.vPrintln("within radius 6");
+                Debug.println(Debug.info, "within radius 6");
                 return;
             }
         }
@@ -70,7 +72,7 @@ public class Politician extends Robot {
             if (rc.canGetFlag(robot.getID()) && 
                 rc.getFlag(robot.getID()) == slandererFlag && 
                 robot.getInfluence() > max_influence) {
-                Util.vPrintln("within sensing radius but not 6");
+                Debug.println(Debug.info, "within sensing radius but not 6");
                 if (ECWithinSensable == null || robot.getLocation().distanceSquaredTo(ECWithinSensable) > robot.getType().sensorRadiusSquared) {
                     max_influence = robot.getInfluence();
                 }

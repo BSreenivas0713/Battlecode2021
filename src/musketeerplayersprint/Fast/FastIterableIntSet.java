@@ -61,7 +61,6 @@ public class FastIterableIntSet {
     }
     
     public void updateIterable() {
-        System.out.println("EarliestRemoved: " + earliestRemoved);
         for (int i = earliestRemoved; i < size; i++) {
             ints[i] = keys.charAt(i);
         }

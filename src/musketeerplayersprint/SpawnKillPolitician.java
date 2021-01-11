@@ -1,7 +1,9 @@
 package musketeerplayersprint;
+
 import battlecode.common.*;
 
 import musketeerplayersprint.Util.*;
+import musketeerplayersprint.Debug.*;
 
 public class SpawnKillPolitician extends Robot {
     static Direction main_direction;
@@ -14,8 +16,8 @@ public class SpawnKillPolitician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        Util.vPrintln("I am a spawn kill politician; current influence: " + rc.getInfluence());
-        Util.vPrintln("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        Debug.println(Debug.info, "I am a spawn kill politician; current influence: " + rc.getInfluence());
+        Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         if(rc.getEmpowerFactor(rc.getTeam(), 0) > Util.spawnKillThreshold) {
             if (rc.canEmpower(actionRadius)) {

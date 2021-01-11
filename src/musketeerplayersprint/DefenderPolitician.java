@@ -2,6 +2,7 @@ package musketeerplayersprint;
 import battlecode.common.*;
 
 import musketeerplayersprint.Util.*;
+import musketeerplayersprint.Debug.*;
 
 public class DefenderPolitician extends Robot {
     static Direction main_direction;
@@ -15,14 +16,12 @@ public class DefenderPolitician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        Util.vPrintln("I am a defender politician; current influence: " + rc.getInfluence());
-        Util.vPrintln("hasSeenEnemy: " + hasSeenEnemy);
+        Debug.println(Debug.info, "I am a defender politician; current influence: " + rc.getInfluence());
+        Debug.println(Debug.info, "hasSeenEnemy: " + hasSeenEnemy);
         
 
         if (enemyAttackable.length != 0 && rc.canEmpower(actionRadius)) {
-            //Util.vPrintln("empowering...");
             rc.empower(actionRadius);
-            //Util.vPrintln("empowered");
             return;
         }
 

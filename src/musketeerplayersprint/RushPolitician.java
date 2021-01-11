@@ -1,7 +1,9 @@
 package musketeerplayersprint;
+
 import battlecode.common.*;
 
 import musketeerplayersprint.Util.*;
+import musketeerplayersprint.Debug.*;
 
 public class RushPolitician extends Robot {
     static MapLocation enemyLocation;
@@ -24,9 +26,9 @@ public class RushPolitician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        Util.vPrintln("I am a rush politician; current influence: " + rc.getInfluence());
-        Util.vPrintln("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
-        Util.vPrintln("target map location: x:" + enemyLocation.x + ", y:" + enemyLocation.y);
+        Debug.println(Debug.info, "I am a rush politician; current influence: " + rc.getInfluence());
+        Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        Debug.println(Debug.info, "target map location: x:" + enemyLocation.x + ", y:" + enemyLocation.y);
 
         if(main_direction == null){
             main_direction = Util.randomDirection();
@@ -37,11 +39,9 @@ public class RushPolitician extends Robot {
         for(RobotInfo robot : enemyAttackable) {
             MapLocation loc = robot.getLocation();
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
-                enemyLocation.isWithinDistanceSquared(loc, 2) &&
+                enemyLocation.isWithinDistanceSquared(loc, 8) &&
                 rc.canEmpower(actionRadius)) {
-                //Util.vPrintln("empowering...");
                 rc.empower(actionRadius);
-                //Util.vPrintln("empowered");
                 return;
             }
         }
@@ -49,11 +49,9 @@ public class RushPolitician extends Robot {
         for(RobotInfo robot : neutrals) {
             MapLocation loc = robot.getLocation();
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
-                enemyLocation.isWithinDistanceSquared(loc, 2) &&
+                enemyLocation.isWithinDistanceSquared(loc, 8) &&
                 rc.canEmpower(actionRadius)) {
-                //Util.vPrintln("empowering...");
                 rc.empower(actionRadius);
-                //Util.vPrintln("empowered");
                 return;
             }
         }
@@ -71,5 +69,7 @@ public class RushPolitician extends Robot {
         if(!rc.getLocation().isWithinDistanceSquared(enemyLocation, 2)){
             tryMoveDest(main_direction);
         }
+        
+        Debug.setIndicatorLine(rc.getLocation(), enemyLocation, 255, 150, 50);
     }
 }

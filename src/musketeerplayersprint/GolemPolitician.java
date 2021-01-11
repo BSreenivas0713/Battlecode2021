@@ -2,6 +2,7 @@ package musketeerplayersprint;
 import battlecode.common.*;
 
 import musketeerplayersprint.Util.*;
+import musketeerplayersprint.Debug.*;
 
 public class GolemPolitician extends Robot {
     static Direction main_direction;
@@ -14,8 +15,8 @@ public class GolemPolitician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        Util.vPrintln("I am a golem politician; current influence: " + rc.getInfluence());
-        Util.vPrintln("Golem extra line");
+        Debug.println(Debug.info, "I am a golem politician; current influence: " + rc.getInfluence());
+        Debug.println(Debug.info, "Golem extra line");
         int min_attackable_conviction = (rc.getConviction()-10) / 3;
         int attackable_conviction = 0;
         for (RobotInfo robot : enemyAttackable) {
@@ -23,9 +24,8 @@ public class GolemPolitician extends Robot {
         }
 
         if ((attackable_conviction >= min_attackable_conviction || enemyAttackable.length >= 3) && rc.canEmpower(actionRadius)) {
-            // Util.vPrintln("empowering...");
             rc.empower(actionRadius);
-            Util.vPrintln("empowered");
+            Debug.println(Debug.info, "empowered");
             return;
         }
         
