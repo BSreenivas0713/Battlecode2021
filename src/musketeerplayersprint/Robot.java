@@ -29,12 +29,16 @@ public class Robot {
         sensorRadius = rc.getType().sensorRadiusSquared;
         actionRadius = rc.getType().actionRadiusSquared;
         defaultFlag = 0;
-        RobotInfo[] sensableWithin2 = rc.senseNearbyRobots(2, rc.getTeam());
-        MapLocation currLoc = rc.getLocation();
-        for (RobotInfo robot : sensableWithin2) {
-            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
-                MapLocation ecLoc = robot.getLocation();
-                home = ecLoc;
+        if(rc.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+            home = rc.getLocation();
+        } else {
+            RobotInfo[] sensableWithin2 = rc.senseNearbyRobots(2, rc.getTeam());
+            MapLocation currLoc = rc.getLocation();
+            for (RobotInfo robot : sensableWithin2) {
+                if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                    MapLocation ecLoc = robot.getLocation();
+                    home = ecLoc;
+                }
             }
         }
 
@@ -48,6 +52,7 @@ public class Robot {
             setFlag(nextFlag);
         }
         Debug.println(Debug.info, "Flag set: " + Integer.toBinaryString(rc.getFlag(rc.getID())));
+        rc.setIndicatorDot(home, 255, 255, 255);
 
         if(resetFlagOnNewTurn)
             nextFlag = defaultFlag;

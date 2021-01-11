@@ -193,6 +193,10 @@ public class EC extends Robot {
             case SAVING_FOR_RUSH:
                 RushFlag targetEC = ECflags.peek();
                 int requiredInfluence = targetEC.requiredInfluence;
+
+                MapLocation enemyLocation = rc.getLocation().translate(targetEC.dx - Util.dOffset, targetEC.dy - Util.dOffset);
+                rc.setIndicatorLine(rc.getLocation(), enemyLocation, 100, 255, 100);
+
                 if(requiredInfluence < currInfluence) {
                     resetFlagOnNewTurn = false;
                     nextFlag = targetEC.flag;
@@ -381,7 +385,11 @@ public class EC extends Robot {
         // if (Comms.getIC(currFlag) == Comms.InformationCategory.ENEMY_EC) {
         //     toBuild = RobotType.MUCKRAKER;
         // }
-        influence = ECflags.peek().requiredInfluence;
+        RushFlag rushFlag = ECflags.peek();
+        influence = rushFlag.requiredInfluence;
+
+        MapLocation enemyLocation = rc.getLocation().translate(rushFlag.dx - Util.dOffset, rushFlag.dy - Util.dOffset);
+        rc.setIndicatorLine(rc.getLocation(), enemyLocation, 255, 150, 50);
 
         if (influence >= currInfluence) {
             currentState = State.SAVING_FOR_RUSH;
