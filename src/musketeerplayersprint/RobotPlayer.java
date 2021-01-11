@@ -12,6 +12,7 @@ public strictfp class RobotPlayer {
     public static void run(RobotController rc) throws GameActionException {
 
         Robot bot = null;
+        Debug.init(rc);
 
         switch (rc.getType()) {
             case ENLIGHTENMENT_CENTER: bot = new EC(rc);          break;

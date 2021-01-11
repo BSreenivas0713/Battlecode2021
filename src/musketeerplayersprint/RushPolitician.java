@@ -70,6 +70,6 @@ public class RushPolitician extends Robot {
             tryMoveDest(main_direction);
         }
         
-        rc.setIndicatorLine(rc.getLocation(), enemyLocation, 255, 150, 50);
+        Debug.setIndicatorLine(rc.getLocation(), enemyLocation, 255, 150, 50);
     }
 }
