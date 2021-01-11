@@ -3,10 +3,9 @@ import battlecode.common.*;
 
 import musketeerplayersprint.Comms.*;
 import musketeerplayersprint.Util.*;
-import java.util.ArrayList;
+import musketeerplayersprint.FastIterableIntSet;
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
-
 
 public class EC extends Robot {
     static enum State {
@@ -62,7 +61,8 @@ public class EC extends Robot {
         }
     }
 
-    static ArrayList<Integer> ids; // TODO USE HASHSET
+    static FastIterableIntSet idSet;
+    static int[] ids;
     static PriorityQueue<RushFlag> ECflags;
     static ArrayDeque<State> stateStack;
 
@@ -82,7 +82,8 @@ public class EC extends Robot {
 
     public EC(RobotController r) {
         super(r);
-        ids = new ArrayList<Integer>();
+        idSet = new FastIterableIntSet(1000);
+        ids = idSet.ints;
         ECflags = new PriorityQueue<RushFlag>();
         stateStack = new ArrayDeque<State>();
         currentState = State.PHASE1;
@@ -277,18 +278,19 @@ public class EC extends Robot {
             int id = robot.getID();
             if(rc.canGetFlag(id)) {
                 int flag = rc.getFlag(id);
-                if(Comms.getIC(flag) == InformationCategory.NEW_ROBOT && !ids.contains(id)) {
-                    ids.add(id);
+                if(Comms.getIC(flag) == InformationCategory.NEW_ROBOT && !idSet.contains(id)) {
+                    idSet.add(id);
                 }
             }
         }
-        Util.vPrintln("num id's found: " + ids.size());
+        Util.vPrintln("num id's found: " + idSet.size);
     }
 
     public void checkForTowers() throws GameActionException {
-        ids.removeIf(robotID -> !rc.canGetFlag(robotID));
-        // int i = 0;
-        for(int id : ids) {
+        idSet.updateIterable();
+        int id;
+        for(int j = idSet.size - 1; j >= 0; j--) {
+            id = ids[j];
             if(rc.canGetFlag(id)) {
                 int flag = rc.getFlag(id);
                 int dxdy = flag & Comms.BIT_MASK_COORDS;
@@ -320,6 +322,8 @@ public class EC extends Robot {
                     //     Util.vPrintln("no update made.");
                     // }
                 }
+            } else {
+                idSet.remove(id);
             }
             // i++;
             // if (i >= 100) {
