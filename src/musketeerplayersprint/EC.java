@@ -97,7 +97,7 @@ public class EC extends Robot {
         while(num_direction != 0) {
             if (rc.canBuildRobot(toBuild, main_direction, influence)) {
                 rc.buildRobot(toBuild, main_direction, influence);
-                RobotInfo robot = rc.senseRobotAtLocation(rc.getLocation().add(main_direction));
+                RobotInfo robot = rc.senseRobotAtLocation(home.add(main_direction));
                 if(robot != null) {
                     Debug.println(Debug.info, "built robot: " + robot.getID());
                     idSet.add(robot.getID());
@@ -194,8 +194,8 @@ public class EC extends Robot {
                 RushFlag targetEC = ECflags.peek();
                 int requiredInfluence = targetEC.requiredInfluence;
 
-                MapLocation enemyLocation = rc.getLocation().translate(targetEC.dx - Util.dOffset, targetEC.dy - Util.dOffset);
-                Debug.setIndicatorLine(rc.getLocation(), enemyLocation, 100, 255, 100);
+                MapLocation enemyLocation = home.translate(targetEC.dx - Util.dOffset, targetEC.dy - Util.dOffset);
+                Debug.setIndicatorLine(home, enemyLocation, 100, 255, 100);
 
                 if(requiredInfluence < currInfluence) {
                     resetFlagOnNewTurn = false;
@@ -359,9 +359,8 @@ public class EC extends Robot {
 
     public boolean tryStartRemovingBlockage() throws GameActionException {
         int num_enemies_near = 0;
-        MapLocation currLoc = rc.getLocation();
         for (Direction dir : Util.directions) {
-            MapLocation surroundingLoc = currLoc.add(dir);
+            MapLocation surroundingLoc = home.add(dir);
             if (rc.onTheMap(surroundingLoc)){
                 RobotInfo surroundingBot = rc.senseRobotAtLocation(surroundingLoc);
                 if (surroundingBot != null && surroundingBot.getTeam() == enemy) {
@@ -388,8 +387,8 @@ public class EC extends Robot {
         RushFlag rushFlag = ECflags.peek();
         influence = rushFlag.requiredInfluence;
 
-        MapLocation enemyLocation = rc.getLocation().translate(rushFlag.dx - Util.dOffset, rushFlag.dy - Util.dOffset);
-        Debug.setIndicatorLine(rc.getLocation(), enemyLocation, 255, 150, 50);
+        MapLocation enemyLocation = home.translate(rushFlag.dx - Util.dOffset, rushFlag.dy - Util.dOffset);
+        Debug.setIndicatorLine(home, enemyLocation, 255, 150, 50);
 
         if (influence >= currInfluence) {
             currentState = State.SAVING_FOR_RUSH;
