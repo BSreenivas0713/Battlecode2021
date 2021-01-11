@@ -39,8 +39,9 @@ public class Util {
     static final int cleanupPoliticianInfluence = 34;
     static final int numDefenders = 4;
     static final int minTimeBetweenRushes = 0;
+    static final int maxSlandereInfluence = 949;
 
-    static final boolean verbose = true;
+    static final boolean verbose = false;
 
     /**
      * Returns a random Direction.
