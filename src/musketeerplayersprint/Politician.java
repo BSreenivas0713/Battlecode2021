@@ -11,11 +11,6 @@ public class Politician extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_BODYGUARD);
     }
 
-    public Politician(RobotController r, int currDx, int currDy) {
-        super(r, currDx, currDy);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_BODYGUARD);
-    }
-
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
