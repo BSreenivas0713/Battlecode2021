@@ -1,7 +1,10 @@
 package musketeerplayersprint;
+
 import battlecode.common.*;
+
 import musketeerplayersprint.Util.*;
 import musketeerplayersprint.Comms.*;
+import musketeerplayersprint.Debug.*;
 
 public strictfp class RobotPlayer {
 
@@ -25,7 +28,7 @@ public strictfp class RobotPlayer {
                     int botFlag = rc.getFlag(robot.getID());
                     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
                     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
-                        Util.vPrintln("Flag for creation: " + botFlag);
+                        Debug.println(Debug.info, "Flag for creation: " + botFlag);
                         switch(flagIC) {
                             case NEUTRAL_EC:
                             case ENEMY_EC:
@@ -64,6 +67,7 @@ public strictfp class RobotPlayer {
                 if(bot != null)
                     break;
                 //TODO: write rush muckraker.
+                Debug.println(Debug.critical, "LOGICAL ERROR: Did not find flag directing type");
                 bot = new Politician(rc);
                 break;
             case SLANDERER:            bot = new Slanderer(rc);   break;
@@ -78,7 +82,7 @@ public strictfp class RobotPlayer {
                 if (bot.changeTo != null) {
                     bot = bot.changeTo;
                 }
-                // Util.vPrintln("BC left at end: " + Clock.getBytecodesLeft());
+                // Debug.println(Debug.info, "BC left at end: " + Clock.getBytecodesLeft());
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();

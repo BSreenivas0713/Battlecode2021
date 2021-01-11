@@ -1,4 +1,5 @@
 package musketeerplayersprint;
+
 import battlecode.common.*;
 
 public class Comms {
