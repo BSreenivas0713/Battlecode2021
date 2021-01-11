@@ -16,9 +16,9 @@ public class Slanderer extends Robot {
         
         if (rc.getType() != RobotType.SLANDERER) {
             if(turnCount % 2 == 0) {
-                changeTo = new Politician(rc, dx, dy);
+                changeTo = new Politician(rc);
             } else {
-                changeTo = new ExplorerPolitician(rc, dx, dy);
+                changeTo = new ExplorerPolitician(rc);
             }
             return;
         }
