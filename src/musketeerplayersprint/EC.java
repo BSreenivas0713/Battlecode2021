@@ -307,6 +307,10 @@ public class EC extends Robot {
                     // else {
                     //     Debug.println(Debug.info, "no update made.");
                     // }
+                } else if(flagIC == Comms.InformationCategory.FRIENDLY_EC) {
+                    int[] currDxDy = Comms.getDxDy(flag);
+                    RushFlag rushFlag = new RushFlag(0, currDxDy[0], currDxDy[1], 0);
+                    ECflags.remove(rushFlag);
                 }
             } else {
                 idSet.remove(id);
