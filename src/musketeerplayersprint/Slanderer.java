@@ -1,7 +1,9 @@
 package musketeerplayersprint;
+
 import battlecode.common.*;
 
 import musketeerplayersprint.Util.*;
+import musketeerplayersprint.Debug.*;
 
 public class Slanderer extends Robot {
     static Direction main_direction;
@@ -23,9 +25,8 @@ public class Slanderer extends Robot {
             return;
         }
 
-        Util.vPrintln("I am a slanderer; current influence: " + rc.getInfluence());
-        Util.vPrintln("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
-        Util.vPrintln("current flag: " + rc.getFlag(rc.getID()));
+        Debug.println(Debug.info, "I am a slanderer; current influence: " + rc.getInfluence());
+        Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         if(main_direction == null) {
             main_direction = Util.randomDirection();

@@ -2,6 +2,7 @@ package musketeerplayersprint;
 import battlecode.common.*;
 
 import musketeerplayersprint.Util.*;
+import musketeerplayersprint.Debug.*;
 
 public class CleanupPolitician extends Robot {
     static Direction main_direction;
@@ -16,17 +17,15 @@ public class CleanupPolitician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        Util.vPrintln("I am an cleanup politician; current influence: " + rc.getInfluence());
-        Util.vPrintln("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        Debug.println(Debug.info, "I am an cleanup politician; current influence: " + rc.getInfluence());
+        Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
 
         if (enemyAttackable.length != 0 && rc.canEmpower(actionRadius)) {
-            //Util.vPrintln("empowering...");
             rc.empower(actionRadius);
-            //Util.vPrintln("empowered");
             return;
         }
 

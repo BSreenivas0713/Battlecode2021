@@ -3,6 +3,7 @@ import battlecode.common.*;
 
 import musketeerplayersprint.Util.*;
 import musketeerplayersprint.Comms.*;
+import musketeerplayersprint.Debug.*;
 
 public class Robot {
     static RobotController rc;
@@ -28,12 +29,16 @@ public class Robot {
         sensorRadius = rc.getType().sensorRadiusSquared;
         actionRadius = rc.getType().actionRadiusSquared;
         defaultFlag = 0;
-        RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
-        MapLocation currLoc = rc.getLocation();
-        for (RobotInfo robot : sensable) {
-            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
-                MapLocation ecLoc = robot.getLocation();
-                home = ecLoc;
+        if(rc.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+            home = rc.getLocation();
+        } else {
+            RobotInfo[] sensableWithin2 = rc.senseNearbyRobots(2, rc.getTeam());
+            MapLocation currLoc = rc.getLocation();
+            for (RobotInfo robot : sensableWithin2) {
+                if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                    MapLocation ecLoc = robot.getLocation();
+                    home = ecLoc;
+                }
             }
         }
 
@@ -46,7 +51,8 @@ public class Robot {
         if(rc.getFlag(rc.getID()) != nextFlag) {
             setFlag(nextFlag);
         }
-        Util.vPrintln("Flag set: " + Integer.toBinaryString(rc.getFlag(rc.getID())));
+        Debug.println(Debug.info, "Flag set: " + Integer.toBinaryString(rc.getFlag(rc.getID())));
+        Debug.setIndicatorDot(home, 255, 255, 255);
 
         if(resetFlagOnNewTurn)
             nextFlag = defaultFlag;
@@ -67,7 +73,7 @@ public class Robot {
      * @throws GameActionException
      */
     static boolean tryMove(Direction dir) throws GameActionException {
-        //Util.vPrintln("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
+        //Debug.println(Debug.info, "I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
         if (rc.canMove(dir)) {
             rc.move(dir);
             return true;
@@ -75,7 +81,7 @@ public class Robot {
     }
 
     static boolean tryMoveDest(Direction target_dir) throws GameActionException {
-        // Util.vPrintln("Dest direction: " + dir);
+        // Debug.println(Debug.info, "Dest direction: " + dir);
         Direction[] dirs = {target_dir, target_dir.rotateRight(), target_dir.rotateLeft(), 
             target_dir.rotateRight().rotateRight(), target_dir.rotateLeft().rotateLeft()};
 
@@ -101,37 +107,39 @@ public class Robot {
                 if(robot.getTeam() == rc.getTeam()) {
                     if(!robot.getLocation().equals(home)) {
                         res = true;
-                        nextFlag = Comms.getFlag(InformationCategory.FRIENDLY_EC);
+    
+                        MapLocation ecLoc = robot.getLocation();
+        
+                        int ecDX = ecLoc.x - home.x + Util.dOffset;
+                        int ecDY = ecLoc.y - home.y + Util.dOffset;
+    
+                        int inf = (int) Math.min(31, Math.ceil(Math.log(robot.getInfluence()) / Math.log(Comms.INF_LOG_BASE)));
+
+                        nextFlag = Comms.getFlag(InformationCategory.FRIENDLY_EC, inf, ecDX, ecDY);
                     }
                 } else {
                     res = true;
     
-                    MapLocation currLoc = rc.getLocation();
                     MapLocation ecLoc = robot.getLocation();
     
                     int ecDX = ecLoc.x - home.x + Util.dOffset;
                     int ecDY = ecLoc.y - home.y + Util.dOffset;
     
-                    int flag = 0;
                     int inf = (int) Math.min(31, Math.ceil(Math.log(robot.getInfluence()) / Math.log(Comms.INF_LOG_BASE)));
                     if(robot.getTeam() == enemy) {
-                        flag = Comms.getFlag(InformationCategory.ENEMY_EC, inf, ecDX, ecDY);
+                        nextFlag = Comms.getFlag(InformationCategory.ENEMY_EC, inf, ecDX, ecDY);
                     } else {
-                        flag = Comms.getFlag(InformationCategory.NEUTRAL_EC, inf, ecDX, ecDY);
+                        nextFlag = Comms.getFlag(InformationCategory.NEUTRAL_EC, inf, ecDX, ecDY);
                     }
-    
-                    nextFlag = flag;
                 }
             }
         }
         return res;
     }
 
-    void setFlag(int flag) {
-        try {
-            if(rc.canSetFlag(flag)) {
-                rc.setFlag(flag);
-            }
-        } catch (Exception e) {}
+    void setFlag(int flag) throws GameActionException {
+        if(rc.canSetFlag(flag)) {
+            rc.setFlag(flag);
+        }
     }
 }
