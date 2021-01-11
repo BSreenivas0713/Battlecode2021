@@ -8,8 +8,6 @@ public class Robot {
     static RobotController rc;
     static int turnCount = 0;
 
-    public static int dx = Util.dOffset;
-    public static int dy = Util.dOffset;
     static int defaultFlag;
     static int nextFlag;
     static boolean resetFlagOnNewTurn = true;
@@ -35,24 +33,11 @@ public class Robot {
         for (RobotInfo robot : sensable) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 MapLocation ecLoc = robot.getLocation();
-                dx += currLoc.x - ecLoc.x;
-                dy += currLoc.y - ecLoc.y;
                 home = ecLoc;
             }
         }
 
         nextFlag = Comms.getFlag(InformationCategory.NEW_ROBOT);
-    }
-
-    public Robot(RobotController r, int currDx, int currDy) {
-        enemy = rc.getTeam().opponent();
-        sensorRadius = rc.getType().sensorRadiusSquared;
-        actionRadius = rc.getType().actionRadiusSquared;
-        rc = r;
-        defaultFlag = 0;
-        dx = currDx;
-        dy = currDy;
-        home = rc.getLocation().translate(-currDx, -currDy);
     }
 
     public void takeTurn() throws GameActionException {
@@ -85,8 +70,6 @@ public class Robot {
         //Util.vPrintln("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
         if (rc.canMove(dir)) {
             rc.move(dir);
-            dx += dir.getDeltaX();
-            dy += dir.getDeltaY();
             return true;
         } else return false;
     }
@@ -98,11 +81,7 @@ public class Robot {
 
         for(Direction dir : dirs) {
             if(rc.canMove(dir)) {
-                rc.move(dir);
-                
-                dx += dir.getDeltaX();
-                dy += dir.getDeltaY();
-    
+                rc.move(dir);  
                 return true;
             }
         }
@@ -130,8 +109,8 @@ public class Robot {
                     MapLocation currLoc = rc.getLocation();
                     MapLocation ecLoc = robot.getLocation();
     
-                    int ecDX = dx + ecLoc.x - currLoc.x;
-                    int ecDY = dy + ecLoc.y - currLoc.y;
+                    int ecDX = ecLoc.x - home.x + Util.dOffset;
+                    int ecDY = ecLoc.y - home.y + Util.dOffset;
     
                     int flag = 0;
                     int inf = (int) Math.min(31, Math.ceil(Math.log(robot.getInfluence()) / Math.log(Comms.INF_LOG_BASE)));
