@@ -69,5 +69,7 @@ public class RushPolitician extends Robot {
         if(!rc.getLocation().isWithinDistanceSquared(enemyLocation, 2)){
             tryMoveDest(main_direction);
         }
+        
+        rc.setIndicatorLine(rc.getLocation(), enemyLocation, 255, 150, 50);
     }
 }
