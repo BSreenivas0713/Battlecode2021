@@ -149,7 +149,7 @@ public class EC extends Robot {
                 Util.vPrintln("Phase1 state");
                 if(currInfluence >= 149 && robotCounter % 5 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
-                    influence = Math.min(1000, currInfluence);
+                    influence = Math.min(Util.maxSlandereInfluence, currInfluence);
                 } else {
                     toBuild = RobotType.MUCKRAKER;
                     influence = 1;
@@ -168,7 +168,7 @@ public class EC extends Robot {
                     signalRobotType(Comms.SubRobotType.POL_BODYGUARD);
                 } else if(7 * currInfluence / 8 >= 150 && robotCounter % 5 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
-                    influence = Math.min(1000, 7 * currInfluence / 8);
+                    influence = Math.min(Util.maxSlandereInfluence, 7 * currInfluence / 8);
                 } else {
                     toBuild = RobotType.MUCKRAKER;
                     influence = 1;
@@ -220,7 +220,7 @@ public class EC extends Robot {
             case CLEANUP:
                 if(currInfluence >= 100 && robotCounter % 2 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
-                    influence = currInfluence / 2;
+                    influence = Math.min(currInfluence / 2, Util.maxSlandereInfluence);
                 }
                 else if(currInfluence >= 100) {
                     toBuild = RobotType.POLITICIAN;
