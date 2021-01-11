@@ -195,7 +195,7 @@ public class EC extends Robot {
                 int requiredInfluence = targetEC.requiredInfluence;
 
                 MapLocation enemyLocation = rc.getLocation().translate(targetEC.dx - Util.dOffset, targetEC.dy - Util.dOffset);
-                rc.setIndicatorLine(rc.getLocation(), enemyLocation, 100, 255, 100);
+                Debug.setIndicatorLine(rc.getLocation(), enemyLocation, 100, 255, 100);
 
                 if(requiredInfluence < currInfluence) {
                     resetFlagOnNewTurn = false;
@@ -389,7 +389,7 @@ public class EC extends Robot {
         influence = rushFlag.requiredInfluence;
 
         MapLocation enemyLocation = rc.getLocation().translate(rushFlag.dx - Util.dOffset, rushFlag.dy - Util.dOffset);
-        rc.setIndicatorLine(rc.getLocation(), enemyLocation, 255, 150, 50);
+        Debug.setIndicatorLine(rc.getLocation(), enemyLocation, 255, 150, 50);
 
         if (influence >= currInfluence) {
             currentState = State.SAVING_FOR_RUSH;
