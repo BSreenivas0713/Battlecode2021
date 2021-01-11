@@ -10,11 +10,6 @@ public class GolemPolitician extends Robot {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_GOLEM);
     }
-    
-    public GolemPolitician(RobotController r, int dx, int dy) {
-        super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_GOLEM);
-    }
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
@@ -87,7 +82,7 @@ public class GolemPolitician extends Robot {
             tryMoveDest(toMove);
         }
         if (!sensesEC) {
-            changeTo = new ExplorerPolitician(rc, dx, dy);
+            changeTo = new ExplorerPolitician(rc);
             return;
         }
     }
