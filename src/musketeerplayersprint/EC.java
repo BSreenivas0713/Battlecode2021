@@ -20,7 +20,6 @@ public class EC extends Robot {
     };
 
     static int robotCounter;
-    static int sendTroopsSemaphore = 0;
     static RobotType toBuild;
     static int influence;
 
@@ -187,8 +186,7 @@ public class EC extends Robot {
             case SAVING_FOR_RUSH:
                 RushFlag targetEC = ECflags.peek();
                 int requiredInfluence = targetEC.requiredInfluence;
-                if(requiredInfluence < currInfluence && rc.isReady()) {
-                    sendTroopsSemaphore = 1;
+                if(requiredInfluence < currInfluence) {
                     resetFlagOnNewTurn = false;
                     nextFlag = targetEC.flag;
                     currentState = State.RUSHING;
@@ -235,7 +233,7 @@ public class EC extends Robot {
                 break;
             case REMOVING_BLOCKAGE:
                 toBuild = RobotType.POLITICIAN;
-                influence = 20;
+                influence = 30;
                 signalRobotType(Comms.SubRobotType.POL_DEFENDER);
                 if(needToBuild && buildRobot(toBuild, influence)) {
                     currentState = stateStack.pop();
@@ -299,7 +297,7 @@ public class EC extends Robot {
                     int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
                     int currReqInf = (int)  neededInf * 4 + 10;
                     if (neededInf <= Util.minECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
-                        Util.vPrintln("Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
+                        // Util.vPrintln("Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                         int[] currDxDy = Comms.getDxDy(dxdy);
                         RushFlag rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag);
                         if(ECflags.contains(rushFlag)) {
@@ -344,9 +342,10 @@ public class EC extends Robot {
     }
 
     public boolean tryStartSavingForRush() throws GameActionException {
-        if (!ECflags.isEmpty() && sendTroopsSemaphore == 0 && turnCount > lastRush + Util.minTimeBetweenRushes) {
+        if (!ECflags.isEmpty() && turnCount > lastRush + Util.minTimeBetweenRushes) {
             stateStack.push(currentState);
             currentState = State.SAVING_FOR_RUSH;
+            Util.vPrintln("tryStartSavingForRush is returning true");
             return true;
         }
         return false;
@@ -390,22 +389,20 @@ public class EC extends Robot {
         // if (Comms.getIC(currFlag) == Comms.InformationCategory.ENEMY_EC) {
         //     toBuild = RobotType.MUCKRAKER;
         // }
-        if(sendTroopsSemaphore != 1) {
-            influence = 20;
-        } else {
-            influence = ECflags.peek().requiredInfluence;
+        influence = ECflags.peek().requiredInfluence;
+
+        if (influence >= currInfluence) {
+            currentState = State.SAVING_FOR_RUSH;
+            return false;
         }
         
         if(buildRobot(toBuild, influence)) {
-            sendTroopsSemaphore--;
-        }
-
-        if (sendTroopsSemaphore == 0) {
             ECflags.remove();
             resetFlagOnNewTurn = true;
             currentState = stateStack.pop();
             lastRush = turnCount;
         }
+
         return true;
     }
 

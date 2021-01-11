@@ -16,9 +16,9 @@ public class Slanderer extends Robot {
         
         if (rc.getType() != RobotType.SLANDERER) {
             if(turnCount % 2 == 0) {
-                changeTo = new Politician(rc, dx, dy);
+                changeTo = new Politician(rc);
             } else {
-                changeTo = new ExplorerPolitician(rc, dx, dy);
+                changeTo = new ExplorerPolitician(rc);
             }
             return;
         }
@@ -71,10 +71,12 @@ public class Slanderer extends Robot {
         double currPass;
         int i = 0;
         while (i < 8) {
-            currPass = rc.sensePassability(curr.add(tempDir));
-            if (currPass > maxPass) {
-                maxPass = currPass;
-                maxDir = tempDir;
+            if (rc.onTheMap(curr.add(tempDir))) {
+                currPass = rc.sensePassability(curr.add(tempDir));
+                if (currPass > maxPass) {
+                    maxPass = currPass;
+                    maxDir = tempDir;
+                }
             }
             i++;
             tempDir = tempDir.rotateRight();

@@ -13,11 +13,6 @@ public class ExplorerPolitician extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_EXPLORER);
     }
 
-    public ExplorerPolitician(RobotController r, int currDx, int currDy) {
-        super(r, currDx, currDy);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_EXPLORER);
-    }
-
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
