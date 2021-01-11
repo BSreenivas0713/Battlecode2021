@@ -2,6 +2,7 @@ package musketeerplayersprint;
 import battlecode.common.*;
 
 import musketeerplayersprint.Util.*;
+import musketeerplayersprint.Debug.*;
 
 public class Muckracker extends Robot {
     static Direction main_direction;
@@ -14,8 +15,8 @@ public class Muckracker extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        Util.vPrintln("I am a " + rc.getType() + "; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
-        Util.vPrintln("current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
+        Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         if(main_direction == null){
             main_direction = Util.randomDirection();
