@@ -154,7 +154,7 @@ public class EC extends Robot {
         switch(currentState) {
             case PHASE1:
                 Debug.println(Debug.info, "Phase1 state");
-                if(Util.getBestSlandererInfluence(currInfluence) >= 149 && robotCounter % 5 == 0 && !muckrackerNear) {
+                if(currInfluence >= 149 && robotCounter % 5 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
                     influence = Util.getBestSlandererInfluence(currInfluence);
                 } else {
