@@ -106,35 +106,34 @@ public class Slanderer extends Robot {
             }
 
             broadcastECLocation();
-        }
-    } else {
-        if(main_direction == null) {
-            main_direction = Util.randomDirection();
-        }
-
-        RobotInfo minRobot = null;
-        double minDistSquared = Integer.MAX_VALUE;
-        MapLocation curr = rc.getLocation();
-        for (RobotInfo robot : enemySensable) {
-            double temp = curr.distanceSquaredTo(robot.getLocation());
-            if (temp < minDistSquared) {
-                minDistSquared = temp;
-                minRobot = robot;
-            }
-        }
-        if (minRobot != null) {
-            main_direction = curr.directionTo(minRobot.getLocation()).opposite();
-        } else if (curr.isWithinDistanceSquared(home, 2 * sensorRadius)) {
-            main_direction = curr.directionTo(home).opposite();
-        }
-
-        MapLocation target = rc.adjacentLocation(main_direction);
-        if (rc.onTheMap(target)) {
-            while (!tryMove(main_direction) && rc.isReady()) {
+        } else {
+            if(main_direction == null) {
                 main_direction = Util.randomDirection();
             }
-        }
 
-        broadcastECLocation();
+            RobotInfo minRobot = null;
+            double minDistSquared = Integer.MAX_VALUE;
+            for (RobotInfo robot : enemySensable) {
+                double temp = curr.distanceSquaredTo(robot.getLocation());
+                if (temp < minDistSquared) {
+                    minDistSquared = temp;
+                    minRobot = robot;
+                }
+            }
+            if (minRobot != null) {
+                main_direction = curr.directionTo(minRobot.getLocation()).opposite();
+            } else if (curr.isWithinDistanceSquared(home, 2 * sensorRadius)) {
+                main_direction = curr.directionTo(home).opposite();
+            }
+
+            MapLocation target = rc.adjacentLocation(main_direction);
+            if (rc.onTheMap(target)) {
+                while (!tryMove(main_direction) && rc.isReady()) {
+                    main_direction = Util.randomDirection();
+                }
+            }
+
+            broadcastECLocation();
+        }
     }
 }
