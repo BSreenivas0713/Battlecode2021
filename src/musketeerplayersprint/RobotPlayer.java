@@ -8,10 +8,10 @@ import musketeerplayersprint.Debug.*;
 
 public strictfp class RobotPlayer {
 
+    static Robot bot;
+
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
-
-        Robot bot = null;
         Debug.init(rc);
 
         switch (rc.getType()) {
@@ -74,7 +74,6 @@ public strictfp class RobotPlayer {
             case SLANDERER:            bot = new Slanderer(rc);   break;
             case MUCKRAKER:            bot = new Muckracker(rc);  break;
         }
-        RobotType prev = rc.getType();
 
         while (true) {
             try {
@@ -91,7 +90,31 @@ public strictfp class RobotPlayer {
             } catch (Exception e) {
                 System.out.println(rc.getType() + " Exception");
                 e.printStackTrace();
+
+                reset(rc);
             }
+        }
+    }
+
+    // Last resort if a bot errors out in deployed code
+    // Certain static variables might need to be cleared to ensure 
+    // a successful return to execution.
+    public static void reset(RobotController rc) throws GameActionException {
+        switch (rc.getType()) {
+            case ENLIGHTENMENT_CENTER:
+                bot = new EC(rc);
+                EC.currentState = EC.State.PHASE1;
+                EC.ECflags.clear();
+                break;
+            case POLITICIAN: 
+                bot = new Politician(rc);
+                break;
+            case SLANDERER:
+                bot = new Slanderer(rc);
+                break;
+            case MUCKRAKER:
+                bot = new Muckracker(rc);
+                break;
         }
     }
 }

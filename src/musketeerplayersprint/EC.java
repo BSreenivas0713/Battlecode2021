@@ -67,7 +67,6 @@ public class EC extends Robot {
     static ArrayDeque<State> stateStack;
 
     static State currentState;
-    static State prevState;
 
     static boolean needToMakeBodyguard = false;
     static int lastRush = 0;
@@ -154,7 +153,7 @@ public class EC extends Robot {
         switch(currentState) {
             case PHASE1:
                 Debug.println(Debug.info, "Phase1 state");
-                if(currInfluence >= 149 && robotCounter % 5 == 0 && !muckrackerNear) {
+                if(Util.getBestSlandererInfluence(currInfluence) >= 130 && robotCounter % 5 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
                     influence = Util.getBestSlandererInfluence(currInfluence);
                 } else {
