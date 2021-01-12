@@ -192,6 +192,10 @@ public class EC extends Robot {
                 break;
             case SAVING_FOR_RUSH:
                 RushFlag targetEC = ECflags.peek();
+                if(targetEC == null) {
+                    currentState = stateStack.pop();
+                    break;
+                }
                 int requiredInfluence = targetEC.requiredInfluence;
 
                 MapLocation enemyLocation = home.translate(targetEC.dx - Util.dOffset, targetEC.dy - Util.dOffset);
