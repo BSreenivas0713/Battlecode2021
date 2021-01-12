@@ -12,11 +12,6 @@ def calculate_best_profits():
     
     return dp;
 
-
-
 if __name__ == '__main__':
     dp = calculate_best_profits()
-    for i in range(0, len(dp)):
-        dp[i] = chr(dp[i])
-    s = "".join(dp)
-    print(s)
+    print(dp)
