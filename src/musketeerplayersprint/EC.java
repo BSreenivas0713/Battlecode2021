@@ -154,9 +154,9 @@ public class EC extends Robot {
         switch(currentState) {
             case PHASE1:
                 Debug.println(Debug.info, "Phase1 state");
-                if(currInfluence >= 149 && robotCounter % 5 == 0 && !muckrackerNear) {
+                if(Util.getBestSlandererInfluence(currInfluence) >= 149 && robotCounter % 5 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
-                    influence = Math.min(Util.maxSlandererInfluence, currInfluence);
+                    influence = Util.getBestSlandererInfluence(currInfluence);
                 } else {
                     toBuild = RobotType.MUCKRAKER;
                     influence = 1;
@@ -173,9 +173,9 @@ public class EC extends Robot {
                     toBuild = RobotType.POLITICIAN;
                     influence = Math.min(currInfluence / 4, 20);
                     signalRobotType(Comms.SubRobotType.POL_BODYGUARD);
-                } else if(7 * currInfluence / 8 >= 150 && robotCounter % 5 == 0 && !muckrackerNear) {
+                } else if(Util.getBestSlandererInfluence(7 * currInfluence / 8) >= 150 && robotCounter % 5 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
-                    influence = Math.min(Util.maxSlandererInfluence, 7 * currInfluence / 8);
+                    influence = Util.getBestSlandererInfluence(7 * currInfluence / 8);
                 } else {
                     toBuild = RobotType.MUCKRAKER;
                     influence = 1;
@@ -229,9 +229,9 @@ public class EC extends Robot {
                 }
                 break;
             case CLEANUP:
-                if(currInfluence >= 100 && robotCounter % 2 == 0 && !muckrackerNear) {
+                if(Util.getBestSlandererInfluence(currInfluence) >= 100 && robotCounter % 2 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
-                    influence = Math.min(currInfluence / 2, Util.maxSlandererInfluence);
+                    influence = Util.getBestSlandererInfluence(currInfluence / 2);
                 }
                 else if(currInfluence >= 100) {
                     toBuild = RobotType.POLITICIAN;
@@ -290,7 +290,7 @@ public class EC extends Robot {
                 if((flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC)) {
                     int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
                     int currReqInf = (int)  neededInf * 4 + 10;
-                    if (neededInf <= Util.minECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
+                    if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
                         // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                         int[] currDxDy = Comms.getDxDy(flag);
                         RushFlag rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag);
@@ -430,55 +430,55 @@ public class EC extends Robot {
         return false;
     }
 
-    public void doMainStrategy() throws GameActionException {
-        int slandererInfluence = Math.min(Math.max(100, currInfluence / 10), 1000);
-        int normalInfluence = Math.max(50, currInfluence / 20);
-        if (currRoundNum < Util.phaseOne) {
-            Debug.println(Debug.info, "phase 1 default build troop behavior");
-            switch(robotCounter % 9) {
-                case 5:
-                    toBuild = RobotType.MUCKRAKER;
-                    influence = normalInfluence;
-                    break;
-                case 3: case 4: case 6: 
-                    signalRobotType(Comms.SubRobotType.POL_EXPLORER);
-                    toBuild = RobotType.POLITICIAN;
-                    influence = normalInfluence;
-                    break;
-                case 8:
-                    signalRobotType(Comms.SubRobotType.POL_BODYGUARD);
-                    toBuild = RobotType.POLITICIAN;
-                    influence = normalInfluence;
-                    break;
-                default:
-                    toBuild = RobotType.SLANDERER;
-                    influence = slandererInfluence;
-                    break;
-            }
-        }
-        else if(currRoundNum < Util.phaseTwo) {
-            Debug.println(Debug.info, "phase 2 default build troop behavior");
-            switch(robotCounter % 9) {
-                case 0: case 2: case 6:
-                    toBuild = RobotType.MUCKRAKER;
-                    influence = normalInfluence;
-                    break;
-                case 1: case 3: case 5:
-                    toBuild = RobotType.POLITICIAN;
-                    influence = normalInfluence;
-                    break;
-                default:
-                    toBuild = RobotType.SLANDERER;
-                    influence = slandererInfluence;
-                    break;
-            }
-        }
-        else {
-            Debug.println(Debug.info, "build troop behavior after 2000 rounds");
-            toBuild = RobotType.MUCKRAKER;
-            influence = normalInfluence;
-        }
-    }
+    // public void doMainStrategy() throws GameActionException {
+    //     int slandererInfluence = Math.min(Math.max(100, currInfluence / 10), 1000);
+    //     int normalInfluence = Math.max(50, currInfluence / 20);
+    //     if (currRoundNum < Util.phaseOne) {
+    //         Debug.println(Debug.info, "phase 1 default build troop behavior");
+    //         switch(robotCounter % 9) {
+    //             case 5:
+    //                 toBuild = RobotType.MUCKRAKER;
+    //                 influence = normalInfluence;
+    //                 break;
+    //             case 3: case 4: case 6: 
+    //                 signalRobotType(Comms.SubRobotType.POL_EXPLORER);
+    //                 toBuild = RobotType.POLITICIAN;
+    //                 influence = normalInfluence;
+    //                 break;
+    //             case 8:
+    //                 signalRobotType(Comms.SubRobotType.POL_BODYGUARD);
+    //                 toBuild = RobotType.POLITICIAN;
+    //                 influence = normalInfluence;
+    //                 break;
+    //             default:
+    //                 toBuild = RobotType.SLANDERER;
+    //                 influence = slandererInfluence;
+    //                 break;
+    //         }
+    //     }
+    //     else if(currRoundNum < Util.phaseTwo) {
+    //         Debug.println(Debug.info, "phase 2 default build troop behavior");
+    //         switch(robotCounter % 9) {
+    //             case 0: case 2: case 6:
+    //                 toBuild = RobotType.MUCKRAKER;
+    //                 influence = normalInfluence;
+    //                 break;
+    //             case 1: case 3: case 5:
+    //                 toBuild = RobotType.POLITICIAN;
+    //                 influence = normalInfluence;
+    //                 break;
+    //             default:
+    //                 toBuild = RobotType.SLANDERER;
+    //                 influence = slandererInfluence;
+    //                 break;
+    //         }
+    //     }
+    //     else {
+    //         Debug.println(Debug.info, "build troop behavior after 2000 rounds");
+    //         toBuild = RobotType.MUCKRAKER;
+    //         influence = normalInfluence;
+    //     }
+    // }
 
     int checkNumDefenders() throws GameActionException {
         int count = 0;
