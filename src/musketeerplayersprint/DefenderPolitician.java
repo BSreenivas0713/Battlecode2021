@@ -19,9 +19,21 @@ public class DefenderPolitician extends Robot {
         Debug.println(Debug.info, "I am a defender politician; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "hasSeenEnemy: " + hasSeenEnemy);
         
+        MapLocation currLoc = rc.getLocation();
+        int minEnemyDistSquared = Integer.MAX_VALUE;
+        MapLocation closestEnemy = null;
+        for (RobotInfo robot : enemyAttackable) {
+            int temp = currLoc.distanceSquaredTo(robot.getLocation());
+            if (temp < minEnemyDistSquared) {
+                minEnemyDistSquared = temp;
+                closestEnemy = robot.getLocation();
+            }
+        }
 
-        if (enemyAttackable.length != 0 && rc.canEmpower(actionRadius)) {
-            rc.empower(actionRadius);
+        if (enemyAttackable.length != 0 && rc.canEmpower(minEnemyDistSquared)) {
+            Debug.println(Debug.info, "Empowered with radius: " + minEnemyDistSquared);
+            Debug.setIndicatorLine(rc.getLocation(), closestEnemy, 255, 150, 50);
+            rc.empower(minEnemyDistSquared);
             return;
         }
 

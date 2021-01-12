@@ -25,9 +25,22 @@ public class Politician extends Robot {
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
+        
+        MapLocation currLoc = rc.getLocation();
+        int maxEnemyDistSquared = Integer.MIN_VALUE;
+        MapLocation farthestEnemy = null;
+        for (RobotInfo robot : enemyAttackable) {
+            int temp = currLoc.distanceSquaredTo(robot.getLocation());
+            if (temp > maxEnemyDistSquared) {
+                maxEnemyDistSquared = temp;
+                farthestEnemy = robot.getLocation();
+            }
+        }
 
-        if((enemyAttackable.length >= 1 || neutrals.length != 0) && rc.canEmpower(actionRadius)) {
-            rc.empower(actionRadius);
+        if (enemyAttackable.length > 0 && rc.canEmpower(maxEnemyDistSquared)) {
+            Debug.println(Debug.info, "Empowered with radius: " + maxEnemyDistSquared);
+            Debug.setIndicatorLine(rc.getLocation(), farthestEnemy, 255, 150, 50);
+            rc.empower(maxEnemyDistSquared);
             return;
         }
 

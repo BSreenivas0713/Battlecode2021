@@ -23,9 +23,22 @@ public class CleanupPolitician extends Robot {
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
+        
+        MapLocation currLoc = rc.getLocation();
+        int minEnemyDistSquared = Integer.MAX_VALUE;
+        MapLocation closestEnemy = null;
+        for (RobotInfo robot : enemyAttackable) {
+            int temp = currLoc.distanceSquaredTo(robot.getLocation());
+            if (temp < minEnemyDistSquared) {
+                minEnemyDistSquared = temp;
+                closestEnemy = robot.getLocation();
+            }
+        }
 
-        if (enemyAttackable.length != 0 && rc.canEmpower(actionRadius)) {
-            rc.empower(actionRadius);
+        if (enemyAttackable.length != 0 && rc.canEmpower(minEnemyDistSquared)) {
+            Debug.println(Debug.info, "Empowered with radius: " + minEnemyDistSquared);
+            Debug.setIndicatorLine(rc.getLocation(), closestEnemy, 255, 150, 50);
+            rc.empower(minEnemyDistSquared);
             return;
         }
 

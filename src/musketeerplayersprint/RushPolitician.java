@@ -32,21 +32,21 @@ public class RushPolitician extends Robot {
         Debug.println(Debug.info, "I am a rush politician; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
         Debug.println(Debug.info, "target map location: x:" + enemyLocation.x + ", y:" + enemyLocation.y);
+        Debug.println(Debug.info, "Semaphore: " + moveSemaphore);
         
         MapLocation currLoc = rc.getLocation();
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
-        boolean targetFound = false;
-        
+        int minEnemyDistSquared = Integer.MAX_VALUE;
+        MapLocation closestEnemy = null;
         for(RobotInfo robot : enemyAttackable) {
             MapLocation loc = robot.getLocation();
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
                 enemyLocation.isWithinDistanceSquared(loc, 8)) {
-                targetFound = true;
                 int dist = currLoc.distanceSquaredTo(loc);
-                if (rc.canEmpower(dist) && (moveSemaphore == 0 || currLoc.isAdjacentTo(loc))) {
-                    rc.empower(dist);
+                if(dist < minEnemyDistSquared) {
+                    minEnemyDistSquared = dist;
+                    closestEnemy = robot.getLocation();
                 }
-                return;
             }
         }
         
@@ -54,16 +54,24 @@ public class RushPolitician extends Robot {
             MapLocation loc = robot.getLocation();
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
                 enemyLocation.isWithinDistanceSquared(loc, 8)) {
-                targetFound = true;
                 int dist = currLoc.distanceSquaredTo(loc);
-                if (rc.canEmpower(dist) && (moveSemaphore == 0 || currLoc.isAdjacentTo(loc))) {
-                    rc.empower(dist);
+                if(dist < minEnemyDistSquared) {
+                    minEnemyDistSquared = dist;
+                    closestEnemy = robot.getLocation();
                 }
-                return;
             }
         }
+        
+        if (rc.canEmpower(minEnemyDistSquared) && (moveSemaphore <= 0 || minEnemyDistSquared <= 1)) {
+            int radius = Math.min(actionRadius, minEnemyDistSquared);
+            Debug.println(Debug.info, "Empowered with radius: " + radius);
+            Debug.setIndicatorLine(rc.getLocation(), closestEnemy, 255, 150, 50);
+            rc.empower(radius);
+            return;
+        }
 
-        if (!targetFound) {
+        // Haven't found enemy EC
+        if (minEnemyDistSquared == Integer.MAX_VALUE) {
             for (RobotInfo robot : friendlySensable) {
                 MapLocation loc = robot.getLocation();
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 8) &&
@@ -75,18 +83,18 @@ public class RushPolitician extends Robot {
         }
 
         main_direction = rc.getLocation().directionTo(enemyLocation);
-        if (currLoc.isAdjacentTo(enemyLocation)) {
-            moveSemaphore = 0;
-        } else if (currLoc.distanceSquaredTo(enemyLocation) <= actionRadius) {
-            if (tryMove(main_direction)) {
+        if(currLoc.isWithinDistanceSquared(enemyLocation, actionRadius)) {
+            if(tryMove(main_direction)) {
                 moveSemaphore = 5;
             } else {
                 moveSemaphore--;
             }
+            tryMove(main_direction.rotateRight());
+            tryMove(main_direction.rotateLeft());
         } else {
             tryMoveDest(main_direction);
         }
-        
+
         Debug.setIndicatorLine(rc.getLocation(), enemyLocation, 255, 150, 50);
     }
 }

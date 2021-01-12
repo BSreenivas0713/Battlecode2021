@@ -16,16 +16,25 @@ public class GolemPolitician extends Robot {
         super.takeTurn();
 
         Debug.println(Debug.info, "I am a golem politician; current influence: " + rc.getInfluence());
-        Debug.println(Debug.info, "Golem extra line");
+        
         int min_attackable_conviction = (rc.getConviction()-10) / 3;
         int attackable_conviction = 0;
+        MapLocation currLoc = rc.getLocation();
+        int maxEnemyDistSquared = Integer.MIN_VALUE;
+        MapLocation farthestEnemy = null;
         for (RobotInfo robot : enemyAttackable) {
             attackable_conviction += robot.getConviction();
+            int temp = currLoc.distanceSquaredTo(robot.getLocation());
+            if (temp > maxEnemyDistSquared) {
+                maxEnemyDistSquared = temp;
+                farthestEnemy = robot.getLocation();
+            }
         }
 
-        if ((attackable_conviction >= min_attackable_conviction || enemyAttackable.length >= 3) && rc.canEmpower(actionRadius)) {
-            rc.empower(actionRadius);
-            Debug.println(Debug.info, "empowered");
+        if ((attackable_conviction >= min_attackable_conviction || enemyAttackable.length >= 3) && rc.canEmpower(maxEnemyDistSquared)) {
+            Debug.println(Debug.info, "Empowered with radius: " + maxEnemyDistSquared);
+            Debug.setIndicatorLine(rc.getLocation(), farthestEnemy, 255, 150, 50);
+            rc.empower(maxEnemyDistSquared);
             return;
         }
         

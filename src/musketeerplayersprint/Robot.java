@@ -42,7 +42,7 @@ public class Robot {
             }
         }
         if (home == null) {
-            home = rc.getLocation;
+            home = rc.getLocation();
         }
 
         nextFlag = Comms.getFlag(InformationCategory.NEW_ROBOT);
