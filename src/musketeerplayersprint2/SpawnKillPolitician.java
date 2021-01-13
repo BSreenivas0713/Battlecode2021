@@ -41,7 +41,7 @@ public class SpawnKillPolitician extends Robot {
                 rc.empower(radius);
             }
         } else {
-            changeTo = new ProtectorPolitician(rc);
+            changeTo = new GolemPolitician(rc);
         }
     }
 }
