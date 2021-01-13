@@ -26,6 +26,10 @@ public class Nav {
     static int closestDistanceToDest;
     static int turnsSinceClosestDistanceDecreased;
 
+    static Direction lastExploreDir;
+    static final int EXPLORE_BOREDOM = 5;
+    static int boredom;
+
     static void init(RobotController r) {
         rc = r;
         baseCooldown = rc.getType().actionCooldown;
@@ -37,6 +41,7 @@ public class Nav {
         dest = null;
         closestDistanceToDest = Integer.MAX_VALUE;
         turnsSinceClosestDistanceDecreased = 0;
+        lastExploreDir = null;
     }
 
     static void setDest(MapLocation d) {
@@ -437,4 +442,46 @@ public class Nav {
 
         return src.directionTo(minLoc);
     }
+    
+	public static void explore() throws GameActionException {
+		Debug.println(Debug.pathfinding, "Exploring");
+		if(lastExploreDir == null) {
+			lastExploreDir = Util.randomDirection();
+			boredom = 0;
+		}
+		if(boredom >= EXPLORE_BOREDOM) {
+            boredom = 0;
+            Direction[] newDirChoices = {
+                lastExploreDir.rotateLeft().rotateLeft(),
+                lastExploreDir.rotateLeft(),
+                lastExploreDir,
+                lastExploreDir.rotateRight(),
+                lastExploreDir.rotateRight().rotateRight()};
+            // Direction[] newDirChoices = {
+            //     lastExploreDir.rotateLeft(),
+            //     lastExploreDir,
+            //     lastExploreDir.rotateRight(),};
+			lastExploreDir = newDirChoices[(int) (Math.random() * newDirChoices.length)];
+		}
+        boredom++;
+        
+		if(!rc.onTheMap(rc.getLocation().add(lastExploreDir))) {
+            // lastExploreDir = lastExploreDir.opposite();
+            lastExploreDir = Util.randomDirection();
+        }
+        
+		if (rc.canMove(lastExploreDir)) {
+			rc.move(lastExploreDir);
+			return;
+        }
+        
+        Direction[] orderedDirs = {lastExploreDir.rotateLeft(), lastExploreDir.rotateRight(), 
+                                    lastExploreDir.rotateLeft().rotateLeft(), lastExploreDir.rotateRight().rotateRight()};
+		for (Direction dir : orderedDirs) {
+			if (rc.canMove(dir)) {
+				rc.move(dir);
+				return;
+			}
+		}
+	}
 }
