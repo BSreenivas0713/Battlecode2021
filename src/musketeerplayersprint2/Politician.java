@@ -60,6 +60,8 @@ public class Politician extends Robot {
 
         RobotInfo closestMuckrakerSensable = null;
         int minDistance = Integer.MAX_VALUE;
+        RobotInfo minRobot = null;
+        double minDistSquared = Integer.MAX_VALUE;
 
         for (RobotInfo robot : enemySensable) {
             int currDistance = robot.getLocation().distanceSquaredTo(home);
@@ -67,6 +69,15 @@ public class Politician extends Robot {
                 closestMuckrakerSensable = robot;
                 minDistance = currDistance;
             }
+            int temp = currLoc.distanceSquaredTo(robot.getLocation());
+            if (temp < minDistSquared) {
+                minDistSquared = temp;
+                minRobot = robot;
+            }
+        }
+
+        if (minRobot != null) {
+            broadcastEnemyFound(minRobot.getLocation());
         }
         
         /* Step by Step decision making*/

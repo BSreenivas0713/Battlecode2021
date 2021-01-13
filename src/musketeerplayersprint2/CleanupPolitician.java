@@ -44,12 +44,23 @@ public class CleanupPolitician extends Robot {
 
         RobotInfo powerful = null;
         int max_influence = (rc.getConviction()-10) / 3;
+        RobotInfo minRobot = null;
+        double minDistSquared = Integer.MAX_VALUE;
         for (RobotInfo robot : enemySensable) {
             int currInfluence = robot.getConviction();
             if (currInfluence > max_influence) {
                 powerful = robot;
                 max_influence = currInfluence;
             }
+            double temp = currLoc.distanceSquaredTo(robot.getLocation());
+            if (temp < minDistSquared) {
+                minDistSquared = temp;
+                minRobot = robot;
+            }
+        }
+
+        if (minRobot != null) {
+            broadcastEnemyFound(minRobot.getLocation());
         }
         
         if (powerful != null) {

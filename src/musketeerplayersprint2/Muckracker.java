@@ -81,6 +81,8 @@ public class Muckracker extends Robot {
         }
         RobotInfo bestSlanderer = null;
         bestInfluence = Integer.MIN_VALUE;
+        RobotInfo minRobot = null;
+        double minDistSquared = Integer.MAX_VALUE;
         for (RobotInfo robot : rc.senseNearbyRobots(sensingRadius, enemy)) {
             if (robot.getType() == RobotType.SLANDERER) {
                 int curr = robot.getConviction();
@@ -89,10 +91,18 @@ public class Muckracker extends Robot {
                     bestSlanderer = robot;
                 }
             }
+            double temp = currLoc.distanceSquaredTo(robot.getLocation());
+            if (temp < minDistSquared) {
+                minDistSquared = temp;
+                minRobot = robot;
+            }
             // if (robot.getType() == RobotType.POLITICIAN && (robot.getConviction() >= 100 || ))
         }
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
+        }
+        if (minRobot != null) {
+            broadcastEnemyFound(minRobot.getLocation());
         }
 
         if(!muckraker_Found_EC){
