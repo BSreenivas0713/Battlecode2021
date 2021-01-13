@@ -49,11 +49,15 @@ public class ProtectorPolitician extends Robot {
         
         int maxEnemyAttackableDistSquared = Integer.MIN_VALUE;
         MapLocation farthestEnemyAttackable = null;
+        int maxPoliticianSize = 0;
         for (RobotInfo robot : enemyAttackable) {
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp > maxEnemyAttackableDistSquared) {
                 maxEnemyAttackableDistSquared = temp;
                 farthestEnemyAttackable = robot.getLocation();
+            }
+            if (robot.getType() == RobotType.POLITICIAN && robot.getConviction() > maxPoliticianSize) {
+                maxPoliticianSize = robot.getConviction();
             }
         }
 
@@ -105,7 +109,7 @@ public class ProtectorPolitician extends Robot {
         /* Step by Step decision making*/
 
         //empower if near 2 enemies or enemy is in sensing radius of our base
-        if ((enemyAttackable.length > 1 || (enemyAttackable.length >0 && (minMuckrakerDistance <= RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared || slandererNearby))) && rc.canEmpower(maxEnemyAttackableDistSquared)) {
+        if ((maxPoliticianSize > 0 && maxPoliticianSize <= 1.5 * rc.getInfluence()) || (enemyAttackable.length > 1 || (enemyAttackable.length >0 && (minMuckrakerDistance <= RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared))) && rc.canEmpower(maxEnemyAttackableDistSquared)) {
             Debug.println(Debug.info, "Enemy too close to base. I will empower");
             Debug.setIndicatorLine(rc.getLocation(), farthestEnemyAttackable, 255, 150, 50);
             rc.empower(maxEnemyAttackableDistSquared);
