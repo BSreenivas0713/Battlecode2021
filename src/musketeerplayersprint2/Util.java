@@ -3,6 +3,10 @@ package musketeerplayersprint2;
 import battlecode.common.*;
 
 public class Util {
+    static enum RotationDirection {
+        CLOCKWISE,
+        COUNTERCLOCKWISE
+    };
     static final RobotType[] spawnableRobot = {
         RobotType.POLITICIAN,
         RobotType.SLANDERER,
@@ -60,6 +64,43 @@ public class Util {
      */
     static Direction randomDirection() {
         return directions[(int) (Math.random() * directions.length)];
+    }
+    static Direction rotateInSpinDirection(RotationDirection Rot, Direction dir) {
+        switch(Rot) {
+            case COUNTERCLOCKWISE:
+                return dir.rotateLeft();
+            case CLOCKWISE:
+                return dir.rotateRight();
+            default:
+                return null;
+        }
+    }
+    static RotationDirection switchSpinDirection(RotationDirection Rot) {
+        switch(Rot) {
+            case COUNTERCLOCKWISE:
+                return RotationDirection.CLOCKWISE;
+            case CLOCKWISE: 
+                return RotationDirection.COUNTERCLOCKWISE;
+            default:
+                return null;
+        }
+    }
+    static Direction turnLeft90(Direction dir) {
+        return dir.rotateLeft().rotateLeft();
+    }
+    static Direction turnRight90(Direction dir) {
+        return dir.rotateRight().rotateRight();
+    }
+    static Direction rightOrLeftTurn(RotationDirection Rot, Direction dir) {
+        switch(Rot) {
+            case COUNTERCLOCKWISE:
+                return turnLeft90(dir);
+            case CLOCKWISE: 
+                return turnRight90(dir);
+            default:
+                return null;
+        }
+
     }
 
     /**
