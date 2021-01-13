@@ -39,8 +39,6 @@ public class SpawnKillPolitician extends Robot {
                 Debug.println(Debug.info, "Empowered with radius: " + radius);
                 Debug.setIndicatorLine(rc.getLocation(), home, 255, 150, 50);
                 rc.empower(radius);
-            } else {
-                changeTo = new ProtectorPolitician(rc);
             }
         } else {
             changeTo = new ProtectorPolitician(rc);

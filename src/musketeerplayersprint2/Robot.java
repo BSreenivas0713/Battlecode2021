@@ -53,7 +53,7 @@ public class Robot {
         if(rc.getFlag(rc.getID()) != nextFlag) {
             setFlag(nextFlag);
         }
-        Debug.println(Debug.info, "Flag set: " + Integer.toBinaryString(rc.getFlag(rc.getID())));
+        Debug.println(Debug.info, "Flag set: " + rc.getFlag(rc.getID()));
         Debug.setIndicatorDot(home, 255, 255, 255);
 
         if(resetFlagOnNewTurn)
