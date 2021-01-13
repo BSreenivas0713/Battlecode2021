@@ -153,6 +153,7 @@ public class EC extends Robot {
         Debug.println(Debug.info, "state: " + currentState);
         Debug.println(Debug.info, "avg direction of enemies: " + avgDirectionOfEnemies);
         Debug.println(Debug.info, "protectors built in a row: " + protectorsSpawnedInARow);
+        Debug.println(Debug.info, "can reset flag on next turn: " + resetFlagOnNewTurn);
 
         processChildrenFlags();
 
@@ -316,6 +317,7 @@ public class EC extends Robot {
                 System.out.println("CRITICAL: Maxwell screwed up stateStack");
                 break;
         }
+        Debug.println(Debug.info, "next flag that will be set: " + nextFlag);
     }
 
     public void initializeGlobals() throws GameActionException {
@@ -348,9 +350,11 @@ public class EC extends Robot {
     }
 
     public void tryStartBuildingSpawnKill() throws GameActionException {
+        Debug.println(Debug.info, "spawn kill lock: " + spawnKillLock);
         if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && spawnKillLock >= 10) {
             Debug.println(Debug.info, "Switching to building spawn kills");
             stateStack.push(currentState);
+            resetFlagOnNewTurn = true;
             currentState = State.BUILDING_SPAWNKILLS;
         }
     }
