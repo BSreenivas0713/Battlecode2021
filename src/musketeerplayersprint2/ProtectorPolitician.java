@@ -114,7 +114,7 @@ public class ProtectorPolitician extends Robot {
             return;
         }
         //Rotates around the base
-        int tryMove = 0
+        int tryMove = 0;
         Debug.println(Debug.info, "I am rotating around the base");
         while (!tryMoveDest(main_direction) && rc.isReady() && tryMove <= 1){
             Debug.println(Debug.info, "I am switching rotation direction");
