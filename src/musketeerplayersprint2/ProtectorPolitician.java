@@ -90,7 +90,7 @@ public class ProtectorPolitician extends Robot {
             return;
         }
         //tries to block a muckraker in its path(if the muckraker is within 2 sensing radiuses of the EC)
-        if (closestMuckrakerSensable != null && closestMuckrakerSensable.getLocation().isWithinDistanceSquared(home, (2 * sensorRadius)) ) {
+        if (closestMuckrakerSensable != null && closestMuckrakerSensable.getLocation().isWithinDistanceSquared(home, (5 * sensorRadius)) ) {
             Debug.println(Debug.info, "I am pushing a muckraker away");
             MapLocation closestMuckrakerSensableLoc = closestMuckrakerSensable.getLocation();
             Direction muckrakerPathtoBase = closestMuckrakerSensableLoc.directionTo(home);
@@ -114,10 +114,14 @@ public class ProtectorPolitician extends Robot {
             return;
         }
         //Rotates around the base
+        int tryMove = 0
         Debug.println(Debug.info, "I am rotating around the base");
-        while (!tryMoveDest(main_direction) && rc.isReady()){
+        while (!tryMoveDest(main_direction) && rc.isReady() && tryMove <= 1){
             Debug.println(Debug.info, "I am switching rotation direction");
             spinDirection = Util.switchSpinDirection(spinDirection);
+            main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
+            tryMove +=1;
+
         }
 
         broadcastECLocation();
