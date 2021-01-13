@@ -1,4 +1,4 @@
-package musketeerplayersprint;
+package musketeerplayersprint.Fast;
 
 /**
  * Interface to represent ints up to 65535 (2^16-1)
@@ -10,7 +10,7 @@ public class FastIterableIntSet {
     public int size;
     private int earliestRemoved;
 
-    FastIterableIntSet() {
+    public FastIterableIntSet() {
         keys = new StringBuilder();
         size = 0;
         maxlen = 500;
@@ -18,7 +18,7 @@ public class FastIterableIntSet {
         ints = new int[maxlen];
     }
 
-    FastIterableIntSet(int len) {
+    public FastIterableIntSet(int len) {
         keys = new StringBuilder();
         size = 0;
         maxlen = len;

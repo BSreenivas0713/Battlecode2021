@@ -1,8 +1,8 @@
-package musketeerplayer;
+package musketeerPlayer;
 import battlecode.common.*;
 
-import musketeerplayer.Util.*;
-import musketeerplayer.Comms.*;
+import musketeerPlayer.Util.*;
+import musketeerPlayer.Comms.*;
 
 public class Robot {
     static RobotController rc;

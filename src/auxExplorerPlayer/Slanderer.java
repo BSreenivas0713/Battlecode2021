@@ -1,7 +1,7 @@
-package auxexplorerplayer;
+package auxExplorerPlayer;
 import battlecode.common.*;
 
-import musketeerplayer.Util.*;
+import auxExplorerPlayer.Util.*;
 
 public class Slanderer extends Robot {
     static Direction main_direction;

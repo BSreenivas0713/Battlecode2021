@@ -1,7 +1,7 @@
-package stuckymucky;
+package StuckyMucky;
 import battlecode.common.*;
 
-import stuckymucky.Util.*;
+import StuckyMucky.Util.*;
 
 public class Slanderer extends Robot {
     static Direction main_direction;

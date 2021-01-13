@@ -33,7 +33,6 @@ public class Robot {
             home = rc.getLocation();
         } else {
             RobotInfo[] sensableWithin2 = rc.senseNearbyRobots(2, rc.getTeam());
-            MapLocation currLoc = rc.getLocation();
             for (RobotInfo robot : sensableWithin2) {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                     MapLocation ecLoc = robot.getLocation();

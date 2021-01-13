@@ -1,7 +1,7 @@
-package auxmusketeerplayer;
+package auxMusketeerPlayer;
 import battlecode.common.*;
 
-import auxmusketeerplayer.Util.*;
+import auxMusketeerPlayer.Util.*;
 
 public class EC extends Robot {
     static int robotCounter;

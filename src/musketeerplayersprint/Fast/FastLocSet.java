@@ -1,11 +1,11 @@
-package musketeerplayersprint;
+package musketeerplayersprint.Fast;
 
 import battlecode.common.*;
 
 public class FastLocSet {
     private static final int HASH = Math.max(GameConstants.MAP_MAX_WIDTH,
                                             GameConstants.MAP_MAX_HEIGHT);
-    private int size = 0;
+    public int size = 0;
     private boolean[][] has = new boolean[HASH][HASH];
 
     public void add(MapLocation loc) {

@@ -1,4 +1,4 @@
-package sprintfirstversion;
+package sprintfirstversion.Fast;
 
 // Kinda buggy. Don't use.
 public class FastMinQueue<T extends Comparable<? super T>> {

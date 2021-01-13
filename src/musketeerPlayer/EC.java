@@ -1,8 +1,8 @@
-package musketeerplayer;
+package musketeerPlayer;
 import battlecode.common.*;
 
-import musketeerplayer.Comms.*;
-import musketeerplayer.Util.*;
+import musketeerPlayer.Comms.*;
+import musketeerPlayer.Util.*;
 import java.util.ArrayList;
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
@@ -368,7 +368,6 @@ public class EC extends Robot {
 
     public boolean trySendARush() throws GameActionException {
         Util.vPrintln("building rush bots");
-        int currFlag = rc.getFlag(rc.getID());
         toBuild = RobotType.POLITICIAN;
         // if (Comms.getIC(currFlag) == Comms.InformationCategory.ENEMY_EC) {
         //     toBuild = RobotType.MUCKRAKER;

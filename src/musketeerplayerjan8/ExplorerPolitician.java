@@ -26,9 +26,7 @@ public class ExplorerPolitician extends Robot {
         int sensingRadius = rc.getType().sensorRadiusSquared;
         int actionRadius = rc.getType().actionRadiusSquared;
         RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
-        RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         RobotInfo[] sensable = rc.senseNearbyRobots(sensingRadius, enemy);
-        RobotInfo[] friendlySensable = rc.senseNearbyRobots(sensingRadius, rc.getTeam());
 
         if(main_direction == null){
             main_direction = Util.randomDirection();

@@ -1,4 +1,4 @@
-package musketeerplayersprint;
+package musketeerplayersprint.Fast;
 
 // Kinda buggy. Don't use.
 public class FastMinQueue<T extends Comparable<? super T>> {

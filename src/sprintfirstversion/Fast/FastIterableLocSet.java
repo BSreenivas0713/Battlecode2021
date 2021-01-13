@@ -1,4 +1,4 @@
-package sprintfirstversion;
+package sprintfirstversion.Fast;
 
 import battlecode.common.*;
 

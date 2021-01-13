@@ -1,7 +1,7 @@
-package musketeerplayer;
+package musketeerPlayer;
 import battlecode.common.*;
 
-import musketeerplayer.Util.*;
+import musketeerPlayer.Util.*;
 
 public class RushPolitician extends Robot {
     static MapLocation enemyLocation;
