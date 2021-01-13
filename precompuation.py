@@ -12,6 +12,20 @@ def calculate_best_profits():
     
     return dp;
 
+def unroll(i, j, s):
+    for x in range(0, i):
+        for y in range(0, j):
+            print(s.replace("[i]", "[" + str(x) + "]").replace("[j]", "[" + str(y) + "]"))
+    
+def unroll(i, s):
+    for x in range(0, i):
+        print(s.replace("[j]", "[" + str(x) + "]").replace("(j)", "(" + str(x) + ")"))
+
 if __name__ == '__main__':
-    dp = calculate_best_profits()
-    print(dp)
+    s = """
+        enc++;
+        costs[rows - 1][j] = heuristic(map[rows - 1][j], dest);
+        q.add(enc);
+        settled.add(enc);"""
+    
+    unroll(5, s);

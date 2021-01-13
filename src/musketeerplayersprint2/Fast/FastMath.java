@@ -1,4 +1,4 @@
-package musketeerplayersprint2;
+package musketeerplayersprint2.fast;
 
 import battlecode.common.*;
 
