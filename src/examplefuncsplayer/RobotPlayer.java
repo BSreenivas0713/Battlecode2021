@@ -63,6 +63,12 @@ public strictfp class RobotPlayer {
 
     static void runEnlightenmentCenter() throws GameActionException {
         System.out.println("Opponent current influence: " + rc.getInfluence());
+
+        // if(turnCount > 100) {
+        //     System.out.println("Resigning");
+        //     rc.resign();
+        // }
+
         int currRoundNum = rc.getRoundNum();
         int currInfluence = rc.getInfluence();
         int biddingInfluence = currInfluence - 10;

@@ -8,7 +8,6 @@ import musketeerplayersprint2.Debug.*;
 public class RushPolitician extends Robot {
     static MapLocation enemyLocation;
     static Direction main_direction;
-    static boolean   toDetonate = false;
     static int moveSemaphore;
     
     public RushPolitician(RobotController r, MapLocation enemyLoc) {
@@ -21,7 +20,6 @@ public class RushPolitician extends Robot {
     public RushPolitician(RobotController r, MapLocation enemyLoc, boolean det) {
         super(r);
         enemyLocation = enemyLoc;
-        toDetonate = det;
         moveSemaphore = 5;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_RUSH);
     }
@@ -82,8 +80,9 @@ public class RushPolitician extends Robot {
             }
         }
 
-        main_direction = rc.getLocation().directionTo(enemyLocation);
         if(currLoc.isWithinDistanceSquared(enemyLocation, actionRadius)) {
+            Debug.println(Debug.info, "Close to EC; using heuristic for movement");
+            main_direction = rc.getLocation().directionTo(enemyLocation);
             if(tryMove(main_direction)) {
                 moveSemaphore = 5;
             } else {
@@ -92,6 +91,8 @@ public class RushPolitician extends Robot {
             tryMove(main_direction.rotateRight());
             tryMove(main_direction.rotateLeft());
         } else {
+            Debug.println(Debug.info, "Using gradient descent for movement");
+            main_direction = Nav.gradientDescent(enemyLocation);
             tryMoveDest(main_direction);
         }
 
