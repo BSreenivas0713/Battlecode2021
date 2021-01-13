@@ -10,12 +10,12 @@ import musketeerplayersprint2.Debug.*;
 5. if in sensor radius of base make a move that keeps you most closely within sensor radius of base(in one direction)
 6. if too far away from base move back towards base
 EXTRA CREDIT: move towards muckrakers near slanderers if when slanderers signal that they are in trouble */
-public class Politician extends Robot {
+public class ProtectorPolitician extends Robot {
     static RotationDirection spinDirection = Util.RotationDirection.COUNTERCLOCKWISE;
     static Direction main_direction;
     static final int slandererFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
     
-    public Politician(RobotController r) {
+    public ProtectorPolitician(RobotController r) {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_PROTECTOR);
     }

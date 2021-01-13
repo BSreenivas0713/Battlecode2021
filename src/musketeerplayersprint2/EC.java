@@ -10,8 +10,8 @@ import java.util.PriorityQueue;
 
 public class EC extends Robot {
     static enum State {
-        PHASE1,
-        PHASE2,
+        BUILDING_SLANDERERS,
+        BUILDING_PROTECTORS,
         RUSHING,
         SAVING_FOR_RUSH,
         CLEANUP,
@@ -77,7 +77,7 @@ public class EC extends Robot {
         ids = idSet.ints;
         ECflags = new PriorityQueue<RushFlag>();
         stateStack = new ArrayDeque<State>();
-        currentState = State.PHASE1;
+        currentState = State.BUILDING_SLANDERERS;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
         avgDirectionOfEnemies = Util.randomDirection();
     }
@@ -138,9 +138,11 @@ public class EC extends Robot {
         muckrackerNear = checkIfMuckrakerNear();
         
         switch(currentState) {
-            case PHASE1:
-                Debug.println(Debug.info, "Phase1 state");
-                if(Util.getBestSlandererInfluence(currInfluence) >= 130 && robotCounter % 5 == 0 && !muckrackerNear) {
+            case BUILDING_SLANDERERS:
+                Debug.println(Debug.info, "building slanderers state");
+                if(((Util.getBestSlandererInfluence(currInfluence) >= 120 && robotCounter % 5 == 0) ||
+                    Util.getBestSlandererInfluence(currInfluence) == 949) && !muckrackerNear ) {
+
                     toBuild = RobotType.SLANDERER;
                     signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
                     influence = Util.getBestSlandererInfluence(currInfluence);
@@ -148,26 +150,41 @@ public class EC extends Robot {
                     toBuild = RobotType.MUCKRAKER;
                     influence = 1;
                 }
-                
-                if(needToBuild) {
-                    buildRobot(toBuild, influence);
-                }
-                tryStartSavingForRush();
-                break;
-            case PHASE2:
-                Debug.println(Debug.info, "Phase2 state");
-                if(Util.getBestSlandererInfluence(7 * currInfluence / 8) >= 150 && robotCounter % 5 == 0 && !muckrackerNear) {
+
+                if (robotCounter == 0) {
+                    //the first robot built should be a 107 slanderer, otherwise in this state
+                    //we will build 130 slanderers at minimum
                     toBuild = RobotType.SLANDERER;
                     signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
-                    influence = Util.getBestSlandererInfluence(7 * currInfluence / 8);
-                } else {
-                    toBuild = RobotType.MUCKRAKER;
-                    influence = 1;
+                    influence = 107;
+
+                    stateStack.push(currentState);
+                    currentState = State.BUILDING_PROTECTORS;
                 }
+
+                if (toBuild != null) buildRobot(toBuild, influence);
+
+                if (tryStartRemovingBlockage()) {} 
+                else {tryStartSavingForRush();}
+                break;
+            case BUILDING_PROTECTORS:
+                Debug.println(Debug.info, "building protectors state");
+                toBuild = RobotType.POLITICIAN;
+                influence = 25;
+                signalRobotType(SubRobotType.POL_PROTECTOR);
                 
-                if(needToBuild) {
-                    buildRobot(toBuild, influence);
-                }                
+
+                boolean built_protector = false;
+                if (toBuild != null) {
+                    built_protector = buildRobot(toBuild, influence);
+                }
+
+                if (robotCounter == 2 && built_protector) {
+                    Debug.println(Debug.info, "built a protector and on first round");
+                    currentState = stateStack.pop();
+                    Debug.println(Debug.info, "switching back to state: " + currentState);
+                }
+
                 if (tryStartRemovingBlockage()) {}   
                 else {tryStartSavingForRush();}
                 break;
@@ -195,9 +212,9 @@ public class EC extends Robot {
                 toBuild = RobotType.MUCKRAKER;
                 influence = 1;
                 Debug.println(Debug.info, "Required Influence: " + requiredInfluence + "; DxDy: " + (currDxDy[0] - Util.dOffset) +  ", " + (currDxDy[1] - Util.dOffset));
-                if(needToBuild) {
-                    buildRobot(toBuild, influence);
-                }
+                
+                buildRobot(toBuild, influence);
+                
                 tryStartRemovingBlockage();
                 break;
             case CLEANUP:
@@ -211,15 +228,17 @@ public class EC extends Robot {
                     influence = Util.cleanupPoliticianInfluence;
                     signalRobotType(Comms.SubRobotType.POL_CLEANUP);
                 } 
-                if(needToBuild && toBuild != null) {
+
+                if(toBuild != null) {
                     buildRobot(toBuild, influence);
                 }
+                
                 break;
             case REMOVING_BLOCKAGE:
                 toBuild = RobotType.POLITICIAN;
                 influence = 30;
                 signalRobotType(Comms.SubRobotType.POL_DEFENDER);
-                if(needToBuild && buildRobot(toBuild, influence)) {
+                if(buildRobot(toBuild, influence)) {
                     currentState = stateStack.pop();
                 }
                 break;
@@ -234,13 +253,8 @@ public class EC extends Robot {
 
         toBuild = null;
         influence = 0;
-        needToBuild = true;
         currRoundNum = rc.getRoundNum();
         currInfluence = rc.getInfluence();
-
-        if(currentState == State.PHASE1 && turnCount > Util.phaseOne) {
-            currentState = State.PHASE2;
-        }
     }
     
     public boolean checkIfMuckrakerNear() throws GameActionException {
