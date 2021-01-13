@@ -49,8 +49,10 @@ public strictfp class RobotPlayer {
                                         break;
                                     case POL_PROTECTOR:
                                         bot = new ProtectorPolitician(rc);
+                                        break;
                                     case POL_DEFENDER:
                                         bot = new DefenderPolitician(rc);
+                                        break;
                                 }
                                 break;
                             default:
@@ -121,7 +123,7 @@ public strictfp class RobotPlayer {
         switch (rc.getType()) {
             case ENLIGHTENMENT_CENTER:
                 bot = new EC(rc);
-                EC.currentState = EC.State.PHASE1;
+                EC.currentState = EC.State.BUILDING_SLANDERERS;
                 EC.ECflags.clear();
                 break;
             case POLITICIAN: 

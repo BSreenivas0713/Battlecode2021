@@ -47,7 +47,6 @@ public class Muckracker extends Robot {
             }
         }
 
-        Team friendly = rc.getTeam();
         RobotInfo closest_muk = null;
         int closest_muk_dist = Integer.MAX_VALUE;
         for (RobotInfo robot : friendlySensable) {
