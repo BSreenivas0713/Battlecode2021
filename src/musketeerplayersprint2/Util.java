@@ -34,7 +34,7 @@ public class Util {
     static final int spawnKillThreshold = 3;
     static final int dOffset = 64;
 
-    static final int phaseOne = 50;
+    static final int phaseOne = 30;
     static final int phaseTwo = 2000;
 
     static final int numDefenders = 4;

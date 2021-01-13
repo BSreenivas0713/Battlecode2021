@@ -42,17 +42,17 @@ public strictfp class RobotPlayer {
                             case TARGET_ROBOT:
                                 Comms.SubRobotType type = Comms.getSubRobotType(botFlag);
                                 switch(type) {
-                                    case POL_DEFENDER:
-                                        bot = new DefenderPolitician(rc);
-                                        break;
                                     case POL_EXPLORER:
                                         bot = new ExplorerPolitician(rc);
                                         break;
-                                    case POL_PROTECTOR:
-                                        bot = new Politician(rc);
-                                        break;
                                     case POL_CLEANUP:
                                         bot = new CleanupPolitician(rc);
+                                        break;
+                                    case POL_PROTECTOR:
+                                        bot = new ProtectorPolitician(rc);
+                                        break;
+                                    case POL_DEFENDER:
+                                        bot = new DefenderPolitician(rc);
                                         break;
                                 }
                                 break;
@@ -69,7 +69,7 @@ public strictfp class RobotPlayer {
                     break;
                 //TODO: write rush muckraker.
                 System.out.println("CRITICAL: Did not find flag directing type");
-                bot = new Politician(rc);
+                bot = new ProtectorPolitician(rc);
                 break;
             case SLANDERER:
                 for (RobotInfo robot : sensableWithin2) { 
@@ -124,11 +124,11 @@ public strictfp class RobotPlayer {
         switch (rc.getType()) {
             case ENLIGHTENMENT_CENTER:
                 bot = new EC(rc);
-                EC.currentState = EC.State.PHASE1;
+                EC.currentState = EC.State.BUILDING_SLANDERERS;
                 EC.ECflags.clear();
                 break;
             case POLITICIAN: 
-                bot = new Politician(rc);
+                bot = new ProtectorPolitician(rc);
                 break;
             case SLANDERER:
                 bot = new Slanderer(rc);
