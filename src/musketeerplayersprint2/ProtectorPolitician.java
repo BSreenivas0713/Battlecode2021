@@ -45,15 +45,15 @@ public class ProtectorPolitician extends Robot {
         }
 
         RobotInfo closestMuckrakerSensable = null;
-        int minDistance = Integer.MAX_VALUE;
+        int minMuckrakerDistance = Integer.MAX_VALUE;
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
 
         for (RobotInfo robot : enemySensable) {
             int currDistance = robot.getLocation().distanceSquaredTo(home);
-            if (robot.getType() == RobotType.MUCKRAKER && currDistance < minDistance) {
+            if (robot.getType() == RobotType.MUCKRAKER && currDistance < minMuckrakerDistance) {
                 closestMuckrakerSensable = robot;
-                minDistance = currDistance;
+                minMuckrakerDistance = currDistance;
             }
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
@@ -91,9 +91,9 @@ public class ProtectorPolitician extends Robot {
         
         /* Step by Step decision making*/
 
-        //empower if near 2 enemies or near an enemy while a slanderer or EC is nearby
-        if ((enemyAttackable.length > 1 || (enemyAttackable.length >0 && slandererOrECNearby)) && rc.canEmpower(maxEnemyAttackableDistSquared)) {
-            Debug.println(Debug.info, "Empowered with radius: " + maxEnemyAttackableDistSquared);
+        //empower if near 2 enemies or enemy is in sensing radius of our base
+        if ((enemyAttackable.length > 1 || (enemyAttackable.length >0 && minMuckrakerDistance <= RobotType.MUCKRAKER.sensorRadiusSquared)) && rc.canEmpower(maxEnemyAttackableDistSquared)) {
+            Debug.println(Debug.info, "Enemy too close to base. I will empower");
             Debug.setIndicatorLine(rc.getLocation(), farthestEnemyAttackable, 255, 150, 50);
             rc.empower(maxEnemyAttackableDistSquared);
             return;
@@ -101,11 +101,12 @@ public class ProtectorPolitician extends Robot {
 
         //tries to block a muckraker in its path(if the muckraker is within 2 sensing radiuses of the EC)
         if (closestMuckrakerSensable != null && 
-            closestMuckrakerSensable.getLocation().distanceSquaredTo(home) <= 5 * sensorRadius &&
+            closestMuckrakerSensable.getLocation().isWithinDistanceSquared(home, (5 * sensorRadius)) &&
             numFollowingClosestMuckraker < Util.maxFollowingSingleUnit) {
             Debug.println(Debug.info, "I am pushing a muckraker away. ID: " + closestMuckrakerSensable.getID());
             setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestMuckrakerSensable.getID()));
             resetFlagOnNewTurn = false;
+            Debug.println(Debug.info, "I am pushing a muckraker away");
             MapLocation closestMuckrakerSensableLoc = closestMuckrakerSensable.getLocation();
             Direction muckrakerPathtoBase = closestMuckrakerSensableLoc.directionTo(home);
             MapLocation squareToBlock = closestMuckrakerSensableLoc.add(muckrakerPathtoBase);
@@ -133,10 +134,14 @@ public class ProtectorPolitician extends Robot {
         }
 
         //Rotates around the base
+        int tryMove = 0;
         Debug.println(Debug.info, "I am rotating around the base");
-        while (!tryMoveDest(main_direction) && rc.isReady()){
+        while (!tryMoveDest(main_direction) && rc.isReady() && tryMove <= 1){
             Debug.println(Debug.info, "I am switching rotation direction");
             spinDirection = Util.switchSpinDirection(spinDirection);
+            main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
+            tryMove +=1;
+
         }
 
         broadcastECLocation();
