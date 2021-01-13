@@ -32,20 +32,6 @@ public class ProtectorPolitician extends Robot {
         main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc)); //Direction if we only want to rotate around the base
         /* Creating all the variables that we need to do the step by step decision making for later*/
 
-        boolean slandererOrECNearby = false;
-        boolean ECNearby = false;
-        for (RobotInfo robot : friendlySensable) {
-            if ((robot.getType() == RobotType.ENLIGHTENMENT_CENTER)){
-                slandererOrECNearby = true;
-                ECNearby = true;
-            } 
-            
-            if((rc.canGetFlag(robot.getID()) && 
-                rc.getFlag(robot.getID()) == slandererFlag)) {
-                slandererOrECNearby = true;
-            }
-        }
-
         int distanceToEC = rc.getLocation().distanceSquaredTo(home);
         
         int maxEnemyAttackableDistSquared = Integer.MIN_VALUE;
@@ -75,6 +61,29 @@ public class ProtectorPolitician extends Robot {
                 minRobot = robot;
             }
         }
+        
+        boolean slandererOrECNearby = false;
+        boolean ECNearby = false;
+        int numFollowingClosestMuckraker = 0;
+        for (RobotInfo robot : friendlySensable) {
+            if ((robot.getType() == RobotType.ENLIGHTENMENT_CENTER)){
+                slandererOrECNearby = true;
+                ECNearby = true;
+            } 
+            
+            if(rc.canGetFlag(robot.getID())) {
+                int flag = rc.getFlag(robot.getID());
+                if(flag == slandererFlag) {
+                    slandererOrECNearby = true;
+                }
+
+                if(closestMuckrakerSensable != null) {
+                    if(flag == Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestMuckrakerSensable.getID())) {
+                        numFollowingClosestMuckraker++;
+                    }
+                }
+            }
+        }
 
         if (minRobot != null) {
             broadcastEnemyFound(minRobot.getLocation());
@@ -89,16 +98,24 @@ public class ProtectorPolitician extends Robot {
             rc.empower(maxEnemyAttackableDistSquared);
             return;
         }
+
         //tries to block a muckraker in its path(if the muckraker is within 2 sensing radiuses of the EC)
-        if (closestMuckrakerSensable != null && closestMuckrakerSensable.getLocation().distanceSquaredTo(home) <= 2 * sensorRadius ) {
-            Debug.println(Debug.info, "I am pushing a muckraker away");
+        if (closestMuckrakerSensable != null && 
+            closestMuckrakerSensable.getLocation().distanceSquaredTo(home) <= 5 * sensorRadius &&
+            numFollowingClosestMuckraker < Util.maxFollowingSingleUnit) {
+            Debug.println(Debug.info, "I am pushing a muckraker away. ID: " + closestMuckrakerSensable.getID());
+            setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestMuckrakerSensable.getID()));
+            resetFlagOnNewTurn = false;
             MapLocation closestMuckrakerSensableLoc = closestMuckrakerSensable.getLocation();
             Direction muckrakerPathtoBase = closestMuckrakerSensableLoc.directionTo(home);
             MapLocation squareToBlock = closestMuckrakerSensableLoc.add(muckrakerPathtoBase);
             Direction toMove = rc.getLocation().directionTo(squareToBlock);
             tryMoveDest(toMove);
             return;
+        } else {
+            resetFlagOnNewTurn = true;
         }
+
         //moves out of sensor radius of Enlightenment Center
         if (ECNearby) {
             Debug.println(Debug.info, "I am moving away from the base");
@@ -106,6 +123,7 @@ public class ProtectorPolitician extends Robot {
             tryMoveDest(toMove);
             return;
         }
+
         //if too far away from sensor radius of Enlightenment center, move towards Enlgihtenment Center
         if (distanceToEC > (int) (sensorRadius * 2)) {
             Debug.println(Debug.info, "I am moving toward the base");
@@ -113,6 +131,7 @@ public class ProtectorPolitician extends Robot {
             tryMoveDest(toMove);
             return;
         }
+
         //Rotates around the base
         Debug.println(Debug.info, "I am rotating around the base");
         while (!tryMoveDest(main_direction) && rc.isReady()){

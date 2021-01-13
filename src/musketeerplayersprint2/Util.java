@@ -57,6 +57,8 @@ public class Util {
         724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 
         855, 855, 855, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 949};
 
+    static final int maxFollowingSingleUnit = 4;
+    
     /**
      * Returns a random Direction.
      *
@@ -65,6 +67,7 @@ public class Util {
     static Direction randomDirection() {
         return directions[(int) (Math.random() * directions.length)];
     }
+
     static Direction rotateInSpinDirection(RotationDirection Rot, Direction dir) {
         switch(Rot) {
             case COUNTERCLOCKWISE:
@@ -75,6 +78,7 @@ public class Util {
                 return null;
         }
     }
+
     static RotationDirection switchSpinDirection(RotationDirection Rot) {
         switch(Rot) {
             case COUNTERCLOCKWISE:
@@ -85,12 +89,15 @@ public class Util {
                 return null;
         }
     }
+    
     static Direction turnLeft90(Direction dir) {
         return dir.rotateLeft().rotateLeft();
     }
+
     static Direction turnRight90(Direction dir) {
         return dir.rotateRight().rotateRight();
     }
+
     static Direction rightOrLeftTurn(RotationDirection Rot, Direction dir) {
         switch(Rot) {
             case COUNTERCLOCKWISE:
