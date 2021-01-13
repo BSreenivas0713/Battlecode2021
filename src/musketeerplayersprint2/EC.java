@@ -4,7 +4,7 @@ import battlecode.common.*;
 import musketeerplayersprint2.Comms.*;
 import musketeerplayersprint2.Util.*;
 import musketeerplayersprint2.Debug.*;
-import musketeerplayersprint2.FastIterableIntSet;
+import musketeerplayersprint2.fast.FastIterableIntSet;
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
 
@@ -17,20 +17,6 @@ public class EC extends Robot {
         CLEANUP,
         REMOVING_BLOCKAGE
     };
-
-    static int robotCounter;
-    static RobotType toBuild;
-    static int influence;
-
-    static int cleanUpCount = 0;
-
-    static int currRoundNum;
-    static int currInfluence;
-    static boolean needToBuild;
-    static boolean muckrackerNear;
-
-    //start spawning slanderers in random directions until you find an enemy
-    static Direction avgDirectionOfEnemies = Util.randomDirection();
 
     static class RushFlag implements Comparable<RushFlag> {
         int requiredInfluence;
@@ -62,6 +48,20 @@ public class EC extends Robot {
         }
     }
 
+    static int robotCounter;
+    static RobotType toBuild;
+    static int influence;
+
+    static int cleanUpCount = 0;
+
+    static int currRoundNum;
+    static int currInfluence;
+    static boolean needToBuild;
+    static boolean muckrackerNear;
+
+    //start spawning slanderers in random directions until you find an enemy
+    static Direction avgDirectionOfEnemies;
+
     static FastIterableIntSet idSet;
     static int[] ids;
     static PriorityQueue<RushFlag> ECflags;
@@ -79,6 +79,7 @@ public class EC extends Robot {
         stateStack = new ArrayDeque<State>();
         currentState = State.PHASE1;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
+        avgDirectionOfEnemies = Util.randomDirection();
     }
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
@@ -93,7 +94,7 @@ public class EC extends Robot {
                     Debug.println(Debug.info, "built robot: " + robot.getID());
                     idSet.add(robot.getID());
                 } else {
-                    Debug.println(Debug.critical, "build robot didn't find the robot it just built");
+                    System.out.println("CRITICAL: build robot didn't find the robot it just built");
                 }
 
                 resetFlagOnNewTurn = true;
@@ -223,7 +224,7 @@ public class EC extends Robot {
                 }
                 break;
             default:
-                Debug.println(Debug.critical, "Maxwell screwed up");
+                System.out.println("CRITICAL: Maxwell screwed up stateStack");
                 break;
         }
     }

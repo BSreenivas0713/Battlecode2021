@@ -1,4 +1,4 @@
-package musketeerplayersprint2;
+package musketeerplayersprint2.fast;
 
 // Kinda buggy. Don't use.
 public class FastMinQueue<T extends Comparable<? super T>> {
@@ -11,7 +11,7 @@ public class FastMinQueue<T extends Comparable<? super T>> {
     private boolean needRecalculate;
 
     @SuppressWarnings("unchecked")
-    FastMinQueue() {
+    public FastMinQueue() {
         ln = 1000;
         buf = (T[])new Comparable[ln];
         l = 0;
@@ -20,7 +20,7 @@ public class FastMinQueue<T extends Comparable<? super T>> {
     }
     
     @SuppressWarnings("unchecked")
-    FastMinQueue(int maxlen) {
+    public FastMinQueue(int maxlen) {
         ln = maxlen + 5;
         buf = (T[])new Comparable[ln];
         l = 0;

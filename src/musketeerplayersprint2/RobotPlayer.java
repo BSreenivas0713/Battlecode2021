@@ -13,6 +13,7 @@ public strictfp class RobotPlayer {
     @SuppressWarnings("unused")
     public static void run(RobotController rc) throws GameActionException {
         Debug.init(rc);
+        Nav.init(rc);
 
         RobotInfo[] sensableWithin2 = rc.senseNearbyRobots(2, rc.getTeam());
 
@@ -67,7 +68,7 @@ public strictfp class RobotPlayer {
                 if(bot != null)
                     break;
                 //TODO: write rush muckraker.
-                Debug.println(Debug.critical, "LOGICAL ERROR: Did not find flag directing type");
+                System.out.println("CRITICAL: Did not find flag directing type");
                 bot = new Politician(rc);
                 break;
             case SLANDERER:
@@ -89,7 +90,7 @@ public strictfp class RobotPlayer {
                 if(bot != null)
                     break;
 
-                Debug.println(Debug.critical, "LOGICAL ERROR: Did not find flag directing type");
+                System.out.println("CRITICAL: Did not find flag directing type");
                 bot = new Slanderer(rc, Util.randomDirection());
                 break;
             case MUCKRAKER:            bot = new Muckracker(rc);  break;
