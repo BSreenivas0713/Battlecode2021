@@ -32,6 +32,19 @@ public class ProtectorPolitician extends Robot {
         main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc)); //Direction if we only want to rotate around the base
         /* Creating all the variables that we need to do the step by step decision making for later*/
 
+        boolean slandererNearby = false;
+        boolean ECNear = false;
+        for (RobotInfo robot : friendlySensable) {
+            if ((robot.getType() == RobotType.ENLIGHTENMENT_CENTER)){
+                ECNear = true;
+            } 
+            
+            if((rc.canGetFlag(robot.getID()) && 
+                rc.getFlag(robot.getID()) == slandererFlag)) {
+                slandererNearby = true;
+            }
+        }
+
         int distanceToEC = rc.getLocation().distanceSquaredTo(home);
         
         int maxEnemyAttackableDistSquared = Integer.MIN_VALUE;
@@ -92,7 +105,7 @@ public class ProtectorPolitician extends Robot {
         /* Step by Step decision making*/
 
         //empower if near 2 enemies or enemy is in sensing radius of our base
-        if ((enemyAttackable.length > 1 || (enemyAttackable.length >0 && minMuckrakerDistance <= RobotType.MUCKRAKER.sensorRadiusSquared)) && rc.canEmpower(maxEnemyAttackableDistSquared)) {
+        if ((enemyAttackable.length > 1 || (enemyAttackable.length >0 && (minMuckrakerDistance <= RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared || slandererNearby))) && rc.canEmpower(maxEnemyAttackableDistSquared)) {
             Debug.println(Debug.info, "Enemy too close to base. I will empower");
             Debug.setIndicatorLine(rc.getLocation(), farthestEnemyAttackable, 255, 150, 50);
             rc.empower(maxEnemyAttackableDistSquared);
