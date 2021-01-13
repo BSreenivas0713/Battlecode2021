@@ -4,7 +4,6 @@ import battlecode.common.*;
 
 public class Debug {
     static final boolean verbose = true;
-    public static final boolean critical = true;
     public static final boolean info = true;
     private static final boolean indicators = true;
 
