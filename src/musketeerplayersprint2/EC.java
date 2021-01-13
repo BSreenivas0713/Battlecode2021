@@ -138,6 +138,11 @@ public class EC extends Robot {
         
         switch(currentState) {
             case PHASE1:
+                if (robotCounter < 2) {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = 25;
+                    signalRobotType(Comms.SubRobotType.POL_PROTECTOR);
+                }
                 Debug.println(Debug.info, "Phase1 state");
                 if(Util.getBestSlandererInfluence(currInfluence) >= 130 && robotCounter % 5 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;

@@ -114,11 +114,11 @@ public class Slanderer extends Robot {
                 main_direction = curr.directionTo(friendlyEC.getLocation()).opposite(); 
             } else if (moveBack == true) {
                 main_direction = curr.directionTo(home);
-            } else if (awayDirection != null) {
-                main_direction = awayDirection;
             } else if (closestSlanderer != null) {
                 main_direction = curr.directionTo(closestSlanderer.getLocation());
-            }
+            } else if (awayDirection != null) {
+                main_direction = awayDirection;
+            } 
 
             MapLocation target = rc.adjacentLocation(main_direction);
             if (rc.onTheMap(target)) {
@@ -182,10 +182,10 @@ public class Slanderer extends Robot {
                 main_direction = curr.directionTo(minRobot.getLocation()).opposite();
             } else if (curr.isWithinDistanceSquared(home, 2 * sensorRadius)) {
                 main_direction = curr.directionTo(home).opposite();
-            } else if (awayDirection != null) {
-                main_direction = awayDirection;
             } else if (closestSlanderer != null) {
                 main_direction = curr.directionTo(closestSlanderer.getLocation());
+            } else if (awayDirection != null) {
+                main_direction = awayDirection;
             }
 
             MapLocation target = rc.adjacentLocation(main_direction);

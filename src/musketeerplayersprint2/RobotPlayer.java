@@ -41,18 +41,14 @@ public strictfp class RobotPlayer {
                             case TARGET_ROBOT:
                                 Comms.SubRobotType type = Comms.getSubRobotType(botFlag);
                                 switch(type) {
-                                    case POL_DEFENDER:
-                                        bot = new DefenderPolitician(rc);
-                                        break;
                                     case POL_EXPLORER:
                                         bot = new ExplorerPolitician(rc);
-                                        break;
-                                    case POL_BODYGUARD:
-                                        bot = new Politician(rc);
                                         break;
                                     case POL_CLEANUP:
                                         bot = new CleanupPolitician(rc);
                                         break;
+                                    case POL_PROTECTOR:
+                                        bot = new ProtectorPolitician(rc);
                                 }
                                 break;
                             default:
@@ -68,7 +64,7 @@ public strictfp class RobotPlayer {
                     break;
                 //TODO: write rush muckraker.
                 Debug.println(Debug.critical, "LOGICAL ERROR: Did not find flag directing type");
-                bot = new Politician(rc);
+                bot = new ProtectorPolitician(rc);
                 break;
             case SLANDERER:
                 for (RobotInfo robot : sensableWithin2) { 
@@ -127,7 +123,7 @@ public strictfp class RobotPlayer {
                 EC.ECflags.clear();
                 break;
             case POLITICIAN: 
-                bot = new Politician(rc);
+                bot = new ProtectorPolitician(rc);
                 break;
             case SLANDERER:
                 bot = new Slanderer(rc);
