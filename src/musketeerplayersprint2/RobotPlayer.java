@@ -20,11 +20,6 @@ public strictfp class RobotPlayer {
         switch (rc.getType()) {
             case ENLIGHTENMENT_CENTER: bot = new EC(rc);          break;
             case POLITICIAN: 
-                if (rc.getEmpowerFactor(rc.getTeam(), 0) > Util.spawnKillThreshold) {
-                    bot = new SpawnKillPolitician(rc);
-                    break;
-                }
-
                 for (RobotInfo robot : sensableWithin2) {
                     int botFlag = rc.getFlag(robot.getID());
                     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
@@ -53,6 +48,13 @@ public strictfp class RobotPlayer {
                                         break;
                                     case POL_DEFENDER:
                                         bot = new DefenderPolitician(rc);
+                                        break;
+                                    case POL_SPAWNKILL:
+                                        if (rc.getEmpowerFactor(rc.getTeam(), 0) > Util.spawnKillThreshold) {
+                                            bot = new SpawnKillPolitician(rc);
+                                        } else {
+                                            bot = new ExplorerPolitician(rc);
+                                        }
                                         break;
                                 }
                                 break;
