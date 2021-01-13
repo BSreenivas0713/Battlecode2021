@@ -10,7 +10,13 @@ import musketeerplayersprint2.fast.FasterQueue;
 import java.util.ArrayDeque;
 import java.util.Map;
 import java.util.PriorityQueue;
-
+/* 
+TODO: 
+implement spawn killing somehow
+have tower to tower communication(slanderers communicate best direction, tell protectors about enemies)
+pathfinding error - rushers are getting stuck behind heavy walls
+Big slanderers/exploreres should turn into Golems/protectors maybe, Golems/protectors should be able to turn into rushers
+*/
 public class EC extends Robot {
     static enum State {
         BUILDING_SLANDERERS,
