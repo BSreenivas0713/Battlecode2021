@@ -9,7 +9,7 @@ public class Comms {
     static final int BIT_DX_OFFSET = 7;
     static final int BIT_MASK_COORD = 0x7F;
     static final int BIT_MASK_COORDS = 0x3FFF;
-    static final int BIT_INF_OFFSET = 14;
+    static final int BIT_INF_OFFSET = 14;  
 
     public enum InformationCategory {
         EMPTY,
