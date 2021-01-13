@@ -21,6 +21,7 @@ public class EC extends Robot {
     static enum State {
         BUILDING_SLANDERERS,
         BUILDING_PROTECTORS,
+        BUILDING_SPAWNKILLS,
         RUSHING,
         SAVING_FOR_RUSH,
         CLEANUP,
@@ -82,7 +83,7 @@ public class EC extends Robot {
     static State currentState;
 
     static int lastRush;
-    static int spawnKillLock = 10;
+    static int spawnKillLock;
 
     public EC(RobotController r) {
         super(r);
@@ -101,55 +102,22 @@ public class EC extends Robot {
         numProtectors = 0;
         lastRush = 0;
         canGoBackToBuildingProtectors = true;
+        spawnKillLock = 10;
     }
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
         Debug.println(Debug.info, "building robot type: " + toBuild + " influence: " + influence);
-        Direction main_direction = Util.randomDirection();
-        if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && spawnKillLock == 0) {
-            int num_direction = 4;
-            main_direction = Direction.NORTH;
-            while (num_direction != 0) {
-                if (rc.canBuildRobot(toBuild, main_direction, influence)) {
-                    rc.buildRobot(toBuild, main_direction, influence);
-                    RobotInfo robot = rc.senseRobotAtLocation(home.add(main_direction));
-                    if(robot != null) {
-                        Debug.println(Debug.info, "built robot: " + robot.getID());
-                        idSet.add(robot.getID());
-                    }
-                    resetFlagOnNewTurn = true;
-                    robotCounter += 1;
-                    return true;
-                } else {
-                    main_direction = main_direction.rotateRight().rotateRight();
-                    num_direction--;
-                }
-            }
-            main_direction = Direction.NORTHEAST;
-            num_direction = 4;
-            while (num_direction != 0) {
-                if (rc.canBuildRobot(toBuild, main_direction, influence)) {
-                    rc.buildRobot(toBuild, main_direction, influence);
-                    RobotInfo robot = rc.senseRobotAtLocation(home.add(main_direction));
-                    if(robot != null) {
-                        Debug.println(Debug.info, "built robot: " + robot.getID());
-                        idSet.add(robot.getID());
-                    }
-                    resetFlagOnNewTurn = true;
-                    robotCounter += 1;
-                    return true;
-                } else {
-                    main_direction = main_direction.rotateRight().rotateRight();
-                    num_direction--;
-                }
-            }
-            return false;
+        DirectionPreference pref = DirectionPreference.RANDOM;
+        if(currentState == State.BUILDING_SPAWNKILLS) {
+            pref = DirectionPreference.ORTHOGONAL;
         }
-        int num_direction = 8;
-        while(num_direction != 0) {
-            if (rc.canBuildRobot(toBuild, main_direction, influence)) {
-                rc.buildRobot(toBuild, main_direction, influence);
-                RobotInfo robot = rc.senseRobotAtLocation(home.add(main_direction));
+        
+        Direction[] orderedDirs = Util.getOrderedDirections(pref);
+
+        for(Direction dir : orderedDirs) {
+            if (rc.canBuildRobot(toBuild, dir, influence)) {
+                rc.buildRobot(toBuild, dir, influence);
+                RobotInfo robot = rc.senseRobotAtLocation(home.add(dir));
                 if(robot != null) {
                     Debug.println(Debug.info, "built robot: " + robot.getID());
                     idSet.add(robot.getID());
@@ -159,15 +127,13 @@ public class EC extends Robot {
                         protectorIdSet.add(robot.getID());
                     }
                 } else {
-                    System.out.println("CRITICAL: build robot didn't find the robot it just built");
+                    System.out.println("CRITICAL: EC didn't find the robot it just built");
                 }
 
                 resetFlagOnNewTurn = true;
                 robotCounter += 1;
                 return true;
             }
-            main_direction = main_direction.rotateRight();
-            num_direction--;
         }
 
         return false;
@@ -194,6 +160,7 @@ public class EC extends Robot {
             tryStartCleanup();
 
         toggleBuildProtectors();
+        tryStartBuildingSpawnKill();
 
         //bidding code
         int biddingInfluence = currInfluence / 20;
@@ -210,139 +177,144 @@ public class EC extends Robot {
         currInfluence = rc.getInfluence();
         muckrackerNear = checkIfMuckrakerNear();
 
-        if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && spawnKillLock == 10) {
-            Debug.println(Debug.info, "spawn killing politician");
-            influence = 6*rc.getInfluence()/8;
-            toBuild = RobotType.POLITICIAN;
-            spawnKillLock = 0;
-            signalRobotType(Comms.SubRobotType.POL_SPAWNKILL);
-            buildRobot(toBuild, influence);
-        } else {  
-            switch(currentState) {
-                case BUILDING_SLANDERERS:
-                    Debug.println(Debug.info, "building slanderers state");
-                    if(!muckrackerNear && robotCounter % 2 != 0) {
+        switch(currentState) {
+            case BUILDING_SLANDERERS:
+                Debug.println(Debug.info, "building slanderers state");
+                if(!muckrackerNear && robotCounter % 2 != 0) {
 
-                        toBuild = RobotType.SLANDERER;
-                        signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
-                        influence = Util.getBestSlandererInfluence(currInfluence);
-                    } else {
-                        toBuild = RobotType.MUCKRAKER;
-                        influence = 1;
-                    }
-
-                    if (robotCounter == 0) {
-                        //the first robot built should be a 107 slanderer, otherwise in this state
-                        //we will build 130 slanderers at minimum
-                        toBuild = RobotType.SLANDERER;
-                        signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
-                        influence = 107;
-
-                        stateStack.push(currentState);
-                        currentState = State.BUILDING_PROTECTORS;
-                    }
-
-                    boolean built_bot = false;
-                    if (toBuild != null) built_bot = buildRobot(toBuild, influence);
-
-                    if (!canGoBackToBuildingProtectors) {
-                        if (built_bot && toBuild == RobotType.SLANDERER) {
-                            canGoBackToBuildingProtectors = true;
-                            currentState = State.BUILDING_PROTECTORS;
-                            protectorsSpawnedInARow = 0;
-                        }
-                    }
-                    else {
-                        if (tryStartRemovingBlockage()) {} 
-                        else {tryStartSavingForRush();}
-                    }
-
-                    break;
-                case BUILDING_PROTECTORS:
-                    Debug.println(Debug.info, "building protectors state");
-                    if (robotCounter % 4 != 0) {
-                        toBuild = RobotType.POLITICIAN;
-                        influence = 25;
-                        signalRobotType(SubRobotType.POL_PROTECTOR);
-                    }
-                    else {
-                        toBuild = RobotType.MUCKRAKER;
-                        influence = 1;
-                    }
-                    
-                    boolean built_robot = false;
-                    if (toBuild != null) {
-                        built_robot = buildRobot(toBuild, influence);
-                    }
-
-                    if (built_robot && toBuild == RobotType.POLITICIAN) protectorsSpawnedInARow++;
-
-                    if (robotCounter == 2 && built_robot && toBuild == RobotType.POLITICIAN) {
-                        Debug.println(Debug.info, "built a protector and on first round");
-                        currentState = stateStack.pop();
-                        Debug.println(Debug.info, "switching back to state: " + currentState);
-                    }
-
-                    tryStartRemovingBlockage();
-                    break;
-                case RUSHING:
-                    trySendARush();
-                    break;
-                case SAVING_FOR_RUSH:
-                    RushFlag targetEC = ECflags.peek();
-                    if(targetEC == null) {
-                        currentState = stateStack.pop();
-                        break;
-                    }
-                    int requiredInfluence = targetEC.requiredInfluence;
-
-                    MapLocation enemyLocation = home.translate(targetEC.dx - Util.dOffset, targetEC.dy - Util.dOffset);
-                    Debug.setIndicatorLine(home, enemyLocation, 100, 255, 100);
-
-                    if(requiredInfluence < currInfluence) {
-                        resetFlagOnNewTurn = false;
-                        nextFlag = targetEC.flag;
-                        currentState = State.RUSHING;
-                        break;
-                    }
-                    int[] currDxDy = {targetEC.dx, targetEC.dy};
+                    toBuild = RobotType.SLANDERER;
+                    signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
+                    influence = Util.getBestSlandererInfluence(currInfluence);
+                } else {
                     toBuild = RobotType.MUCKRAKER;
                     influence = 1;
-                    Debug.println(Debug.info, "Required Influence: " + requiredInfluence + "; DxDy: " + (currDxDy[0] - Util.dOffset) +  ", " + (currDxDy[1] - Util.dOffset));
-                    
-                    buildRobot(toBuild, influence);
-                    
-                    tryStartRemovingBlockage();
-                    break;
-                case CLEANUP:
-                    if(Util.getBestSlandererInfluence(currInfluence) >= 100 && robotCounter % 2 == 0 && !muckrackerNear) {
-                        toBuild = RobotType.SLANDERER;
-                        signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
-                        influence = Util.getBestSlandererInfluence(currInfluence / 2);
-                    }
-                    else if(currInfluence >= 100) {
-                        toBuild = RobotType.POLITICIAN;
-                        influence = Util.cleanupPoliticianInfluence;
-                        signalRobotType(Comms.SubRobotType.POL_CLEANUP);
-                    } 
+                }
 
-                    if(toBuild != null) {
-                        buildRobot(toBuild, influence);
+                if (robotCounter == 0) {
+                    //the first robot built should be a 107 slanderer, otherwise in this state
+                    //we will build 130 slanderers at minimum
+                    toBuild = RobotType.SLANDERER;
+                    signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
+                    influence = 107;
+
+                    stateStack.push(currentState);
+                    currentState = State.BUILDING_PROTECTORS;
+                }
+
+                boolean built_bot = false;
+                if (toBuild != null) built_bot = buildRobot(toBuild, influence);
+
+                if (!canGoBackToBuildingProtectors) {
+                    if (built_bot && toBuild == RobotType.SLANDERER) {
+                        canGoBackToBuildingProtectors = true;
+                        currentState = State.BUILDING_PROTECTORS;
+                        protectorsSpawnedInARow = 0;
                     }
-                    
-                    break;
-                case REMOVING_BLOCKAGE:
+                }
+                else {
+                    if (tryStartRemovingBlockage()) {} 
+                    else {tryStartSavingForRush();}
+                }
+
+                break;
+            case BUILDING_PROTECTORS:
+                Debug.println(Debug.info, "building protectors state");
+                if (robotCounter % 4 != 0) {
                     toBuild = RobotType.POLITICIAN;
-                    influence = 30;
-                    signalRobotType(Comms.SubRobotType.POL_DEFENDER);
-                    if(buildRobot(toBuild, influence)) {
-                        currentState = stateStack.pop();
-                    }
+                    influence = 25;
+                    signalRobotType(SubRobotType.POL_PROTECTOR);
+                }
+                else {
+                    toBuild = RobotType.MUCKRAKER;
+                    influence = 1;
+                }
+                
+                boolean built_robot = false;
+                if (toBuild != null) {
+                    built_robot = buildRobot(toBuild, influence);
+                }
+
+                if (built_robot && toBuild == RobotType.POLITICIAN) protectorsSpawnedInARow++;
+
+                if (robotCounter == 2 && built_robot && toBuild == RobotType.POLITICIAN) {
+                    Debug.println(Debug.info, "built a protector and on first round");
+                    currentState = stateStack.pop();
+                    Debug.println(Debug.info, "switching back to state: " + currentState);
+                }
+
+                tryStartRemovingBlockage();
+                break;
+            case RUSHING:
+                trySendARush();
+                break;
+            case SAVING_FOR_RUSH:
+                RushFlag targetEC = ECflags.peek();
+                if(targetEC == null) {
+                    currentState = stateStack.pop();
                     break;
-                default:
-                    System.out.println("CRITICAL: Maxwell screwed up stateStack");
+                }
+                int requiredInfluence = targetEC.requiredInfluence;
+
+                MapLocation enemyLocation = home.translate(targetEC.dx - Util.dOffset, targetEC.dy - Util.dOffset);
+                Debug.setIndicatorLine(home, enemyLocation, 100, 255, 100);
+
+                if(requiredInfluence < currInfluence) {
+                    resetFlagOnNewTurn = false;
+                    nextFlag = targetEC.flag;
+                    currentState = State.RUSHING;
                     break;
-            }
+                }
+                int[] currDxDy = {targetEC.dx, targetEC.dy};
+                toBuild = RobotType.MUCKRAKER;
+                influence = 1;
+                Debug.println(Debug.info, "Required Influence: " + requiredInfluence + "; DxDy: " + (currDxDy[0] - Util.dOffset) +  ", " + (currDxDy[1] - Util.dOffset));
+                
+                buildRobot(toBuild, influence);
+                
+                tryStartRemovingBlockage();
+                break;
+            case CLEANUP:
+                if(Util.getBestSlandererInfluence(currInfluence) >= 100 && robotCounter % 2 == 0 && !muckrackerNear) {
+                    toBuild = RobotType.SLANDERER;
+                    signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
+                    influence = Util.getBestSlandererInfluence(currInfluence / 2);
+                }
+                else if(currInfluence >= 100) {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = Util.cleanupPoliticianInfluence;
+                    signalRobotType(Comms.SubRobotType.POL_CLEANUP);
+                } 
+
+                if(toBuild != null) {
+                    buildRobot(toBuild, influence);
+                }
+                
+                break;
+            case REMOVING_BLOCKAGE:
+                toBuild = RobotType.POLITICIAN;
+                influence = 30;
+                signalRobotType(Comms.SubRobotType.POL_DEFENDER);
+                if(buildRobot(toBuild, influence)) {
+                    currentState = stateStack.pop();
+                }
+                break;
+            case BUILDING_SPAWNKILLS:
+                if(rc.getEmpowerFactor(rc.getTeam(),0) <= Util.spawnKillThreshold) {
+                    currentState = stateStack.pop();
+                    break;
+                }
+                Debug.println(Debug.info, "Building spawn kill politician");
+                influence = 6*rc.getInfluence()/8;
+                toBuild = RobotType.POLITICIAN;
+                signalRobotType(Comms.SubRobotType.POL_SPAWNKILL);
+                if(buildRobot(toBuild, influence)) {
+                    spawnKillLock = 0;
+                    currentState = stateStack.pop();
+                }
+                break;
+            default:
+                System.out.println("CRITICAL: Maxwell screwed up stateStack");
+                break;
         }
     }
 
@@ -372,6 +344,14 @@ public class EC extends Robot {
         } else if (protectorsSpawnedInARow >= 10) {
             canGoBackToBuildingProtectors = false;
             currentState = State.BUILDING_SLANDERERS;
+        }
+    }
+
+    public void tryStartBuildingSpawnKill() throws GameActionException {
+        if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && spawnKillLock >= 10) {
+            Debug.println(Debug.info, "Switching to building spawn kills");
+            stateStack.push(currentState);
+            currentState = State.BUILDING_SPAWNKILLS;
         }
     }
     

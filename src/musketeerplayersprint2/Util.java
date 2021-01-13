@@ -7,6 +7,13 @@ public class Util {
         CLOCKWISE,
         COUNTERCLOCKWISE
     };
+
+    static enum DirectionPreference {
+        RANDOM,
+        ORTHOGONAL,
+        DIAGONAL,
+    }
+
     static final RobotType[] spawnableRobot = {
         RobotType.POLITICIAN,
         RobotType.SLANDERER,
@@ -24,11 +31,18 @@ public class Util {
         Direction.NORTHWEST,
     };
 
-    static final Direction[] defenderDirs = {
-        Direction.NORTHEAST,
-        Direction.SOUTHEAST,
-        Direction.SOUTHWEST,
-        Direction.NORTHWEST,
+    static final Direction[] orthogonalDirs = {
+        Direction.NORTH,
+        Direction.SOUTH,
+        Direction.WEST,
+        Direction.EAST,
+    };
+
+    static final Direction[] diagonalDirs = {
+        Direction.NORTH,
+        Direction.SOUTH,
+        Direction.WEST,
+        Direction.EAST,
     };
 
     static final int spawnKillThreshold = 5;
@@ -66,6 +80,33 @@ public class Util {
      */
     static Direction randomDirection() {
         return directions[(int) (Math.random() * directions.length)];
+    }
+
+    static Direction randomOrthogonalDirection() {
+        return orthogonalDirs[(int) (Math.random() * orthogonalDirs.length)];
+    }
+
+    static Direction randomDiagonalDirection() {
+        return orthogonalDirs[(int) (Math.random() * orthogonalDirs.length)];
+    }
+
+    static Direction[] getOrderedDirections(DirectionPreference pref) {
+        Direction dir;
+        switch(pref) {
+            case ORTHOGONAL:
+                dir = randomOrthogonalDirection();
+                return new Direction[]{dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(), dir.opposite().rotateRight(), dir.opposite(),
+                        dir.opposite().rotateLeft(), dir.rotateRight().rotateRight(), dir.rotateRight()};
+            case DIAGONAL:
+                dir = randomDiagonalDirection();
+                return new Direction[]{dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(), dir.opposite().rotateRight(), dir.opposite(),
+                        dir.opposite().rotateLeft(), dir.rotateRight().rotateRight(), dir.rotateRight()};
+            case RANDOM:
+            default:
+                dir = randomDirection();
+                return new Direction[]{dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(), dir.opposite().rotateRight(), dir.opposite(),
+                        dir.opposite().rotateLeft(), dir.rotateRight().rotateRight(), dir.rotateRight()};
+        }
     }
 
     static Direction rotateInSpinDirection(RotationDirection Rot, Direction dir) {
