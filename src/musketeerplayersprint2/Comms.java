@@ -20,7 +20,8 @@ public class Comms {
         TARGET_ROBOT,
         ROBOT_TYPE,
         ENEMY_FOUND,
-        SPECIFYING_SLANDERER_DIRECTION
+        SPECIFYING_SLANDERER_DIRECTION,
+        FOLLOWING,
     }
 
     public enum SubRobotType {
@@ -40,10 +41,13 @@ public class Comms {
         return (flag << BIT_IC_OFFSET) + (dx << BIT_DX_OFFSET) + dy;
     }
 
+    public static int getFlag(InformationCategory cat, int n) {
+        return getFlag(cat, 0, n);
+    }
+
     //spawning slanderers and telling them what direction is away from average enemy
     public static int getFlag(InformationCategory cat, Direction awayFromEnemy) {
-        int flag = cat.ordinal();
-        return (flag << BIT_IC_OFFSET) + awayFromEnemy.ordinal();
+        return getFlag(cat, 0, awayFromEnemy.ordinal());
     }
 
     // TARGET_ROBOT / ROBOT_TYPE
