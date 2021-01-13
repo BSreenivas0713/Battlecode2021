@@ -64,6 +64,7 @@ public class EC extends Robot {
     static int cleanUpCount;
     static int currRoundNum;
     static int currInfluence;
+    static boolean noAdjacentEC;
 
     static boolean muckrackerNear;
     //start spawning slanderers in random directions until you find an enemy
@@ -143,6 +144,13 @@ public class EC extends Robot {
         super.takeTurn();
         if (spawnKillLock < 10) {
             spawnKillLock++;
+        }
+
+        for (RobotInfo robot : rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, enemy)) {
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                noAdjacentEC = false;
+            }
+            noAdjacentEC = true;
         }
 
         Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + currInfluence);
@@ -356,7 +364,7 @@ public class EC extends Robot {
         // Debug.println(Debug.info, "robot counter from toggle protectors: " + robotCounter);
 
         if (protectorIdSet.size <= 25 && currentState != State.BUILDING_PROTECTORS && resetFlagOnNewTurn && 
-            robotCounter > 40 && canGoBackToBuildingProtectors) {
+            robotCounter > 40 && canGoBackToBuildingProtectors && noAdjacentEC) {
             Debug.println(Debug.info, "switching to building protectors");
             stateStack.push(currentState);
             currentState = State.BUILDING_PROTECTORS;
