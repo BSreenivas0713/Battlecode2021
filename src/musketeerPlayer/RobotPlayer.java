@@ -1,7 +1,7 @@
-package musketeerplayer;
+package musketeerPlayer;
 import battlecode.common.*;
-import musketeerplayer.Util.*;
-import musketeerplayer.Comms.*;
+import musketeerPlayer.Util.*;
+import musketeerPlayer.Comms.*;
 
 public strictfp class RobotPlayer {
 

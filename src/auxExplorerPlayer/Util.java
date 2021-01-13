@@ -1,4 +1,4 @@
-package auxexplorerplayer;
+package auxExplorerPlayer;
 import battlecode.common.*;
 
 public class Util {

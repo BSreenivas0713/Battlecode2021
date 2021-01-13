@@ -1,6 +1,6 @@
-package auxexplorerplayer;
+package auxExplorerPlayer;
 import battlecode.common.*;
-import musketeerplayer.Util.*;
+import auxExplorerPlayer.Util.*;
 
 public strictfp class RobotPlayer {
 

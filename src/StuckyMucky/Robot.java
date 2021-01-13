@@ -1,8 +1,8 @@
-package stuckymucky;
+package StuckyMucky;
 import battlecode.common.*;
 
-import stuckymucky.Util.*;
-import stuckymucky.Comms.*;
+import StuckyMucky.Util.*;
+import StuckyMucky.Comms.*;
 
 public class Robot {
     static RobotController rc;

@@ -1,7 +1,7 @@
-package auxmusketeerplayer;
+package auxMusketeerPlayer;
 import battlecode.common.*;
 
-import auxmusketeerplayer.Util.*;
+import auxMusketeerPlayer.Util.*;
 
 public class Muckracker extends Robot {
     static Direction main_direction;

@@ -1,7 +1,7 @@
-package stuckymucky;
+package StuckyMucky;
 import battlecode.common.*;
 
-import stuckymucky.Util.*;
+import StuckyMucky.Util.*;
 
 public class DefenderPolitician extends Robot {
     static Direction main_direction;

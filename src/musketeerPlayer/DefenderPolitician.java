@@ -1,7 +1,7 @@
-package musketeerplayer;
+package musketeerPlayer;
 import battlecode.common.*;
 
-import musketeerplayer.Util.*;
+import musketeerPlayer.Util.*;
 
 public class DefenderPolitician extends Robot {
     static Direction main_direction;

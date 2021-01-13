@@ -1,4 +1,4 @@
-package musketeerplayer;
+package musketeerPlayer;
 import battlecode.common.*;
 
 public class Comms {

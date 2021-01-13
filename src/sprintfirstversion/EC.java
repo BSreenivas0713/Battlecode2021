@@ -3,7 +3,7 @@ import battlecode.common.*;
 
 import sprintfirstversion.Comms.*;
 import sprintfirstversion.Util.*;
-import sprintfirstversion.FastIterableIntSet;
+import sprintfirstversion.Fast.FastIterableIntSet;
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
 

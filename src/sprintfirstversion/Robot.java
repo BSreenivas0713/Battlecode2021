@@ -29,7 +29,6 @@ public class Robot {
         actionRadius = rc.getType().actionRadiusSquared;
         defaultFlag = 0;
         RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
-        MapLocation currLoc = rc.getLocation();
         for (RobotInfo robot : sensable) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 MapLocation ecLoc = robot.getLocation();
@@ -106,7 +105,6 @@ public class Robot {
                 } else {
                     res = true;
     
-                    MapLocation currLoc = rc.getLocation();
                     MapLocation ecLoc = robot.getLocation();
     
                     int ecDX = ecLoc.x - home.x + Util.dOffset;

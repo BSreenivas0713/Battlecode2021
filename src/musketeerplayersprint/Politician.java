@@ -19,7 +19,6 @@ public class Politician extends Robot {
         Debug.println(Debug.info, "I am a normal politician; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
-        RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         RobotInfo[] within6 = rc.senseNearbyRobots(6, rc.getTeam());
 
         if(main_direction == null){

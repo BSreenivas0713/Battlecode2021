@@ -1,7 +1,7 @@
-package stuckymucky;
+package StuckyMucky;
 import battlecode.common.*;
 
-import stuckymucky.Util.*;
+import StuckyMucky.Util.*;
 
 public class RushPolitician extends Robot {
     static MapLocation enemyLocation;

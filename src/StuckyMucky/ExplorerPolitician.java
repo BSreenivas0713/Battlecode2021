@@ -1,7 +1,7 @@
-package stuckymucky;
+package StuckyMucky;
 import battlecode.common.*;
 
-import stuckymucky.Util.*;
+import StuckyMucky.Util.*;
 
 public class ExplorerPolitician extends Robot {
     static Direction main_direction;
@@ -28,7 +28,6 @@ public class ExplorerPolitician extends Robot {
         RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         RobotInfo[] sensable = rc.senseNearbyRobots(sensingRadius, enemy);
-        RobotInfo[] friendlySensable = rc.senseNearbyRobots(sensingRadius, rc.getTeam());
 
         if(main_direction == null){
             main_direction = Util.randomDirection();

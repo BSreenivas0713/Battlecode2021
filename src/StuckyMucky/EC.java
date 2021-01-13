@@ -1,8 +1,8 @@
-package stuckymucky;
+package StuckyMucky;
 import battlecode.common.*;
 
-import stuckymucky.Comms.*;
-import stuckymucky.Util.*;
+import StuckyMucky.Comms.*;
+import StuckyMucky.Util.*;
 import java.util.ArrayList;
 import java.util.ArrayDeque;
 
@@ -112,7 +112,6 @@ public class EC extends Robot {
         }
         else if (sendTroopsSemaphore > 0) {
             if (Util.verbose) System.out.println("building rush bots");
-            int currFlag = rc.getFlag(rc.getID());
             toBuild = RobotType.POLITICIAN;
             // if (Comms.getIC(currFlag) == Comms.InformationCategory.ENEMY_EC) {
             //     toBuild = RobotType.MUCKRAKER;

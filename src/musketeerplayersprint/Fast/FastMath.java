@@ -1,4 +1,4 @@
-package musketeerplayersprint;
+package musketeerplayersprint.Fast;
 
 import battlecode.common.*;
 

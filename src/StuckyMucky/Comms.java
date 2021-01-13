@@ -1,4 +1,4 @@
-package stuckymucky;
+package StuckyMucky;
 import battlecode.common.*;
 
 public class Comms {

@@ -4,7 +4,7 @@ import battlecode.common.*;
 import musketeerplayersprint.Comms.*;
 import musketeerplayersprint.Util.*;
 import musketeerplayersprint.Debug.*;
-import musketeerplayersprint.FastIterableIntSet;
+import musketeerplayersprint.Fast.FastIterableIntSet;
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
 

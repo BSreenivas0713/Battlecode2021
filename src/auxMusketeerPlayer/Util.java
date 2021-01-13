@@ -1,4 +1,4 @@
-package auxmusketeerplayer;
+package auxMusketeerPlayer;
 import battlecode.common.*;
 
 public class Util {
