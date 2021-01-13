@@ -13,14 +13,14 @@ public class RushPolitician extends Robot {
     public RushPolitician(RobotController r, MapLocation enemyLoc) {
         super(r);
         enemyLocation = enemyLoc;
-        moveSemaphore = 5;
+        moveSemaphore = 2;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_RUSH);
     }
 
     public RushPolitician(RobotController r, MapLocation enemyLoc, boolean det) {
         super(r);
         enemyLocation = enemyLoc;
-        moveSemaphore = 5;
+        moveSemaphore = 2;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_RUSH);
     }
 
@@ -84,7 +84,7 @@ public class RushPolitician extends Robot {
             Debug.println(Debug.info, "Close to EC; using heuristic for movement");
             main_direction = rc.getLocation().directionTo(enemyLocation);
             if(tryMove(main_direction)) {
-                moveSemaphore = 5;
+                moveSemaphore = 2;
             } else {
                 moveSemaphore--;
             }
