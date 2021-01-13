@@ -43,6 +43,16 @@ public class Slanderer extends Robot {
             main_direction = Util.randomDirection();
         }
 
+        for (RobotInfo robot : friendlySensable) {
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                int botFlag = rc.getFlag(robot.getID());
+                Comms.InformationCategory flagIC = Comms.getIC(botFlag);
+                if (flagIC == Comms.InformationCategory.SPECIFYING_SLANDERER_DIRECTION) {
+                            awayDirection = Comms.getAwayDirection(botFlag);
+                        }
+            }
+        }
+
         RobotInfo[] neutralECs = rc.senseNearbyRobots(sensorRadius, Team.NEUTRAL);
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
