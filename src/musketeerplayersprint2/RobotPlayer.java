@@ -48,7 +48,7 @@ public strictfp class RobotPlayer {
                                     case POL_EXPLORER:
                                         bot = new ExplorerPolitician(rc);
                                         break;
-                                    case POL_BODYGUARD:
+                                    case POL_PROTECTOR:
                                         bot = new Politician(rc);
                                         break;
                                     case POL_CLEANUP:
