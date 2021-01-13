@@ -76,6 +76,7 @@ public class EC extends Robot {
     static State currentState;
 
     static int lastRush;
+    static int spawnKillLock = 10;
 
     public EC(RobotController r) {
         super(r);
@@ -129,6 +130,9 @@ public class EC extends Robot {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
+        if (spawnKillLock < 10) {
+            spawnKillLock++;
+        }
 
         Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + currInfluence);
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
@@ -140,6 +144,12 @@ public class EC extends Robot {
         Debug.println(Debug.info, "protectors built in a row: " + protectorsSpawnedInARow);
 
         processChildrenFlags();
+        if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && spawnKillLock == 10) {
+            Debug.println(Debug.info, "spawn killing politician");
+            influence = 6*rc.getInfluence()/8;
+            toBuild = RobotType.POLITICIAN;
+            spawnKillLock = 0;
+        }
 
         if (currRoundNum > 500)
             tryStartCleanup();

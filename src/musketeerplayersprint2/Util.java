@@ -31,7 +31,7 @@ public class Util {
         Direction.NORTHWEST,
     };
 
-    static final int spawnKillThreshold = 3;
+    static final int spawnKillThreshold = 5;
     static final int dOffset = 64;
 
     static final int phaseOne = 30;
