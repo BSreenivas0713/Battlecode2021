@@ -15,13 +15,7 @@ public class RushPolitician extends Robot {
         enemyLocation = enemyLoc;
         moveSemaphore = 2;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_RUSH);
-    }
-
-    public RushPolitician(RobotController r, MapLocation enemyLoc, boolean det) {
-        super(r);
-        enemyLocation = enemyLoc;
-        moveSemaphore = 2;
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_RUSH);
+        Nav.setDest(enemyLoc);
     }
 
     public void takeTurn() throws GameActionException {
@@ -63,7 +57,7 @@ public class RushPolitician extends Robot {
         if (rc.canEmpower(minEnemyDistSquared) && (moveSemaphore <= 0 || minEnemyDistSquared <= 1)) {
             int radius = Math.min(actionRadius, minEnemyDistSquared);
             Debug.println(Debug.info, "Empowered with radius: " + radius);
-            Debug.setIndicatorLine(rc.getLocation(), closestEnemy, 255, 150, 50);
+            Debug.setIndicatorLine(Debug.info, rc.getLocation(), closestEnemy, 255, 150, 50);
             rc.empower(radius);
             return;
         }
@@ -92,10 +86,10 @@ public class RushPolitician extends Robot {
             tryMove(main_direction.rotateLeft());
         } else {
             Debug.println(Debug.info, "Using gradient descent for movement");
-            main_direction = Nav.gradientDescent(enemyLocation);
+            main_direction = Nav.gradientDescent();
             tryMoveDest(main_direction);
         }
 
-        Debug.setIndicatorLine(rc.getLocation(), enemyLocation, 255, 150, 50);
+        Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
     }
 }
