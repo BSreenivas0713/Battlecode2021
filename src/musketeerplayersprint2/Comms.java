@@ -24,6 +24,7 @@ public class Comms {
     }
 
     public enum SubRobotType {
+        POL_DEFENDER,
         POL_EXPLORER,
         POL_PROTECTOR,
         POL_SPAWNKILL,
