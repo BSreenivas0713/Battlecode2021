@@ -71,13 +71,24 @@ public class GolemPolitician extends Robot {
         }
         RobotInfo enemyRobot = null;
         int maxEnemyConviction = min_attackable_conviction - 1;
+        RobotInfo minRobot = null;
+        double minDistSquared = Integer.MAX_VALUE;
         for (RobotInfo robot : enemySensable) {
             int enemyConviction = robot.getConviction();
             if(enemyConviction > maxEnemyConviction) {
                 enemyRobot = robot;
                 maxEnemyConviction = enemyConviction;
             }
+            double temp = currLoc.distanceSquaredTo(robot.getLocation());
+            if (temp < minDistSquared) {
+                minDistSquared = temp;
+                minRobot = robot;
+            }
         }
+        if (minRobot != null) {
+            broadcastEnemyFound(minRobot.getLocation());
+        }
+        
         if (enemyRobot != null) {
             Direction toMove = rc.getLocation().directionTo(enemyRobot.getLocation());
             tryMoveDest(toMove);
