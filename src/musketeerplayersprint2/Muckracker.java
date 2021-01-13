@@ -49,6 +49,7 @@ public class Muckracker extends Robot {
 
         RobotInfo closest_muk = null;
         int closest_muk_dist = Integer.MAX_VALUE;
+        boolean awayFromHome = false;
         for (RobotInfo robot : friendlySensable) {
             MapLocation tempLoc = robot.getLocation();
             int dist = currLoc.distanceSquaredTo(tempLoc);
@@ -57,6 +58,9 @@ public class Muckracker extends Robot {
                 closest_muk_dist = dist;
             }
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && home == robot.getLocation()) {
+                    awayFromHome = true;
+                }
                 int botFlag = rc.getFlag(robot.getID());
                 Comms.InformationCategory flagIC = Comms.getIC(botFlag);
                 if (flagIC == Comms.InformationCategory.ENEMY_EC) {
@@ -108,6 +112,10 @@ public class Muckracker extends Robot {
             if (bestSlanderer != null && rc.isReady()) {
                 main_direction = currLoc.directionTo(bestSlanderer.getLocation());
                 tryMoveDest(main_direction);
+            }
+            if (awayFromHome == true) {
+                main_direction = currLoc.directionTo(home).opposite();
+                tryMove(main_direction);
             }
             if (closest_muk != null && rc.isReady()){
                 main_direction = currLoc.directionTo(closest_muk.getLocation()).opposite();
