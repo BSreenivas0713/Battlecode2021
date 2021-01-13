@@ -7,10 +7,18 @@ import musketeerplayersprint2.Debug.*;
 
 public class Slanderer extends Robot {
     static Direction main_direction;
+    static Direction awayDirection;
     
     public Slanderer(RobotController r) {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
+        awayDirection = null;
+    }
+
+    public Slanderer(RobotController r, Direction away) {
+        super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
+        awayDirection = away;
     }
 
     public void takeTurn() throws GameActionException {
@@ -45,6 +53,9 @@ public class Slanderer extends Robot {
                     minRobot = robot;
                 }
             }
+            if (minRobot != null) {
+                broadcastEnemyFound(minRobot.getLocation());
+            }
             
             RobotInfo minNeutralRobot = null;
             double minNeutralDistSquared = Integer.MAX_VALUE;
@@ -57,9 +68,16 @@ public class Slanderer extends Robot {
             }
             
             RobotInfo friendlyEC = null;
+            RobotInfo closestSlanderer = null;
+            int closestSlandDist = Integer.MAX_VALUE;
             for (RobotInfo robot: friendlySensable) {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                     friendlyEC = robot;
+                }
+                int dist = robot.getLocation().distanceSquaredTo(curr);
+                if (robot.getType() == RobotType.SLANDERER && dist < closestSlandDist) {
+                    closestSlanderer = robot;
+                    closestSlandDist = dist;
                 }
             }
 
@@ -96,6 +114,10 @@ public class Slanderer extends Robot {
                 main_direction = curr.directionTo(friendlyEC.getLocation()).opposite(); 
             } else if (moveBack == true) {
                 main_direction = curr.directionTo(home);
+            } else if (awayDirection != null) {
+                main_direction = awayDirection;
+            } else if (closestSlanderer != null) {
+                main_direction = curr.directionTo(closestSlanderer.getLocation());
             }
 
             MapLocation target = rc.adjacentLocation(main_direction);
@@ -121,9 +143,49 @@ public class Slanderer extends Robot {
                 }
             }
             if (minRobot != null) {
+                broadcastEnemyFound(minRobot.getLocation());
+            }
+
+            RobotInfo friendlyEC = null;
+            RobotInfo closestSlanderer = null;
+            int closestSlandDist = Integer.MAX_VALUE;
+            for (RobotInfo robot: friendlySensable) {
+                if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                    friendlyEC = robot;
+                }
+                int dist = robot.getLocation().distanceSquaredTo(curr);
+                if (robot.getType() == RobotType.SLANDERER && dist < closestSlandDist) {
+                    closestSlanderer = robot;
+                    closestSlandDist = dist;
+                }
+            }
+
+            double maxPass = 0;
+            Direction maxDir = null;
+            Direction tempDir = Util.randomDirection();
+            double currPass;
+            int i = 0;
+            while (i < 8) {
+                if (rc.onTheMap(curr.add(tempDir))) {
+                    currPass = rc.sensePassability(curr.add(tempDir));
+                    if (currPass > maxPass) {
+                        maxPass = currPass;
+                        maxDir = tempDir;
+                    }
+                }
+                i++;
+                tempDir = tempDir.rotateRight();
+            }
+            main_direction = maxDir;
+
+            if (minRobot != null) {
                 main_direction = curr.directionTo(minRobot.getLocation()).opposite();
             } else if (curr.isWithinDistanceSquared(home, 2 * sensorRadius)) {
                 main_direction = curr.directionTo(home).opposite();
+            } else if (awayDirection != null) {
+                main_direction = awayDirection;
+            } else if (closestSlanderer != null) {
+                main_direction = curr.directionTo(closestSlanderer.getLocation());
             }
 
             MapLocation target = rc.adjacentLocation(main_direction);
