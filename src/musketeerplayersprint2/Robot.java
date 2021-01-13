@@ -140,6 +140,14 @@ public class Robot {
         return res;
     }
 
+    boolean broadcastEnemyFound(MapLocation enemyLoc) {
+        int enemyDx = enemyLoc.x - home.x + Util.dOffset;
+        int enemyDy = enemyLoc.y - home.y + Util.dOffset;
+
+        nextFlag = Comms.getFlag(InformationCategory.ENEMY_FOUND, enemyDx, enemyDy);
+        return true;
+    }
+
     void setFlag(int flag) throws GameActionException {
         if(rc.canSetFlag(flag)) {
             rc.setFlag(flag);

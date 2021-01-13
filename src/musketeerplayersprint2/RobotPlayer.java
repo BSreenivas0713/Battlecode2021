@@ -14,6 +14,8 @@ public strictfp class RobotPlayer {
     public static void run(RobotController rc) throws GameActionException {
         Debug.init(rc);
 
+        RobotInfo[] sensableWithin2 = rc.senseNearbyRobots(2, rc.getTeam());
+
         switch (rc.getType()) {
             case ENLIGHTENMENT_CENTER: bot = new EC(rc);          break;
             case POLITICIAN: 
@@ -22,13 +24,10 @@ public strictfp class RobotPlayer {
                 //     break;
                 // }
 
-                int sensorRadius = rc.getType().sensorRadiusSquared;
-                RobotInfo[] sensableWithin2 = rc.senseNearbyRobots(2, rc.getTeam());
-                boolean botCreated = false;
                 for (RobotInfo robot : sensableWithin2) {
                     int botFlag = rc.getFlag(robot.getID());
                     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
-                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
                         Debug.println(Debug.info, "Flag for creation: " + botFlag);
                         switch(flagIC) {
                             case NEUTRAL_EC:
@@ -71,7 +70,28 @@ public strictfp class RobotPlayer {
                 Debug.println(Debug.critical, "LOGICAL ERROR: Did not find flag directing type");
                 bot = new Politician(rc);
                 break;
-            case SLANDERER:            bot = new Slanderer(rc);   break;
+            case SLANDERER:
+                for (RobotInfo robot : sensableWithin2) { 
+                    int botFlag = rc.getFlag(robot.getID());
+                    Comms.InformationCategory flagIC = Comms.getIC(botFlag);
+                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
+                        Debug.println(Debug.info, "Flag for creation: " + botFlag);
+                        if (flagIC == Comms.InformationCategory.SPECIFYING_SLANDERER_DIRECTION) {
+                            Direction awayDirection = Comms.getAwayDirection(botFlag);
+                            bot = new Slanderer(rc, awayDirection);
+                            break;
+                        }
+                    }
+                    if(bot != null)
+                        break;
+                }
+
+                if(bot != null)
+                    break;
+
+                Debug.println(Debug.critical, "LOGICAL ERROR: Did not find flag directing type");
+                bot = new Slanderer(rc, Util.randomDirection());
+                break;
             case MUCKRAKER:            bot = new Muckracker(rc);  break;
         }
 

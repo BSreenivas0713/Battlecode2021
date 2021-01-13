@@ -15,8 +15,6 @@ public class EC extends Robot {
         RUSHING,
         SAVING_FOR_RUSH,
         CLEANUP,
-        MAKING_GOLEM, // TOCONSIDER
-        MAKING_DEFENDERS,
         REMOVING_BLOCKAGE
     };
 
@@ -30,6 +28,9 @@ public class EC extends Robot {
     static int currInfluence;
     static boolean needToBuild;
     static boolean muckrackerNear;
+
+    //start spawning slanderers in random directions until you find an enemy
+    static Direction avgDirectionOfEnemies = Util.randomDirection();
 
     static class RushFlag implements Comparable<RushFlag> {
         int requiredInfluence;
@@ -68,16 +69,7 @@ public class EC extends Robot {
 
     static State currentState;
 
-    static boolean needToMakeBodyguard = false;
     static int lastRush = 0;
-
-    // TODO: Better slanderer pathfinding. Wallscraping muckrakers. Better defense
-    // TODO: implement spawn killing if it is worth it, 
-    // TODO: better money management strategy(I.E don't just making 1000 slanderers quicker and quicker in late game)
-    // TODO: Slanderers should store the location of their current base, and try not to wander too far away from it(MAYBE??)
-    // TODO: DO NOT RUSH if you do not have AT LEAST 2 or 3 Slanderes as the money creation is too slow and the tower basically just stops doing anything productive
-    // TODO(DONE): DO NOT Build a slanderer if there is an enemy Muckraker in range of the EC
-    // TODO: make defenders even while trying to send a rush
 
     public EC(RobotController r) {
         super(r);
@@ -104,12 +96,6 @@ public class EC extends Robot {
                     Debug.println(Debug.critical, "build robot didn't find the robot it just built");
                 }
 
-                if(needToMakeBodyguard) {
-                    needToMakeBodyguard = false;
-                }
-                if(toBuild == RobotType.SLANDERER) {
-                    needToMakeBodyguard = true;
-                }
                 resetFlagOnNewTurn = true;
                 robotCounter += 1;
                 return true;
@@ -129,11 +115,13 @@ public class EC extends Robot {
         Debug.println(Debug.info, "num of ec's found: " + ECflags.size());
         Debug.println(Debug.info, "num ids found: " + idSet.size);
         Debug.println(Debug.info, "state: " + currentState);
+        Debug.println(Debug.info, "avg direction of enemies: " + avgDirectionOfEnemies);
 
-        checkForTowers();
+        checkForTowersAndEnemyDirection();
         if (currRoundNum > 500)
             tryStartCleanup();
 
+        //bidding code
         int biddingInfluence = currInfluence / 20;
         if (rc.canBid(biddingInfluence) && currRoundNum > 500) {
             rc.bid(biddingInfluence);
@@ -143,18 +131,17 @@ public class EC extends Robot {
                 rc.bid(biddingInfluence);
             }
         }
+
+        //updating currInfluence after a bid
         currInfluence = rc.getInfluence();
         muckrackerNear = checkIfMuckrakerNear();
-        // if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
-        //     Debug.println(Debug.info, "spawn killing politicians");
-        //     influence = 6*rc.getInfluence()/8;
-        //     toBuild = RobotType.POLITICIAN;
-        // }
+        
         switch(currentState) {
             case PHASE1:
                 Debug.println(Debug.info, "Phase1 state");
                 if(Util.getBestSlandererInfluence(currInfluence) >= 130 && robotCounter % 5 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
+                    signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
                     influence = Util.getBestSlandererInfluence(currInfluence);
                 } else {
                     toBuild = RobotType.MUCKRAKER;
@@ -168,12 +155,9 @@ public class EC extends Robot {
                 break;
             case PHASE2:
                 Debug.println(Debug.info, "Phase2 state");
-                if(needToMakeBodyguard) {
-                    toBuild = RobotType.POLITICIAN;
-                    influence = Math.min(currInfluence / 4, 20);
-                    signalRobotType(Comms.SubRobotType.POL_BODYGUARD);
-                } else if(Util.getBestSlandererInfluence(7 * currInfluence / 8) >= 150 && robotCounter % 5 == 0 && !muckrackerNear) {
+                if(Util.getBestSlandererInfluence(7 * currInfluence / 8) >= 150 && robotCounter % 5 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
+                    signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
                     influence = Util.getBestSlandererInfluence(7 * currInfluence / 8);
                 } else {
                     toBuild = RobotType.MUCKRAKER;
@@ -184,7 +168,7 @@ public class EC extends Robot {
                     buildRobot(toBuild, influence);
                 }                
                 if (tryStartRemovingBlockage()) {}   
-                else if (!tryStartMakingDefenders()) {tryStartSavingForRush();}
+                else {tryStartSavingForRush();}
                 break;
             case RUSHING:
                 trySendARush();
@@ -214,26 +198,11 @@ public class EC extends Robot {
                     buildRobot(toBuild, influence);
                 }
                 tryStartRemovingBlockage();
-                tryStartMakingDefenders();
-                break;
-            case MAKING_DEFENDERS:
-                // Consider staggering making defenders
-                boolean built = false;
-                toBuild = RobotType.POLITICIAN;
-                influence = 20;
-
-                if(needToBuild) {
-                    signalRobotType(Comms.SubRobotType.POL_DEFENDER);
-                    built = buildRobot(toBuild, influence);
-                }
-
-                if(built && checkNumDefenders() + 2 >= Util.numDefenders) {
-                    currentState = stateStack.pop();
-                }
                 break;
             case CLEANUP:
                 if(Util.getBestSlandererInfluence(currInfluence) >= 100 && robotCounter % 2 == 0 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
+                    signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
                     influence = Util.getBestSlandererInfluence(currInfluence / 2);
                 }
                 else if(currInfluence >= 100) {
@@ -282,8 +251,11 @@ public class EC extends Robot {
         return false;
     }
 
-    public void checkForTowers() throws GameActionException {
+    public void checkForTowersAndEnemyDirection() throws GameActionException {
         idSet.updateIterable();
+
+        int directionTotal = 0;
+        int numChildrenThatFoundEnemy = 0;
         int id;
         for(int j = idSet.size - 1; j >= 0; j--) {
             id = ids[j];
@@ -304,29 +276,30 @@ public class EC extends Robot {
                             currentState = stateStack.pop();
                         }
                     }
-
-                    // if(!ECdxdys.isEmpty() && ECdxdys.peek().equals(rushFlag)) {
-                    //     ECflags.remove();
-                    //     ECflags.offerFirst(flag);
-                    //     requiredInfluence = (int)  Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE)) * 4;  
-                    //     Debug.println(Debug.info, "required influence updated as follows: " + requiredInfluence); 
-                    // }
-                    // else {
-                    //     Debug.println(Debug.info, "no update made.");
-                    // }
                 } else if(flagIC == Comms.InformationCategory.FRIENDLY_EC) {
                     int[] currDxDy = Comms.getDxDy(flag);
                     RushFlag rushFlag = new RushFlag(0, currDxDy[0], currDxDy[1], 0);
                     ECflags.remove(rushFlag);
                 }
+                //for calculation of average direction to enemy
+                if (flagIC == Comms.InformationCategory.ENEMY_FOUND) {
+                    int[] enemyDxDy = Comms.getDxDy(flag);
+                    MapLocation spawningLoc = rc.getLocation();
+                    MapLocation enemyLoc = new MapLocation(enemyDxDy[0] + spawningLoc.x - Util.dOffset, enemyDxDy[1] + spawningLoc.y - Util.dOffset);
+                    Direction dirToEnemy = spawningLoc.directionTo(enemyLoc);
+                    directionTotal += dirToEnemy.ordinal();
+                    numChildrenThatFoundEnemy++;
+                }
             } else {
                 idSet.remove(id);
             }
-            // i++;
-            // if (i >= 100) {
-            //     break;
-            // }
         }
+        //for calculation of average direction to enemy
+        if (numChildrenThatFoundEnemy != 0) {
+            int enemyDirectionAverage = (int) (directionTotal / numChildrenThatFoundEnemy);
+            avgDirectionOfEnemies = Direction.values()[enemyDirectionAverage];
+        }
+
         cleanUpCount++;
     }
 
@@ -347,16 +320,6 @@ public class EC extends Robot {
             Debug.println(Debug.info, "tryStartSavingForRush is returning true");
             return true;
         }
-        return false;
-    }
-    
-    // WE wILL NOT BE MAKING DEFENDERS
-    public boolean tryStartMakingDefenders() throws GameActionException {
-        // if(checkNumDefenders() < Util.numDefenders) {
-        //     stateStack.push(currentState);
-        //     currentState = State.MAKING_DEFENDERS;
-        //     return true;
-        // }
         return false;
     }
 
@@ -382,11 +345,8 @@ public class EC extends Robot {
 
     public boolean trySendARush() throws GameActionException {
         Debug.println(Debug.info, "building rush bots");
-        // int currFlag = rc.getFlag(rc.getID());
+
         toBuild = RobotType.POLITICIAN;
-        // if (Comms.getIC(currFlag) == Comms.InformationCategory.ENEMY_EC) {
-        //     toBuild = RobotType.MUCKRAKER;
-        // }
         RushFlag rushFlag = ECflags.peek();
         influence = rushFlag.requiredInfluence;
 
@@ -408,103 +368,16 @@ public class EC extends Robot {
         return true;
     }
 
-    public boolean tryDefendARush() throws GameActionException {
-        boolean enemy_near = false;
-        int max_influence = 0;
-        Team enemy = rc.getTeam().opponent();
-        RobotInfo[] botsIn15 = rc.senseNearbyRobots(15, enemy);
-        for (RobotInfo robot : botsIn15) {
-           if (robot.getType() == RobotType.MUCKRAKER){
-               enemy_near = true;
-               if (robot.getInfluence() > max_influence){
-                   max_influence = robot.getInfluence();
-               }
-           } 
-        } 
-        if (enemy_near) {
-            Debug.println(Debug.info, "defending a rush");
-            int num_robots = rc.senseNearbyRobots(15).length;
-            int naive_influence = num_robots * max_influence;
-            influence = Math.min(naive_influence + 10, 50);
-            toBuild = RobotType.POLITICIAN;
-            signalRobotType(Comms.SubRobotType.POL_EXPLORER);
-            return true;
-        }
-        return false;
-    }
-
-    // public void doMainStrategy() throws GameActionException {
-    //     int slandererInfluence = Math.min(Math.max(100, currInfluence / 10), 1000);
-    //     int normalInfluence = Math.max(50, currInfluence / 20);
-    //     if (currRoundNum < Util.phaseOne) {
-    //         Debug.println(Debug.info, "phase 1 default build troop behavior");
-    //         switch(robotCounter % 9) {
-    //             case 5:
-    //                 toBuild = RobotType.MUCKRAKER;
-    //                 influence = normalInfluence;
-    //                 break;
-    //             case 3: case 4: case 6: 
-    //                 signalRobotType(Comms.SubRobotType.POL_EXPLORER);
-    //                 toBuild = RobotType.POLITICIAN;
-    //                 influence = normalInfluence;
-    //                 break;
-    //             case 8:
-    //                 signalRobotType(Comms.SubRobotType.POL_BODYGUARD);
-    //                 toBuild = RobotType.POLITICIAN;
-    //                 influence = normalInfluence;
-    //                 break;
-    //             default:
-    //                 toBuild = RobotType.SLANDERER;
-    //                 influence = slandererInfluence;
-    //                 break;
-    //         }
-    //     }
-    //     else if(currRoundNum < Util.phaseTwo) {
-    //         Debug.println(Debug.info, "phase 2 default build troop behavior");
-    //         switch(robotCounter % 9) {
-    //             case 0: case 2: case 6:
-    //                 toBuild = RobotType.MUCKRAKER;
-    //                 influence = normalInfluence;
-    //                 break;
-    //             case 1: case 3: case 5:
-    //                 toBuild = RobotType.POLITICIAN;
-    //                 influence = normalInfluence;
-    //                 break;
-    //             default:
-    //                 toBuild = RobotType.SLANDERER;
-    //                 influence = slandererInfluence;
-    //                 break;
-    //         }
-    //     }
-    //     else {
-    //         Debug.println(Debug.info, "build troop behavior after 2000 rounds");
-    //         toBuild = RobotType.MUCKRAKER;
-    //         influence = normalInfluence;
-    //     }
-    // }
-
-    int checkNumDefenders() throws GameActionException {
-        int count = 0;
-        for(RobotInfo robot : friendlySensable) {
-            if(rc.canGetFlag(robot.getID())) {
-                int flag = rc.getFlag(robot.getID());
-                Comms.InformationCategory flagIC = Comms.getIC(flag);
-                if(flagIC == Comms.InformationCategory.ROBOT_TYPE) {
-                    if(Comms.getSubRobotType(flag) == Comms.SubRobotType.POL_DEFENDER) {
-                        count++;
-                    }
-                }
-            }
-        }
-
-        Debug.println(Debug.info, "Defenders around: " + count);
-        return count;
-    }
-
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {
         if (resetFlagOnNewTurn) {
             nextFlag = Comms.getFlag(Comms.InformationCategory.TARGET_ROBOT, type);
             resetFlagOnNewTurn = false;
+        }
+    }
+
+    void signalSlandererAwayDirection(Direction awayDirection) throws GameActionException {
+        if (resetFlagOnNewTurn) {
+            nextFlag = Comms.getFlag(Comms.InformationCategory.SPECIFYING_SLANDERER_DIRECTION, awayDirection);
         }
     }
 }
