@@ -82,7 +82,7 @@ public class Slanderer extends Robot {
             }
 
             boolean moveBack = false;
-            if (!curr.isWithinDistanceSquared(home, 3 * sensorRadius / 4)) {
+            if (!curr.isWithinDistanceSquared(home, sensorRadius)) {
                 moveBack = true;
             }
 
@@ -136,7 +136,8 @@ public class Slanderer extends Robot {
             }
 
             broadcastECLocation();
-        } else {
+        }
+        /* else {
             if(main_direction == null) {
                 main_direction = Util.randomDirection();
             }
@@ -210,6 +211,6 @@ public class Slanderer extends Robot {
             }
 
             broadcastECLocation();
-        }
+        }*/
     }
 }
