@@ -40,7 +40,7 @@ public class ExplorerPolitician extends Robot {
 
         if (attackable_conviction >= min_attackable_conviction && rc.canEmpower(maxEnemyDistSquared)) {
             Debug.println(Debug.info, "Empowered with radius: " + maxEnemyDistSquared);
-            Debug.setIndicatorLine(rc.getLocation(), farthestEnemy, 255, 150, 50);
+            Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestEnemy, 255, 150, 50);
             rc.empower(maxEnemyDistSquared);
             return;
         }

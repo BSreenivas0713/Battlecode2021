@@ -5,6 +5,7 @@ import battlecode.common.*;
 public class Debug {
     static final boolean verbose = true;
     public static final boolean info = true;
+    public static final boolean pathfinding = true;
     private static final boolean indicators = true;
 
     private static RobotController rc;
@@ -25,14 +26,14 @@ public class Debug {
         }
     }
 
-    static void setIndicatorDot(MapLocation loc, int r, int g, int b) {
-        if(verbose && indicators) {
+    static void setIndicatorDot(boolean cond, MapLocation loc, int r, int g, int b) {
+        if(verbose && indicators && cond) {
             rc.setIndicatorDot(loc, r, g, b);
         }
     }
 
-    static void setIndicatorLine(MapLocation startLoc, MapLocation endLoc, int r, int g, int b) {
-        if(verbose && indicators) {
+    static void setIndicatorLine(boolean cond, MapLocation startLoc, MapLocation endLoc, int r, int g, int b) {
+        if(verbose && indicators && cond) {
             rc.setIndicatorLine(startLoc, endLoc, r, g, b);
         }
     }

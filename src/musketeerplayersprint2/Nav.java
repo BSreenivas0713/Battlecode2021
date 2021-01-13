@@ -22,6 +22,10 @@ public class Nav {
     static double[][] costs;
     static double[][] cooldownPenalties;
 
+    static MapLocation dest;
+    static int closestDistanceToDest;
+    static int turnsSinceClosestDistanceDecreased;
+
     static void init(RobotController r) {
         rc = r;
         baseCooldown = rc.getType().actionCooldown;
@@ -30,6 +34,15 @@ public class Nav {
         costs = new double[rows][cols];
         cooldownPenalties = new double[rows][cols];
         map = new MapLocation[rows][cols];
+        dest = null;
+        closestDistanceToDest = Integer.MAX_VALUE;
+        turnsSinceClosestDistanceDecreased = 0;
+    }
+
+    static void setDest(MapLocation d) {
+        dest = d;
+        closestDistanceToDest = Integer.MAX_VALUE;
+        turnsSinceClosestDistanceDecreased = 0;
     }
 
     static void updateLocalMap() throws GameActionException {
@@ -42,7 +55,7 @@ public class Nav {
                 loc = currLoc.translate(dx, dy);
                 if(rc.canSenseLocation(loc) && rc.senseRobotAtLocation(loc) == null) {
                     map[i][j] = loc;
-                    rc.setIndicatorDot(loc, 0, 100, 255);
+                    // Debug.setIndicatorDot(Debug.pathfinding, loc, 0, 100, 255);
                 } else {
                     map[i][j] = null;
                 }
@@ -192,10 +205,26 @@ public class Nav {
 
     // Note: Takes 12500 BC
     // Unrolled version of gradientDescent
-    static Direction gradientDescent(MapLocation dest) throws GameActionException {
+    static Direction gradientDescent() throws GameActionException {
         // System.out.println("Bytecode at beginning: " + Clock.getBytecodeNum());
         updateLocalMap();
         MapLocation src = rc.getLocation();
+
+        int dist = src.distanceSquaredTo(dest);
+        if(dist < closestDistanceToDest) {
+            closestDistanceToDest = dist;
+            turnsSinceClosestDistanceDecreased = 0;
+        } else {
+            turnsSinceClosestDistanceDecreased++;
+        }
+
+        if(turnsSinceClosestDistanceDecreased >= 2) {
+            Debug.println(Debug.pathfinding, "Gradient descent failed to get closer in two turns: Falling back to directionTo");
+            return src.directionTo(dest);
+        } else {
+            Debug.println(Debug.pathfinding, "Doing gradient descent normally");
+        }
+
         // System.out.println("Bytecode after updateLocalMap: " + Clock.getBytecodeNum());
         int i;
         int j;

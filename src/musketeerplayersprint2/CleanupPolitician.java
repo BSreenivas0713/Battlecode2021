@@ -37,7 +37,7 @@ public class CleanupPolitician extends Robot {
 
         if (enemyAttackable.length != 0 && rc.canEmpower(minEnemyDistSquared)) {
             Debug.println(Debug.info, "Empowered with radius: " + minEnemyDistSquared);
-            Debug.setIndicatorLine(rc.getLocation(), closestEnemy, 255, 150, 50);
+            Debug.setIndicatorLine(Debug.info, rc.getLocation(), closestEnemy, 255, 150, 50);
             rc.empower(minEnemyDistSquared);
             return;
         }
