@@ -50,7 +50,7 @@ public strictfp class RobotPlayer {
                                         bot = new DefenderPolitician(rc);
                                         break;
                                     case POL_SPAWNKILL:
-                                        if (rc.getEmpowerFactor(rc.getTeam(), 0) > Util.spawnKillThreshold) {
+                                        if (rc.getEmpowerFactor(rc.getTeam(), 10) > Util.spawnKillThreshold) {
                                             bot = new SpawnKillPolitician(rc);
                                         } else {
                                             bot = new ExplorerPolitician(rc);
