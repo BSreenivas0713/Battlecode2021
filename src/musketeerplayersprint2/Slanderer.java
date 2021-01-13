@@ -70,6 +70,7 @@ public class Slanderer extends Robot {
         RobotInfo friendlyEC = null;
         RobotInfo closestSlanderer = null;
         int closestSlandDist = Integer.MAX_VALUE;
+        MapLocation spawnKillDude = null;
         for (RobotInfo robot: friendlySensable) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 friendlyEC = robot;
@@ -78,6 +79,9 @@ public class Slanderer extends Robot {
             if (robot.getType() == RobotType.SLANDERER && dist < closestSlandDist) {
                 closestSlanderer = robot;
                 closestSlandDist = dist;
+            }
+            if (robot.getType() == RobotType.POLITICIAN && home.isAdjacentTo(robot.getLocation()) && rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
+                spawnKillDude = robot.getLocation();
             }
         }
 
@@ -107,6 +111,9 @@ public class Slanderer extends Robot {
         if (minRobot != null) {
             main_direction = curr.directionTo(minRobot.getLocation()).opposite();
             Debug.println(Debug.info, "Prioritizing moving away from enemies.");
+        }
+        else if (spawnKillDude != null) {
+            main_direction = curr.directionTo(spawnKillDude).opposite();
         }
         else if (minNeutralRobot != null) {
             main_direction = curr.directionTo(minNeutralRobot.getLocation()).opposite(); 
