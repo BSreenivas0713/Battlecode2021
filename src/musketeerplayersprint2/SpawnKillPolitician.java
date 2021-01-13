@@ -26,10 +26,10 @@ public class SpawnKillPolitician extends Robot {
                 Debug.setIndicatorLine(rc.getLocation(), home, 255, 150, 50);
                 rc.empower(radius);
             } else {
-                changeTo = new Politician(rc);
+                changeTo = new ProtectorPolitician(rc);
             }
         } else {
-            changeTo = new Politician(rc);
+            changeTo = new ProtectorPolitician(rc);
         }
     }
 }
