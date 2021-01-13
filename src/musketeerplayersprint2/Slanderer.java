@@ -106,18 +106,26 @@ public class Slanderer extends Robot {
 
             if (minRobot != null) {
                 main_direction = curr.directionTo(minRobot.getLocation()).opposite();
+                Debug.println(Debug.info, "Prioritizing moving away from enemies.");
             }
             else if (minNeutralRobot != null) {
                 main_direction = curr.directionTo(minNeutralRobot.getLocation()).opposite(); 
+                Debug.println(Debug.info, "Prioritizing moving away from neutrals.");
             }
             else if (friendlyEC != null) {
                 main_direction = curr.directionTo(friendlyEC.getLocation()).opposite(); 
+                Debug.println(Debug.info, "Prioritizing moving away from friendly ECs.");
             } else if (moveBack == true) {
                 main_direction = curr.directionTo(home);
+                Debug.println(Debug.info, "Prioritizing moving towards home.");
             } else if (awayDirection != null) {
                 main_direction = awayDirection;
+                Debug.println(Debug.info, "Prioritizing moving using EC signal.");
             } else if (closestSlanderer != null) {
                 main_direction = curr.directionTo(closestSlanderer.getLocation());
+                Debug.println(Debug.info, "Prioritizing moving towards slanderers.");
+            } else {
+                Debug.println(Debug.info, "Prioritizing passability.");
             }
 
             MapLocation target = rc.adjacentLocation(main_direction);
@@ -180,12 +188,18 @@ public class Slanderer extends Robot {
 
             if (minRobot != null) {
                 main_direction = curr.directionTo(minRobot.getLocation()).opposite();
+                Debug.println(Debug.info, "Prioritizing moving away from enemies.");
             } else if (curr.isWithinDistanceSquared(home, 2 * sensorRadius)) {
                 main_direction = curr.directionTo(home).opposite();
+                Debug.println(Debug.info, "Prioritizing moving away from home.");
             } else if (awayDirection != null) {
                 main_direction = awayDirection;
+                Debug.println(Debug.info, "Prioritizing moving away using EC signal.");
             } else if (closestSlanderer != null) {
                 main_direction = curr.directionTo(closestSlanderer.getLocation());
+                Debug.println(Debug.info, "Prioritizing moving towards slanderers.");
+            } else {
+                Debug.println(Debug.info, "Prioritizing passability.");
             }
 
             MapLocation target = rc.adjacentLocation(main_direction);
