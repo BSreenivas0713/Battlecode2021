@@ -52,7 +52,7 @@ public class EC extends Robot {
     static RobotType toBuild;
     static int influence;
 
-    static int cleanUpCount = 0;
+    static int cleanUpCount;
 
     static int currRoundNum;
     static int currInfluence;
@@ -67,9 +67,11 @@ public class EC extends Robot {
     static PriorityQueue<RushFlag> ECflags;
     static ArrayDeque<State> stateStack;
 
+    static int numProtectors;
+
     static State currentState;
 
-    static int lastRush = 0;
+    static int lastRush;
 
     public EC(RobotController r) {
         super(r);
@@ -80,6 +82,9 @@ public class EC extends Robot {
         currentState = State.BUILDING_SLANDERERS;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
         avgDirectionOfEnemies = Util.randomDirection();
+        cleanUpCount = 0;
+        numProtectors = 0;
+        lastRush = 0;
     }
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
@@ -118,7 +123,7 @@ public class EC extends Robot {
         Debug.println(Debug.info, "state: " + currentState);
         Debug.println(Debug.info, "avg direction of enemies: " + avgDirectionOfEnemies);
 
-        checkForTowersAndEnemyDirection();
+        processChildrenFlags();
         if (currRoundNum > 500)
             tryStartCleanup();
 
@@ -173,7 +178,6 @@ public class EC extends Robot {
                 influence = 25;
                 signalRobotType(SubRobotType.POL_PROTECTOR);
                 
-
                 boolean built_protector = false;
                 if (toBuild != null) {
                     built_protector = buildRobot(toBuild, influence);
@@ -266,7 +270,7 @@ public class EC extends Robot {
         return false;
     }
 
-    public void checkForTowersAndEnemyDirection() throws GameActionException {
+    public void processChildrenFlags() throws GameActionException {
         idSet.updateIterable();
 
         int directionTotal = 0;
@@ -277,33 +281,43 @@ public class EC extends Robot {
             if(rc.canGetFlag(id)) {
                 int flag = rc.getFlag(id);
                 Comms.InformationCategory flagIC = Comms.getIC(flag);
-                if((flagIC == Comms.InformationCategory.NEUTRAL_EC || flagIC == Comms.InformationCategory.ENEMY_EC)) {
-                    int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
-                    int currReqInf = (int)  neededInf * 4 + 10;
-                    if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
-                        // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
-                        int[] currDxDy = Comms.getDxDy(flag);
-                        RushFlag rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag);
-                        ECflags.remove(rushFlag);
-                        ECflags.add(rushFlag);
-                        cleanUpCount = -1;
-                        if (currentState == State.CLEANUP) {
-                            currentState = stateStack.pop();
+                switch (flagIC) {
+                    case NEUTRAL_EC:
+                    case ENEMY_EC:
+                        int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
+                        int currReqInf = (int)  neededInf * 4 + 10;
+                        if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
+                            // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
+                            int[] currDxDy = Comms.getDxDy(flag);
+                            RushFlag rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag);
+                            ECflags.remove(rushFlag);
+                            ECflags.add(rushFlag);
+                            cleanUpCount = -1;
+                            if (currentState == State.CLEANUP) {
+                                currentState = stateStack.pop();
+                            }
                         }
-                    }
-                } else if(flagIC == Comms.InformationCategory.FRIENDLY_EC) {
-                    int[] currDxDy = Comms.getDxDy(flag);
-                    RushFlag rushFlag = new RushFlag(0, currDxDy[0], currDxDy[1], 0);
-                    ECflags.remove(rushFlag);
-                }
-                //for calculation of average direction to enemy
-                if (flagIC == Comms.InformationCategory.ENEMY_FOUND) {
-                    int[] enemyDxDy = Comms.getDxDy(flag);
-                    MapLocation spawningLoc = rc.getLocation();
-                    MapLocation enemyLoc = new MapLocation(enemyDxDy[0] + spawningLoc.x - Util.dOffset, enemyDxDy[1] + spawningLoc.y - Util.dOffset);
-                    Direction dirToEnemy = spawningLoc.directionTo(enemyLoc);
-                    directionTotal += dirToEnemy.ordinal();
-                    numChildrenThatFoundEnemy++;
+                        break;
+                    case FRIENDLY_EC:
+                        int[] currDxDy = Comms.getDxDy(flag);
+                        RushFlag rushFlag = new RushFlag(0, currDxDy[0], currDxDy[1], 0);
+                        ECflags.remove(rushFlag);
+                        break;
+                    case ENEMY_FOUND:
+                        int[] enemyDxDy = Comms.getDxDy(flag);
+                        MapLocation spawningLoc = rc.getLocation();
+                        MapLocation enemyLoc = new MapLocation(enemyDxDy[0] + spawningLoc.x - Util.dOffset, enemyDxDy[1] + spawningLoc.y - Util.dOffset);
+                        
+                        if (rc.getLocation().isWithinDistanceSquared(enemyLoc, rc.getType().sensorRadiusSquared * 2) &&
+                            currentState != State.BUILDING_PROTECTORS) {
+                            stateStack.push(currentState);
+                            currentState = State.BUILDING_PROTECTORS;
+                        }
+                        
+                        Direction dirToEnemy = spawningLoc.directionTo(enemyLoc);
+                        directionTotal += dirToEnemy.ordinal();
+                        numChildrenThatFoundEnemy++;
+                        break;
                 }
             } else {
                 idSet.remove(id);
