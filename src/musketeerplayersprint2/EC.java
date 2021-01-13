@@ -221,7 +221,7 @@ public class EC extends Robot {
                 Debug.println(Debug.info, "building protectors state");
                 if (robotCounter % 4 != 0) {
                     toBuild = RobotType.POLITICIAN;
-                    influence = 25;
+                    influence = 18;
                     signalRobotType(SubRobotType.POL_PROTECTOR);
                 }
                 else {
@@ -333,8 +333,8 @@ public class EC extends Robot {
         // Debug.println(Debug.info, "current state from toggle building protectors: " + currentState);
         // Debug.println(Debug.info, "robot counter from toggle protectors: " + robotCounter);
 
-        if (protectorIdSet.size <= 25 && currentState != State.BUILDING_PROTECTORS && robotCounter > 40 &&
-            canGoBackToBuildingProtectors) {
+        if (protectorIdSet.size <= 25 && currentState != State.BUILDING_PROTECTORS && resetFlagOnNewTurn && 
+            robotCounter > 40 && canGoBackToBuildingProtectors) {
             Debug.println(Debug.info, "switching to building protectors");
             stateStack.push(currentState);
             currentState = State.BUILDING_PROTECTORS;
