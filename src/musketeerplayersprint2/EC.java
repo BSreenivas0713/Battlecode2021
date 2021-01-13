@@ -106,6 +106,45 @@ public class EC extends Robot {
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
         Debug.println(Debug.info, "building robot type: " + toBuild + " influence: " + influence);
         Direction main_direction = Util.randomDirection();
+        if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && spawnKillLock == 0) {
+            int num_direction = 4;
+            main_direction = Direction.NORTH;
+            while (num_direction != 0) {
+                if (rc.canBuildRobot(toBuild, main_direction, influence)) {
+                    rc.buildRobot(toBuild, main_direction, influence);
+                    RobotInfo robot = rc.senseRobotAtLocation(home.add(main_direction));
+                    if(robot != null) {
+                        Debug.println(Debug.info, "built robot: " + robot.getID());
+                        idSet.add(robot.getID());
+                    }
+                    resetFlagOnNewTurn = true;
+                    robotCounter += 1;
+                    return true;
+                } else {
+                    main_direction = main_direction.rotateRight().rotateRight();
+                    num_direction--;
+                }
+            }
+            main_direction = Direction.NORTHEAST;
+            num_direction = 4;
+            while (num_direction != 0) {
+                if (rc.canBuildRobot(toBuild, main_direction, influence)) {
+                    rc.buildRobot(toBuild, main_direction, influence);
+                    RobotInfo robot = rc.senseRobotAtLocation(home.add(main_direction));
+                    if(robot != null) {
+                        Debug.println(Debug.info, "built robot: " + robot.getID());
+                        idSet.add(robot.getID());
+                    }
+                    resetFlagOnNewTurn = true;
+                    robotCounter += 1;
+                    return true;
+                } else {
+                    main_direction = main_direction.rotateRight().rotateRight();
+                    num_direction--;
+                }
+            }
+            return false;
+        }
         int num_direction = 8;
         while(num_direction != 0) {
             if (rc.canBuildRobot(toBuild, main_direction, influence)) {
