@@ -14,15 +14,21 @@ public class ProtectorPoliticianNew extends Robot {
     static RotationDirection spinDirection = Util.RotationDirection.COUNTERCLOCKWISE;
     static Direction main_direction;
     static final int slandererFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
+    static MapLocation lastSeenSlanderer;
+    static int turnLastSeenSlanderer;
     
     public ProtectorPoliticianNew(RobotController r) {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_PROTECTOR);
+        lastSeenSlanderer = null;
+        turnLastSeenSlanderer = 0;
     }
     
     public ProtectorPoliticianNew(RobotController r, MapLocation h) {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_PROTECTOR);
+        lastSeenSlanderer = null;
+        turnLastSeenSlanderer = 0;
         home = h;
     }
 
@@ -85,16 +91,16 @@ public class ProtectorPoliticianNew extends Robot {
             } else {
                 MapLocation tempLoc = robot.getLocation();
                 int tempDist = currLoc.distanceSquaredTo(tempLoc);
-                if (robot.getType() == RobotType.SLANDERER && tempDist < nearestSlandyDist) {
-                    nearestSlandy = tempLoc;
-                    nearestSlandyDist = tempDist;
-                }
                 if(rc.canGetFlag(robot.getID())) {
                     int flag = rc.getFlag(robot.getID());
                     // Only slanderers and EC's broadcast AVG_ENEMY_DIR so this is valid to check for slanderers
                     if(flag == slandererFlag || Comms.getIC(flag) == Comms.InformationCategory.AVG_ENEMY_DIR) {
                         slandererOrECNearby = true;
                         slandererNearby = true;
+                        if (tempDist < nearestSlandyDist) {
+                            nearestSlandy = tempLoc;
+                            nearestSlandyDist = tempDist;
+                        }
                     }
     
                     if(closestMuckrakerSensable != null) {
@@ -104,6 +110,15 @@ public class ProtectorPoliticianNew extends Robot {
                     }
                 }
             }
+        }
+
+        if(nearestSlandy != null) {
+            lastSeenSlanderer = nearestSlandy;
+            turnLastSeenSlanderer = rc.getRoundNum();
+        }
+        
+        if(rc.getRoundNum() > turnLastSeenSlanderer + Util.turnsSlandererLocValid) {
+            lastSeenSlanderer = null;
         }
 
         if (minRobot != null) {
@@ -143,28 +158,53 @@ public class ProtectorPoliticianNew extends Robot {
         //moves out of sensor radius of Enlightenment Center
         if (ECNearby) {
             Debug.println(Debug.info, "I am moving away from the base");
-            Direction toMove = Util.rotateInSpinDirection(spinDirection, rc.getLocation().directionTo(home).opposite());
-            tryMoveDest(toMove);
-            return;
+            main_direction = Util.rotateInSpinDirection(spinDirection, currLoc.directionTo(home).opposite());
+            Debug.setIndicatorLine(Debug.pathfinding, currLoc, lastSeenSlanderer, 200, 0, 255);
+        }
+        else if(lastSeenSlanderer != null) {
+            Debug.setIndicatorDot(Debug.pathfinding, lastSeenSlanderer, 200, 0, 255);
+            Debug.setIndicatorLine(Debug.pathfinding, currLoc, lastSeenSlanderer, 200, 0, 255);
+
+            int distToSlandy = currLoc.distanceSquaredTo(lastSeenSlanderer);
+            int distSlandyToHome = lastSeenSlanderer.distanceSquaredTo(home); // TODO: Make this distSlandyToNearestEC
+            int distToHome = currLoc.distanceSquaredTo(home);                 // TODO: Make this distToNearestEC
+            if(distSlandyToHome >= distToHome + 2) {
+                Debug.println(Debug.info, "I am moving to the outside of the slanderer");
+                main_direction = currLoc.directionTo(lastSeenSlanderer);
+            } else {
+                Debug.println(Debug.info, "I am rotating around last seen slanderer");
+                if(distToSlandy > Util.maxRotationRadius) {
+                    main_direction = Util.rotateOppositeSpinDirection(spinDirection, currLoc.directionTo(nearestSlandy));
+                    Debug.println(Debug.info, "Rotating TOWARDS");
+                } else if(distToSlandy < Util.minRotationRadius) {
+                    main_direction = Util.rotateInSpinDirection(spinDirection, currLoc.directionTo(nearestSlandy).opposite());
+                    Debug.println(Debug.info, "Rotating AWAY");
+                } else {
+                    main_direction = Util.rightOrLeftTurn(spinDirection, lastSeenSlanderer.directionTo(currLoc));
+                    Debug.println(Debug.info, "Rotating EXACTLY");
+                }
+            }
+
+        }
+        // else rotate towards home
+        else {
+            Debug.println(Debug.info, "I see no slanderers. Rotating towards home");
+            main_direction = Util.rotateOppositeSpinDirection(spinDirection, currLoc.directionTo(home));
         }
 
-        //if too far away from nearest slandy, move towards it
-        if (nearestSlandy != null && nearestSlandyDist > 8) {
-            Debug.println(Debug.info, "I am moving towards the slandies");
-            Direction toMove = currLoc.directionTo(nearestSlandy).rotateRight();
-            tryMoveDest(toMove);
-            return;
-        }
+        MapLocation target = currLoc.add(main_direction);
+        Debug.setIndicatorLine(Debug.pathfinding, currLoc, target, 100, 100, 255);
 
-        if (nearestSlandy != null) {
-            main_direction = Util.rightOrLeftTurn(spinDirection, nearestSlandy.directionTo(currLoc));
+        MapLocation lookAhead = currLoc.translate(main_direction.getDeltaX() * 2, main_direction.getDeltaY() * 2);
+        if(!rc.onTheMap(lookAhead)) {
+            Debug.println(Debug.info, "Close to a wall: Switching direction");
+            spinDirection = Util.switchSpinDirection(spinDirection);
         }
 
         //Rotates around slanderers and then home
         int tryMove = 0;
-        Debug.println(Debug.info, "I am rotating around slandies");
         while (!tryMoveDest(main_direction) && rc.isReady() && tryMove <= 1){
-            Debug.println(Debug.info, "I am switching rotation direction");
+            Debug.println(Debug.info, "Try move failed: I am switching rotation direction");
             spinDirection = Util.switchSpinDirection(spinDirection);
             if (nearestSlandy != null) {
                 main_direction = Util.rightOrLeftTurn(spinDirection, nearestSlandy.directionTo(currLoc));
@@ -172,7 +212,6 @@ public class ProtectorPoliticianNew extends Robot {
                 main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
             }
             tryMove +=1;
-
         }
 
         broadcastECLocation();
