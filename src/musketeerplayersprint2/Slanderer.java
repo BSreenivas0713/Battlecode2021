@@ -35,7 +35,7 @@ public class Slanderer extends Robot {
                 changeTo = new ExplorerPolitician(rc, home);
             }
             else {
-                changeTo = new ProtectorPolitician(rc, home);
+                changeTo = new ProtectorPoliticianNew(rc, home);
             }
             return;
         }

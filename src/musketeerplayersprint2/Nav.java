@@ -214,6 +214,7 @@ public class Nav {
         // System.out.println("Bytecode at beginning: " + Clock.getBytecodeNum());
         updateLocalMap();
         MapLocation src = rc.getLocation();
+        Debug.setIndicatorLine(Debug.info, src, dest, 255, 150, 50);
 
         int dist = src.distanceSquaredTo(dest);
         if(dist < closestDistanceToDest) {
@@ -443,15 +444,16 @@ public class Nav {
         return src.directionTo(minLoc);
     }
     
-	public static void explore() throws GameActionException {
+	public static Direction explore() throws GameActionException {
         Debug.println(Debug.pathfinding, "Exploring");
         if(!rc.isReady())
-            return;
+            return null;
         
 		if(lastExploreDir == null) {
             lastExploreDir = rc.getLocation().directionTo(Robot.home).opposite();
 			boredom = 0;
-		}
+        }
+        
 		if(boredom >= EXPLORE_BOREDOM) {
             boredom = 0;
             // Direction[] newDirChoices = {
@@ -473,13 +475,93 @@ public class Nav {
             lastExploreDir = Util.randomDirection();
         }
         
-        Direction[] orderedDirs = {lastExploreDir, lastExploreDir.rotateLeft(), lastExploreDir.rotateRight(), 
-                                    lastExploreDir.rotateLeft().rotateLeft(), lastExploreDir.rotateRight().rotateRight()};
-		for (Direction dir : orderedDirs) {
-			if (rc.canMove(dir)) {
-				rc.move(dir);
-				return;
-			}
+        return lastExploreDir;
+	}
+    
+	public static Direction explorePathfinding() throws GameActionException {
+        Debug.println(Debug.pathfinding, "Exploring");
+        if(!rc.isReady())
+            return null;
+        
+		if(lastExploreDir == null) {
+            lastExploreDir = rc.getLocation().directionTo(Robot.home).opposite();
+			boredom = 0;
+            // MapLocation target = rc.getLocation().translate(lastExploreDir.getDeltaX() * 3, lastExploreDir.getDeltaY() * 3);
+            // setDest(target);
+        }
+        
+        // Pick a kinda new direction if you've gone in the same direction for a while
+		if(boredom >= EXPLORE_BOREDOM) {
+            boredom = 0;
+            // Direction[] newDirChoices = {
+            //     lastExploreDir.rotateLeft().rotateLeft(),
+            //     lastExploreDir.rotateLeft(),
+            //     lastExploreDir,
+            //     lastExploreDir.rotateRight(),
+            //     lastExploreDir.rotateRight().rotateRight()};
+            Direction[] newDirChoices = {
+                lastExploreDir.rotateLeft(),
+                lastExploreDir,
+                lastExploreDir.rotateRight(),};
+			lastExploreDir = newDirChoices[(int) (Math.random() * newDirChoices.length)];
+            // MapLocation target = rc.getLocation().translate(lastExploreDir.getDeltaX() * 3, lastExploreDir.getDeltaY() * 3);
+            // setDest(target);
 		}
+        boredom++;
+
+        Direction left = lastExploreDir.rotateLeft();
+        Direction right = lastExploreDir.rotateRight();
+
+        MapLocation[] targets = {rc.getLocation().add(lastExploreDir), rc.getLocation().add(left), rc.getLocation().add(right)};
+        
+        while(!rc.onTheMap(targets[0]) || !rc.onTheMap(targets[1]) || !rc.onTheMap(targets[2])) {
+            lastExploreDir = Util.randomDirection();
+            left = lastExploreDir.rotateLeft();
+            right = lastExploreDir.rotateRight();
+    
+            targets[0] = rc.getLocation().add(lastExploreDir);
+            targets[1] = rc.getLocation().add(left);
+            targets[2] = rc.getLocation().add(right);
+        }
+
+        double totalPassability = 0;
+        
+        double maxPassTarget = -1;
+        int maxPassTargetIndex = -1;
+        for(int i = 0; i < targets.length; i++) {
+            totalPassability += rc.sensePassability(targets[i]);
+            if(maxPassTarget < rc.sensePassability(targets[i])) {
+                maxPassTarget = rc.sensePassability(targets[i]);
+                maxPassTargetIndex = i;
+            }
+        }
+        
+        Direction ret;
+        double rand = Math.random() * totalPassability;
+        if(rand < rc.sensePassability(targets[0])) {
+            ret = rc.getLocation().directionTo(targets[0]);
+        } else if (rand < rc.sensePassability(targets[0]) + rc.sensePassability(targets[1])) {
+            ret = rc.getLocation().directionTo(targets[1]);
+        } else {
+            ret = rc.getLocation().directionTo(targets[2]);
+        }
+
+        return ret;
+        
+        // Pick a random new direction if you found a wall
+		// while(!rc.onTheMap(rc.getLocation().add(lastExploreDir)) || (rc.canSenseLocation(dest) && !rc.onTheMap(dest))) {
+        //     // lastExploreDir = lastExploreDir.opposite();
+        //     lastExploreDir = Util.randomDirection();
+        //     MapLocation target = rc.getLocation().translate(lastExploreDir.getDeltaX() * 3, lastExploreDir.getDeltaY() * 3);
+        //     setDest(target);
+        // }
+        
+        // // Reset the dest if you're close to it
+        // if(rc.getLocation().isWithinDistanceSquared(dest, 2)) {
+        //     MapLocation target = rc.getLocation().translate(lastExploreDir.getDeltaX() * 3, lastExploreDir.getDeltaY() * 3);
+        //     setDest(target);
+        // }
+
+        // return gradientDescent();
 	}
 }
