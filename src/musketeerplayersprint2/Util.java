@@ -77,6 +77,11 @@ public class Util {
     static final int turnsEnemyBroadcastValid = 5;
 
     static final int explorerMuckrakerLifetime = 200;
+
+    static final int turnsSlandererLocValid = 5;
+    static final int minRotationRadius = 15;
+    static final int maxRotationRadius = 30;
+
     
     /**
      * Returns a random Direction.
@@ -120,6 +125,17 @@ public class Util {
                 return dir.rotateLeft();
             case CLOCKWISE:
                 return dir.rotateRight();
+            default:
+                return null;
+        }
+    }
+
+    static Direction rotateOppositeSpinDirection(RotationDirection Rot, Direction dir) {
+        switch(Rot) {
+            case COUNTERCLOCKWISE:
+                return dir.rotateRight();
+            case CLOCKWISE:
+                return dir.rotateLeft();
             default:
                 return null;
         }
