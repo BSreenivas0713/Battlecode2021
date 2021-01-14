@@ -281,6 +281,28 @@ public class EC extends Robot {
                 break;
             case BUILDING_PROTECTORS:
                 Debug.println(Debug.info, "building protectors state");
+
+
+                RushFlag targetECFromProtectors = ECflags.peek();
+                if(targetECFromProtectors != null) {
+                    int requiredInfluence = targetECFromProtectors.requiredInfluence;
+
+                    MapLocation enemyLocation = home.translate(targetECFromProtectors.dx - Util.dOffset, targetECFromProtectors.dy - Util.dOffset);
+                    Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
+                    if(requiredInfluence < totalGolemConviction) {
+                        resetFlagOnNewTurn = false;
+                        nextFlag = Comms.getFlag(Comms.InformationCategory.RUSH_EC_GOLEM, targetECFromProtectors.dx, targetECFromProtectors.dy);
+                        break;
+                    }
+                    if(requiredInfluence < currInfluence) {
+                        resetFlagOnNewTurn = false;
+                        nextFlag = targetECFromProtectors.flag;
+                        stateStack.push(currentState);
+                        currentState = State.RUSHING;
+                        break;
+                    }  
+                }
+
                 if (robotCounter % 4 != 0) {
                     toBuild = RobotType.POLITICIAN;
                     influence = 18;

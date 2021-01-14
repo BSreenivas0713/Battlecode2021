@@ -207,6 +207,7 @@ public class ProtectorPoliticianNew extends Robot {
             if (nearestSlandy != null) {
                 main_direction = Util.rightOrLeftTurn(spinDirection, nearestSlandy.directionTo(currLoc));
             } else {
+                Debug.println(Debug.info, "Couldn't find slandies ): I am rotating around home");
                 main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
             }
             tryMove +=1;
