@@ -58,6 +58,9 @@ public strictfp class RobotPlayer {
                                         break;
                                 }
                                 break;
+                            case AVG_ENEMY_DIR:
+                                bot = new ProtectorPolitician(rc);
+                                break;
                             default:
                                 break;
                         }
@@ -74,26 +77,7 @@ public strictfp class RobotPlayer {
                 bot = new ProtectorPolitician(rc);
                 break;
             case SLANDERER:
-                for (RobotInfo robot : sensableWithin2) { 
-                    int botFlag = rc.getFlag(robot.getID());
-                    Comms.InformationCategory flagIC = Comms.getIC(botFlag);
-                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
-                        Debug.println(Debug.info, "Flag for creation: " + botFlag);
-                        if (flagIC == Comms.InformationCategory.SPECIFYING_SLANDERER_DIRECTION) {
-                            Direction awayDirection = Comms.getAwayDirection(botFlag);
-                            bot = new Slanderer(rc, awayDirection);
-                            break;
-                        }
-                    }
-                    if(bot != null)
-                        break;
-                }
-
-                if(bot != null)
-                    break;
-
-                System.out.println("CRITICAL: Did not find flag directing type");
-                bot = new Slanderer(rc, Util.randomDirection());
+                bot = new Slanderer(rc);
                 break;
             case MUCKRAKER:            bot = new Muckracker(rc);  break;
         }

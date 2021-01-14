@@ -470,12 +470,7 @@ public class Nav {
             lastExploreDir = Util.randomDirection();
         }
         
-		if (rc.canMove(lastExploreDir)) {
-			rc.move(lastExploreDir);
-			return;
-        }
-        
-        Direction[] orderedDirs = {lastExploreDir.rotateLeft(), lastExploreDir.rotateRight(), 
+        Direction[] orderedDirs = {lastExploreDir, lastExploreDir.rotateLeft(), lastExploreDir.rotateRight(), 
                                     lastExploreDir.rotateLeft().rotateLeft(), lastExploreDir.rotateRight().rotateRight()};
 		for (Direction dir : orderedDirs) {
 			if (rc.canMove(dir)) {

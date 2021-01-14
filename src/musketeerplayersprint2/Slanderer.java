@@ -7,18 +7,18 @@ import musketeerplayersprint2.Debug.*;
 
 public class Slanderer extends Robot {
     static Direction main_direction;
-    static Direction awayDirection;
+
+    static Direction avgEnemyDir;
+    static int avgEnemyDirTurn;
     
     public Slanderer(RobotController r) {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
-        awayDirection = null;
     }
 
     public Slanderer(RobotController r, Direction away) {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
-        awayDirection = away;
     }
 
     public void takeTurn() throws GameActionException {
@@ -37,20 +37,12 @@ public class Slanderer extends Robot {
         Debug.println(Debug.info, "I am a slanderer; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
+        checkForAvgEnemyDir();
+
         MapLocation curr = rc.getLocation();
 
         if(main_direction == null) {
             main_direction = Util.randomDirection();
-        }
-
-        for (RobotInfo robot : friendlySensable) {
-            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
-                int botFlag = rc.getFlag(robot.getID());
-                Comms.InformationCategory flagIC = Comms.getIC(botFlag);
-                if (flagIC == Comms.InformationCategory.SPECIFYING_SLANDERER_DIRECTION) {
-                            awayDirection = Comms.getAwayDirection(botFlag);
-                        }
-            }
         }
 
         RobotInfo[] neutralECs = rc.senseNearbyRobots(sensorRadius, Team.NEUTRAL);
@@ -119,8 +111,23 @@ public class Slanderer extends Robot {
         main_direction = maxDir;
 
         if (minRobot != null) {
-            main_direction = curr.directionTo(minRobot.getLocation()).opposite();
-            Debug.println(Debug.info, "Prioritizing moving away from enemies.");
+            avgEnemyDir = curr.directionTo(minRobot.getLocation());
+            avgEnemyDirTurn = rc.getRoundNum();
+            int flag = Comms.getFlag(Comms.InformationCategory.AVG_ENEMY_DIR, avgEnemyDirTurn, avgEnemyDir);
+            // Rebroadcast the flag right away
+            if(rc.canSetFlag(flag)) {
+                rc.setFlag(flag);
+            }
+            
+            resetFlagOnNewTurn = false;
+            main_direction = avgEnemyDir.opposite();
+            Debug.println(Debug.info, "Prioritizing moving away from enemies: " + main_direction);
+        }
+        else if(avgEnemyDir != null) {
+            // Direction[] candidateDirs = {avgEnemyDir.opposite(), avgEnemyDir.opposite().rotateLeft(), avgEnemyDir.opposite().rotateRight()};
+            // main_direction = candidateDirs[(int)(Math.random() * candidateDirs.length)];
+            main_direction = avgEnemyDir.opposite();
+            Debug.println(Debug.info, "Prioritizing moving away from average enemy location: " + main_direction);
         }
         else if (spawnKillDude != null) {
             main_direction = curr.directionTo(spawnKillDude).opposite();
@@ -132,12 +139,9 @@ public class Slanderer extends Robot {
         else if (friendlyEC != null) {
             main_direction = curr.directionTo(friendlyEC.getLocation()).opposite(); 
             Debug.println(Debug.info, "Prioritizing moving away from friendly ECs.");
-        } else if (moveBack == true) {
+        } else if (moveBack) {
             main_direction = curr.directionTo(home);
             Debug.println(Debug.info, "Prioritizing moving towards home.");
-        } else if (awayDirection != null) {
-            main_direction = awayDirection;
-            Debug.println(Debug.info, "Prioritizing moving using EC signal.");
         } else if (closestSlanderer != null) {
             main_direction = curr.directionTo(closestSlanderer.getLocation());
             Debug.println(Debug.info, "Prioritizing moving towards slanderers.");
@@ -147,12 +151,18 @@ public class Slanderer extends Robot {
 
         MapLocation target = rc.adjacentLocation(main_direction);
         if (rc.onTheMap(target)) {
-            while (!tryMove(main_direction) && rc.isReady()) {
+            while (!tryMoveDest(main_direction) && rc.isReady()) {
                 main_direction = Util.randomDirection();
             }
         }
+        
+        if(avgEnemyDir != null && rc.getRoundNum() > avgEnemyDirTurn + Util.turnsEnemyBroadcastValid) {
+            avgEnemyDir = null;
+            resetFlagOnNewTurn = true;
+        }
 
         broadcastECLocation();
+        // Old 50-300 turn stuff
         /* else {
             if(main_direction == null) {
                 main_direction = Util.randomDirection();
@@ -228,5 +238,24 @@ public class Slanderer extends Robot {
 
             broadcastECLocation();
         }*/
+    }
+
+    static void checkForAvgEnemyDir() throws GameActionException {
+        for(RobotInfo robot : friendlySensable) {
+            if(rc.canGetFlag(robot.getID())) {
+                int flag = rc.getFlag(robot.getID());
+                if(Comms.getIC(flag) == Comms.InformationCategory.AVG_ENEMY_DIR) {
+                    avgEnemyDirTurn = Comms.getTurnCount(flag);
+                    if(rc.getRoundNum() <= avgEnemyDirTurn + Util.turnsEnemyBroadcastValid) {
+                        // Rebroadcast the flag right away
+                        if(rc.canSetFlag(flag)) {
+                            rc.setFlag(flag);
+                        }
+                        resetFlagOnNewTurn = false;
+                        avgEnemyDir = Comms.getDirection(flag);
+                    }
+                }
+            }
+        }
     }
 }
