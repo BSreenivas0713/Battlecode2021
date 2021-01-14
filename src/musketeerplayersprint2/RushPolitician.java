@@ -14,16 +14,13 @@ public class RushPolitician extends Robot {
         super(r);
         enemyLocation = enemyLoc;
         moveSemaphore = 2;
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_RUSH);
+        subRobotType = Comms.SubRobotType.POL_RUSH;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         Nav.setDest(enemyLoc);
     }
     
     public RushPolitician(RobotController r, MapLocation enemyLoc, MapLocation h) {
-        super(r);
-        enemyLocation = enemyLoc;
-        moveSemaphore = 2;
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_RUSH);
-        Nav.setDest(enemyLoc);
+        this(r, enemyLoc);
         home = h;
     }
 

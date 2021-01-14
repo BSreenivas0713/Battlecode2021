@@ -21,6 +21,8 @@ public class Robot {
     static RobotInfo[] neutralSensable;
     static RobotInfo[] enemyAttackable;
 
+    static Comms.SubRobotType subRobotType;
+
     public static Robot changeTo = null;
 
     public Robot(RobotController r) {
@@ -138,6 +140,67 @@ public class Robot {
             }
         }
         return res;
+    }
+
+    boolean broadcastClosestEnemy() throws GameActionException {
+        int dx = 0;
+        int dy = 0;
+
+        MapLocation currLoc = rc.getLocation();
+        MapLocation closestEnemyLoc = null;
+        double minDistSquared = Integer.MAX_VALUE;
+        for (RobotInfo robot : enemySensable) {
+            double temp = currLoc.distanceSquaredTo(robot.getLocation());
+            if (temp < minDistSquared) {
+                minDistSquared = temp;
+                closestEnemyLoc = robot.getLocation();
+            }
+        }
+
+        // Did not find its own sensable enemy, propagate other flags
+        if(closestEnemyLoc == null) {
+            int minEnemyDist = Integer.MAX_VALUE;
+            for(RobotInfo robot : friendlySensable) {
+                if(rc.canGetFlag(robot.getID())) {
+                    int flag = rc.getFlag(robot.getID());
+                    switch(Comms.getIC(flag)) {
+                        case ROBOT_TYPE_AND_CLOSEST_ENEMY:
+                            MapLocation robotLoc = robot.getLocation();
+                            int[] enemyDxDyFromRobot = Comms.getDxDy(flag);
+
+                            // Both dOffset means no enemy found.
+                            if(enemyDxDyFromRobot[0] != Util.dOffset || enemyDxDyFromRobot[1] != Util.dOffset) {
+                                int enemyDx = enemyDxDyFromRobot[0] + robotLoc.x - Util.dOffset;
+                                int enemyDy = enemyDxDyFromRobot[1] + robotLoc.y - Util.dOffset;
+    
+                                int dist = enemyDx * enemyDx + enemyDy + enemyDy;
+                                if(dist < minEnemyDist) {
+                                    dx = enemyDx;
+                                    dy = enemyDy;
+                                    minEnemyDist = dist;
+                                }
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        } else {
+            dx = closestEnemyLoc.x - currLoc.x;
+            dy = closestEnemyLoc.y - currLoc.y;
+        }
+
+        nextFlag = Comms.getFlag(InformationCategory.ROBOT_TYPE_AND_CLOSEST_ENEMY, 
+                                    subRobotType, dx + Util.dOffset, dy + Util.dOffset);
+        if(dx == 0 && dy == 0) {
+            Debug.println(Debug.info, "No closest enemy found");
+            return false;
+        } else {
+            Debug.println(Debug.info, "Broadcasting closest enemy found at: dX: " + dx + ", dY: " + dy);
+            Debug.setIndicatorDot(Debug.info, currLoc.translate(dx, dy), 0, 0, 0);
+            return true;
+        }
     }
 
     boolean broadcastEnemyFound(MapLocation enemyLoc) {
