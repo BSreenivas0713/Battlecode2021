@@ -139,10 +139,12 @@ public class HunterMuckracker extends Robot {
                 main_direction = currLoc.directionTo(bestSlanderer.getLocation());
                 tryMoveDest(main_direction);
                 Debug.println(Debug.info, "Prioritizing killing slandies.");
+                Debug.setIndicatorLine(Debug.info, rc.getLocation(), bestSlanderer.getLocation(), 255, 150, 50);
             }
             else if (enemyLocation != null && rc.isReady() && currLoc.distanceSquaredTo(enemyLocation) > sensorRadius) {
                 tryMoveDest(currLoc.directionTo(enemyLocation));
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation + ".");
+                Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
             }
             else if (awayFromBase) {
                 tryMoveDest(currLoc.directionTo(friendlyBase.getLocation()).opposite());
@@ -152,9 +154,13 @@ public class HunterMuckracker extends Robot {
                 MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
                 tryMoveDest(currLoc.directionTo(hunterLoc));
                 Debug.println(Debug.info, "Prioritizing going towards " + hunterLoc + ".");
+                Debug.setIndicatorLine(Debug.info, rc.getLocation(), hunterLoc, 255, 150, 50);
             }
             else {
-                Nav.explore();
+                main_direction = Nav.explore();
+                if(main_direction != null) {
+                    tryMoveDest(main_direction);
+                }
                 Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);
             }
         }

@@ -118,6 +118,7 @@ public class ExplorerMuckracker extends Robot {
         if(!muckraker_Found_EC){
             if (bestSlanderer != null && rc.isReady()) {
                 main_direction = currLoc.directionTo(bestSlanderer.getLocation());
+                Debug.setIndicatorLine(Debug.info, rc.getLocation(), bestSlanderer.getLocation(), 255, 150, 50);
                 tryMoveDest(main_direction);
             }
             else if (spawnKillRunFromHome) {
@@ -125,7 +126,10 @@ public class ExplorerMuckracker extends Robot {
                 tryMoveDest(main_direction);
             }
             else {
-                Nav.explore();
+                main_direction = Nav.explore();
+                if(main_direction != null) {
+                    tryMoveDest(main_direction);
+                }
                 Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);
             }
         }
