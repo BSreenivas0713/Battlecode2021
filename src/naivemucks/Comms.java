@@ -1,4 +1,4 @@
-package musketeerplayersprint2;
+package naivemucks;
 
 import battlecode.common.*;
 
@@ -9,23 +9,20 @@ public class Comms {
     static final int BIT_DX_OFFSET = 7;
     static final int BIT_MASK_COORD = 0x7F;
     static final int BIT_MASK_COORDS = 0x3FFF;
-    static final int BIT_INF_OFFSET = 14;
-    static final int BIT_TURNCOUNT_OFFSET = 7;
-    static final int BIT_MASK_DIR = 0xF;
+    static final int BIT_INF_OFFSET = 14;  
 
     public enum InformationCategory {
         EMPTY,
         NEUTRAL_EC,
         ENEMY_EC,
-        ENEMY_EC_MUK,
         FRIENDLY_EC,
         RUSH_EC_GOLEM,
         NEW_ROBOT,
         TARGET_ROBOT,
         ROBOT_TYPE,
         ENEMY_FOUND,
+        SPECIFYING_SLANDERER_DIRECTION,
         FOLLOWING,
-        AVG_ENEMY_DIR,
     }
 
     public enum SubRobotType {
@@ -43,10 +40,6 @@ public class Comms {
 
     public static int addCoord(int flag, int dx, int dy) {
         return (flag << BIT_IC_OFFSET) + (dx << BIT_DX_OFFSET) + dy;
-    }
-
-    public static int getFlag(InformationCategory cat, int turnCount, Direction avgDirection) {
-        return getFlag(cat, turnCount, avgDirection.ordinal());
     }
 
     public static int getFlag(InformationCategory cat, int n) {
@@ -94,19 +87,11 @@ public class Comms {
         return (flag & ~BIT_MASK_IC) >> BIT_INF_OFFSET;
     }
 
-    public static int getTurnCount(int flag) {
-        return (flag & ~BIT_MASK_IC) >> BIT_TURNCOUNT_OFFSET;
-    }
-
     public static SubRobotType getSubRobotType(int flag) {
         return SubRobotType.values()[(flag & ~BIT_MASK_IC)];
     }
 
     public static Direction getAwayDirection(int flag) {
         return Direction.values()[(flag & ~BIT_MASK_IC)];
-    }
-
-    public static Direction getDirection(int flag) {
-        return Direction.values()[(flag & BIT_MASK_DIR)];
     }
 }

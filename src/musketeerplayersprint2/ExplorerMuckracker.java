@@ -4,11 +4,11 @@ import battlecode.common.*;
 import musketeerplayersprint2.Util.*;
 import musketeerplayersprint2.Debug.*;
 
-public class Muckracker extends Robot {
+public class ExplorerMuckracker extends Robot {
     static Direction main_direction;
     static MapLocation enemyLocation;
 
-    public Muckracker(RobotController r) {
+    public ExplorerMuckracker(RobotController r) {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
         enemyLocation = null;
@@ -19,7 +19,7 @@ public class Muckracker extends Robot {
         int sensingRadius = rc.getType().sensorRadiusSquared;
         MapLocation currLoc = rc.getLocation();
 
-        Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
+        Debug.println(Debug.info, "I am an explorer mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         if(main_direction == null){
@@ -124,6 +124,7 @@ public class Muckracker extends Robot {
             if (enemyLocation != null && rc.isReady()) {
                 tryMoveDest(currLoc.directionTo(enemyLocation));
             }
+            main_direction = currLoc.directionTo(home).opposite();
             while (!tryMove(main_direction) && rc.isReady()){
                 main_direction = Util.randomDirection();
             }
