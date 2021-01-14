@@ -146,11 +146,11 @@ public class EC extends Robot {
             spawnKillLock++;
         }
 
-        for (RobotInfo robot : rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, enemy)) {
+        for (RobotInfo robot : enemySensable) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 noAdjacentEC = false;
             }
-            noAdjacentEC = true;
+            
         }
 
         Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + currInfluence);
@@ -163,10 +163,11 @@ public class EC extends Robot {
         Debug.println(Debug.info, "protectors built in a row: " + protectorsSpawnedInARow);
         Debug.println(Debug.info, "can reset flag on next turn: " + resetFlagOnNewTurn);
 
+
         processChildrenFlags();
         Debug.println(Debug.info, "total Golem Conviction: " + totalGolemConviction);
 
-        if (currRoundNum > 500)
+        if (currRoundNum > 250)
             tryStartCleanup();
 
         toggleBuildProtectors();
@@ -221,13 +222,12 @@ public class EC extends Robot {
                     influence = 1;
                 }
 
-                if (robotCounter == 0) {
+                if (robotCounter == 0 && noAdjacentEC) {
                     //the first robot built should be a 107 slanderer, otherwise in this state
                     //we will build 130 slanderers at minimum
                     toBuild = RobotType.SLANDERER;
                     signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
                     influence = 107;
-
                     stateStack.push(currentState);
                     currentState = State.BUILDING_PROTECTORS;
                 }
@@ -367,6 +367,8 @@ public class EC extends Robot {
         currRoundNum = rc.getRoundNum();
         currInfluence = rc.getInfluence();
         totalGolemConviction = 0;
+        noAdjacentEC = true;
+
     }
 
     public void toggleBuildProtectors() throws GameActionException {
@@ -454,7 +456,7 @@ public class EC extends Robot {
 
                         MapLocation enemyLoc = new MapLocation(enemyLocX, enemyLocY);
                         if (rc.getLocation().isWithinDistanceSquared(enemyLoc, rc.getType().sensorRadiusSquared * 4) &&
-                            currentState != State.BUILDING_PROTECTORS && protectorIdSet.size <= 25 && canGoBackToBuildingProtectors) {
+                            currentState != State.BUILDING_PROTECTORS && protectorIdSet.size <= 25 && canGoBackToBuildingProtectors && noAdjacentEC) {
                             stateStack.push(currentState);
                             currentState = State.BUILDING_PROTECTORS;
                             protectorsSpawnedInARow = 0;
