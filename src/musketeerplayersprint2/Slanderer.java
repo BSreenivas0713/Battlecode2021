@@ -13,17 +13,12 @@ public class Slanderer extends Robot {
     
     public Slanderer(RobotController r) {
         super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
+        subRobotType = Comms.SubRobotType.SLANDERER;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
     }
 
-    public Slanderer(RobotController r, Direction away) {
-        super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
-    }
-
-    public Slanderer(RobotController r, Direction away, MapLocation h) {
-        super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
+    public Slanderer(RobotController r,  MapLocation h) {
+        this(r);
         home = h;
     }
 

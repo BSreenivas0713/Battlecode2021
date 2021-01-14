@@ -11,12 +11,12 @@ public class CleanupPolitician extends Robot {
     //TOCONSIDER: allow for these types to attack neutrals
     public CleanupPolitician(RobotController r) {
         super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_EXPLORER);
+        subRobotType = Comms.SubRobotType.POL_EXPLORER;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
     }
     
     public CleanupPolitician(RobotController r, MapLocation h) {
-        super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_EXPLORER);
+        this(r);
         home = h;
     }
 
