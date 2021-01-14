@@ -1,10 +1,10 @@
-package musketeerplayersprint2;
+package naivemucks;
 
 import battlecode.common.*;
 
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Comms.*;
-import musketeerplayersprint2.Debug.*;
+import naivemucks.Util.*;
+import naivemucks.Comms.*;
+import naivemucks.Debug.*;
 
 public strictfp class RobotPlayer {
 
@@ -58,9 +58,6 @@ public strictfp class RobotPlayer {
                                         break;
                                 }
                                 break;
-                            case AVG_ENEMY_DIR:
-                                bot = new ProtectorPolitician(rc);
-                                break;
                             default:
                                 break;
                         }
@@ -77,31 +74,28 @@ public strictfp class RobotPlayer {
                 bot = new ProtectorPolitician(rc);
                 break;
             case SLANDERER:
-                bot = new Slanderer(rc);
-                break;
-            case MUCKRAKER: 
-                for (RobotInfo robot : sensableWithin2) {
+                for (RobotInfo robot : sensableWithin2) { 
                     int botFlag = rc.getFlag(robot.getID());
                     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
                     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
-                        if (flagIC == Comms.InformationCategory.ENEMY_EC_MUK) {
-                            int[] dxdy = Comms.getDxDy(botFlag);
-                            if (dxdy[0] == 0 && dxdy[1] == 0) {
-                                bot = new HunterMuckracker(rc);
-                            } else {
-                                MapLocation spawningLoc = robot.getLocation();
-                                MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
-                                bot = new HunterMuckracker(rc, enemyLoc);
-                            }
+                        Debug.println(Debug.info, "Flag for creation: " + botFlag);
+                        if (flagIC == Comms.InformationCategory.SPECIFYING_SLANDERER_DIRECTION) {
+                            Direction awayDirection = Comms.getAwayDirection(botFlag);
+                            bot = new Slanderer(rc, awayDirection);
                             break;
                         }
                     }
+                    if(bot != null)
+                        break;
                 }
-                if(bot != null) {
+
+                if(bot != null)
                     break;
-                }    
-                bot = new ExplorerMuckracker(rc);  
+
+                System.out.println("CRITICAL: Did not find flag directing type");
+                bot = new Slanderer(rc, Util.randomDirection());
                 break;
+            case MUCKRAKER:            bot = new Muckracker(rc);  break;
         }
 
         while (true) {
@@ -142,7 +136,7 @@ public strictfp class RobotPlayer {
                 bot = new Slanderer(rc);
                 break;
             case MUCKRAKER:
-                bot = new ExplorerMuckracker(rc);
+                bot = new Muckracker(rc);
                 break;
         }
     }
