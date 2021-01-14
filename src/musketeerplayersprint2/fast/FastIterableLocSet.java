@@ -5,12 +5,18 @@ import battlecode.common.*;
 public class FastIterableLocSet {
     public StringBuilder keys;
     public int maxlen;
-    public int[] ints;
+    public MapLocation[] locs;
     public int size;
     private int earliestRemoved;
 
     public FastIterableLocSet() {
+        this(100);
+    }
+
+    public FastIterableLocSet(int len) {
         keys = new StringBuilder();
+        maxlen = len;
+        locs = new MapLocation[maxlen];
     }
 
     private String locToStr(MapLocation loc) {
@@ -29,7 +35,7 @@ public class FastIterableLocSet {
         String key = locToStr(loc);
         int index;
         if ((index = keys.indexOf(key)) >= 0) {
-            keys.deleteCharAt(index);
+            keys.delete(index, index + 3);
             size--;
             
             if(earliestRemoved > index)
@@ -44,14 +50,14 @@ public class FastIterableLocSet {
     public void clear() {
         size = 0;
         keys = new StringBuilder();
-        earliestRemoved = size;
+        earliestRemoved = 0;
     }
 
     public void updateIterable() {
-        for (int i = earliestRemoved; i < size; i++) {
-            ints[i] = keys.charAt(i);
+        for (int i = earliestRemoved / 3; i < size; i++) {
+            locs[i] = new MapLocation(keys.charAt(i*3+1), keys.charAt(i*3+2));
         }
-        earliestRemoved = size;
+        earliestRemoved = size * 3;
     }
 
     public void replace(String newSet) {
