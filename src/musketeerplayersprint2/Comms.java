@@ -26,6 +26,7 @@ public class Comms {
         ENEMY_FOUND,
         FOLLOWING,
         AVG_ENEMY_DIR,
+        ROBOT_TYPE_AND_CLOSEST_ENEMY,
     }
 
     public enum SubRobotType {
@@ -37,8 +38,10 @@ public class Comms {
         POL_GOLEM,
         POL_CLEANUP,
         SLANDERER,
-        MUCKRAKER,
-        EC
+        MUC_HUNTER,
+        MUC_EXPLORER,
+        MUC_LATTICE,
+        EC,
     }
 
     public enum ECFoundType {
@@ -50,6 +53,10 @@ public class Comms {
 
     public static int addCoord(int flag, int dx, int dy) {
         return (flag << BIT_IC_OFFSET) + (dx << BIT_DX_OFFSET) + dy;
+    }
+
+    public static int getFlag(InformationCategory cat, SubRobotType type, int dx, int dy) {
+        return getFlag(cat, type.ordinal(), dx, dy);
     }
 
     public static int getFlag(InformationCategory cat, int turnCount, Direction avgDirection) {
@@ -105,8 +112,14 @@ public class Comms {
         return (flag & ~BIT_MASK_IC) >> BIT_TURNCOUNT_OFFSET;
     }
 
+    // DO NOT USE WITH ROBOT_TYPE_AND_CLOSEST_ENEMY
     public static SubRobotType getSubRobotType(int flag) {
         return SubRobotType.values()[(flag & ~BIT_MASK_IC)];
+    }
+
+    // USE ONLY WITH ROBOT_TYPE_AND_CLOSEST_ENEMY
+    public static SubRobotType getSubRobotTypeClosestEnemy(int flag) {
+        return SubRobotType.values()[(flag & ~BIT_MASK_IC) >> BIT_INF_OFFSET];
     }
 
     public static Direction getAwayDirection(int flag) {
@@ -115,5 +128,16 @@ public class Comms {
 
     public static Direction getDirection(int flag) {
         return Direction.values()[(flag & BIT_MASK_DIR)];
+    }
+
+    public static boolean isSubRobotType(int flag, SubRobotType type) {
+        switch(Comms.getIC(flag)) {
+            case ROBOT_TYPE:
+                return Comms.getSubRobotType(flag) == type;
+            case ROBOT_TYPE_AND_CLOSEST_ENEMY:
+                return Comms.getSubRobotTypeClosestEnemy(flag) == type;
+            default:
+                return false;
+        }
     }
 }

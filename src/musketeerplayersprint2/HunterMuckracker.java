@@ -8,22 +8,19 @@ public class HunterMuckracker extends Robot {
     static Direction main_direction;
     static MapLocation enemyLocation;
 
-    public HunterMuckracker(RobotController r) {
-        super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
-        enemyLocation = null;
-    }
-
     public HunterMuckracker(RobotController r, MapLocation enemyLoc) {
         super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
+        subRobotType = Comms.SubRobotType.MUC_HUNTER;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         enemyLocation = enemyLoc;
+    }
+
+    public HunterMuckracker(RobotController r) {
+        this(r, null);
     }
 
     public HunterMuckracker(RobotController r, MapLocation enemyLoc, MapLocation h) {
-        super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
-        enemyLocation = enemyLoc;
+        this(r, enemyLoc);
         home = h;
     }
 
@@ -143,7 +140,7 @@ public class HunterMuckracker extends Robot {
             }
             else if (enemyLocation != null && rc.isReady() && currLoc.distanceSquaredTo(enemyLocation) > sensorRadius) {
                 tryMoveDest(currLoc.directionTo(enemyLocation));
-                Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation + ".");
+                Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
             }
             else if (awayFromBase) {
@@ -153,7 +150,7 @@ public class HunterMuckracker extends Robot {
             else if (enemiesFound != 0) {
                 MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
                 tryMoveDest(currLoc.directionTo(hunterLoc));
-                Debug.println(Debug.info, "Prioritizing going towards " + hunterLoc + ".");
+                Debug.println(Debug.info, "Prioritizing going towards average enemy at " + hunterLoc;
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), hunterLoc, 255, 150, 50);
             }
             else {

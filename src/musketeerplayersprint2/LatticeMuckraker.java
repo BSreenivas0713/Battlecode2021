@@ -10,14 +10,13 @@ public class LatticeMuckraker extends Robot {
 
     public LatticeMuckraker(RobotController r) {
         super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
+        subRobotType = Comms.SubRobotType.MUC_LATTICE;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         enemyLocation = null;
     }
     
     public LatticeMuckraker(RobotController r, MapLocation h) {
-        super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
-        enemyLocation = null;
+        this(r);
         home = h;
     }
 

@@ -10,12 +10,12 @@ public class SpawnKillPolitician extends Robot {
     
     public SpawnKillPolitician(RobotController r) {
         super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_SPAWNKILL);
+        subRobotType = Comms.SubRobotType.POL_SPAWNKILL;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
     }
     
     public SpawnKillPolitician(RobotController r, MapLocation h) {
-        super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_SPAWNKILL);
+        this(r);
         home = h;
     }
 
