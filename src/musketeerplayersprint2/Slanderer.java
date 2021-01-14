@@ -21,15 +21,21 @@ public class Slanderer extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
     }
 
+    public Slanderer(RobotController r, Direction away, MapLocation h) {
+        super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
+        home = h;
+    }
+
     public void takeTurn() throws GameActionException {
         super.takeTurn();
         
         if (rc.getType() != RobotType.SLANDERER) {
             if (turnCount % 2 == 0) {
-                changeTo = new ExplorerPolitician(rc);
+                changeTo = new ExplorerPolitician(rc, home);
             }
             else {
-                changeTo = new ProtectorPolitician(rc);
+                changeTo = new ProtectorPolitician(rc, home);
             }
             return;
         }

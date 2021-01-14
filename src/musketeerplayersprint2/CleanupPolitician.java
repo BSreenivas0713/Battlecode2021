@@ -13,6 +13,12 @@ public class CleanupPolitician extends Robot {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_EXPLORER);
     }
+    
+    public CleanupPolitician(RobotController r, MapLocation h) {
+        super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_EXPLORER);
+        home = h;
+    }
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();

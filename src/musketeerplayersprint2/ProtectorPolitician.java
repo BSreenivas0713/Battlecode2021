@@ -19,6 +19,12 @@ public class ProtectorPolitician extends Robot {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_PROTECTOR);
     }
+    
+    public ProtectorPolitician(RobotController r, MapLocation h) {
+        super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_PROTECTOR);
+        home = h;
+    }
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();

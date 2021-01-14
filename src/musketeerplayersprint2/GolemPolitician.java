@@ -11,6 +11,12 @@ public class GolemPolitician extends Robot {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_GOLEM);
     }
+    
+    public GolemPolitician(RobotController r, MapLocation h) {
+        super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_GOLEM);
+        home = h;
+    }
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
@@ -52,7 +58,7 @@ public class GolemPolitician extends Robot {
                         int[] dxdy = Comms.getDxDy(flag);
                         MapLocation spawningLoc = rc.getLocation();
                         MapLocation rushEnemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
-                        changeTo = new RushPolitician(rc, rushEnemyLoc);
+                        changeTo = new RushPolitician(rc, rushEnemyLoc, home);
                         return;
                     }
                 }
@@ -86,7 +92,7 @@ public class GolemPolitician extends Robot {
             return;
         }
         if (enemyECinRadius) {
-            changeTo = new RushPolitician(rc, enemyLoc);
+            changeTo = new RushPolitician(rc, enemyLoc, home);
             return;
         }
         int distToEC = 500;

@@ -14,6 +14,13 @@ public class ExplorerMuckracker extends Robot {
         enemyLocation = null;
     }
 
+    public ExplorerMuckracker(RobotController r, MapLocation h) {
+        super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
+        enemyLocation = null;
+        home = h;
+    }
+
     public void takeTurn() throws GameActionException {
         super.takeTurn();
         int sensingRadius = rc.getType().sensorRadiusSquared;
@@ -49,7 +56,7 @@ public class ExplorerMuckracker extends Robot {
 
         RobotInfo closest_muk = null;
         int closest_muk_dist = Integer.MAX_VALUE;
-        boolean spawnkillRunFromHome = false;
+        boolean spawnKillRunFromHome = false;
         for (RobotInfo robot : friendlySensable) {
             MapLocation tempLoc = robot.getLocation();
             int dist = currLoc.distanceSquaredTo(tempLoc);
@@ -59,7 +66,7 @@ public class ExplorerMuckracker extends Robot {
             }
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && home.equals(robot.getLocation())) {
-                    spawnkillRunFromHome = true;
+                    spawnKillRunFromHome = true;
                 }
                 int botFlag = rc.getFlag(robot.getID());
                 Comms.InformationCategory flagIC = Comms.getIC(botFlag);
@@ -113,17 +120,18 @@ public class ExplorerMuckracker extends Robot {
                 main_direction = currLoc.directionTo(bestSlanderer.getLocation());
                 tryMoveDest(main_direction);
             }
-            else if (spawnkillRunFromHome) {
+            else if (spawnKillRunFromHome) {
                 main_direction = currLoc.directionTo(home).opposite();
                 tryMoveDest(main_direction);
             }
             else {
                 Nav.explore();
+                Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);
             }
         }
 
         if(turnCount > Util.explorerMuckrakerLifetime) {
-            changeTo = new LatticeMuckraker(rc);
+            changeTo = new LatticeMuckraker(rc, home);
         }
          
         broadcastECLocation();

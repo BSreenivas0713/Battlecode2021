@@ -444,23 +444,26 @@ public class Nav {
     }
     
 	public static void explore() throws GameActionException {
-		Debug.println(Debug.pathfinding, "Exploring");
+        Debug.println(Debug.pathfinding, "Exploring");
+        if(!rc.isReady())
+            return;
+        
 		if(lastExploreDir == null) {
-			lastExploreDir = Util.randomDirection();
+            lastExploreDir = rc.getLocation().directionTo(Robot.home).opposite();
 			boredom = 0;
 		}
 		if(boredom >= EXPLORE_BOREDOM) {
             boredom = 0;
-            Direction[] newDirChoices = {
-                lastExploreDir.rotateLeft().rotateLeft(),
-                lastExploreDir.rotateLeft(),
-                lastExploreDir,
-                lastExploreDir.rotateRight(),
-                lastExploreDir.rotateRight().rotateRight()};
             // Direction[] newDirChoices = {
+            //     lastExploreDir.rotateLeft().rotateLeft(),
             //     lastExploreDir.rotateLeft(),
             //     lastExploreDir,
-            //     lastExploreDir.rotateRight(),};
+            //     lastExploreDir.rotateRight(),
+            //     lastExploreDir.rotateRight().rotateRight()};
+            Direction[] newDirChoices = {
+                lastExploreDir.rotateLeft(),
+                lastExploreDir,
+                lastExploreDir.rotateRight(),};
 			lastExploreDir = newDirChoices[(int) (Math.random() * newDirChoices.length)];
 		}
         boredom++;

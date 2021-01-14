@@ -12,6 +12,12 @@ public class SpawnKillPolitician extends Robot {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_SPAWNKILL);
     }
+    
+    public SpawnKillPolitician(RobotController r, MapLocation h) {
+        super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_SPAWNKILL);
+        home = h;
+    }
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
@@ -41,7 +47,7 @@ public class SpawnKillPolitician extends Robot {
                 rc.empower(radius);
             }
         } else {
-            changeTo = new GolemPolitician(rc);
+            changeTo = new GolemPolitician(rc, home);
         }
     }
 }
