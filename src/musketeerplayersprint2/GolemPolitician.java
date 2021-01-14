@@ -19,6 +19,7 @@ public class GolemPolitician extends Robot {
         
         int min_attackable_conviction = (rc.getConviction()-10) / 3;
         int attackable_conviction = 0;
+        int distancetoECSemaphor = 2;
         MapLocation currLoc = rc.getLocation();
         int maxEnemyDistSquared = Integer.MIN_VALUE;
         MapLocation farthestEnemy = null;
@@ -38,8 +39,13 @@ public class GolemPolitician extends Robot {
                 enemyLoc = robot.getLocation();
             }
         }
+
+        int ECInfluence = 0;
+        MapLocation ECPosition = null;
         for (RobotInfo robot: friendlySensable) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                ECInfluence = robot.getInfluence();
+                ECPosition = robot.getLocation();
                 if(rc.canGetFlag(robot.getID())) {
                     int flag = rc.getFlag(robot.getID());
                     if(Comms.getIC(flag) == Comms.InformationCategory.RUSH_EC_GOLEM) {
@@ -53,7 +59,27 @@ public class GolemPolitician extends Robot {
             }
         }
 
-        if ((attackable_conviction >= min_attackable_conviction) && rc.canEmpower(maxEnemyDistSquared)) {
+        boolean boostBase = false;
+        if(ECInfluence !=0 && ECInfluence <= rc.getInfluence() ) {
+            if(distancetoECSemaphor == 0) {
+                boostBase = true;
+            }
+            else {
+                Direction toMove = rc.getLocation().directionTo(ECPosition);
+                int DistancetoECBefore = rc.getLocation().distanceSquaredTo(ECPosition);
+                boolean moveSuccesful = tryMoveDest(toMove);
+                int DistancetoECAfter = rc.getLocation().distanceSquaredTo(ECPosition);
+                if(moveSuccesful && (DistancetoECBefore > DistancetoECAfter)) {
+                    distancetoECSemaphor = 2;
+                }
+                else {
+                    distancetoECSemaphor--;
+                }
+
+            }
+        }
+
+        if ((attackable_conviction >= min_attackable_conviction || boostBase) && rc.canEmpower(maxEnemyDistSquared)) {
             Debug.println(Debug.info, "Empowered with radius: " + maxEnemyDistSquared);
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestEnemy, 255, 150, 50);
             rc.empower(maxEnemyDistSquared);
