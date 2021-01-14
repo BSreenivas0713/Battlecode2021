@@ -124,6 +124,7 @@ public class Muckracker extends Robot {
             if (enemyLocation != null && rc.isReady()) {
                 tryMoveDest(currLoc.directionTo(enemyLocation));
             }
+            main_direction = currLoc.directionTo(home).opposite();
             while (!tryMove(main_direction) && rc.isReady()){
                 main_direction = Util.randomDirection();
             }
