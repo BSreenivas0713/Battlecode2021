@@ -10,14 +10,13 @@ public class ExplorerMuckracker extends Robot {
 
     public ExplorerMuckracker(RobotController r) {
         super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
+        subRobotType = Comms.SubRobotType.MUC_EXPLORER;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         enemyLocation = null;
     }
 
     public ExplorerMuckracker(RobotController r, MapLocation h) {
-        super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
-        enemyLocation = null;
+        this(r);
         home = h;
     }
 
