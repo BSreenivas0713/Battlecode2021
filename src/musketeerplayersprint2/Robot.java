@@ -7,7 +7,7 @@ import musketeerplayersprint2.Debug.*;
 
 public class Robot {
     static RobotController rc;
-    static int turnCount = 0;
+    static int turnCount;
 
     static int defaultFlag;
     static int nextFlag;
@@ -25,6 +25,7 @@ public class Robot {
 
     public Robot(RobotController r) {
         rc = r;
+        turnCount = 0;
         enemy = rc.getTeam().opponent();
         sensorRadius = rc.getType().sensorRadiusSquared;
         actionRadius = rc.getType().actionRadiusSquared;

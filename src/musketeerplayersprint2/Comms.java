@@ -41,6 +41,13 @@ public class Comms {
         EC
     }
 
+    public enum ECFoundType {
+        ENEMY,
+        NEUTRAL,
+        HUNTER_ADD,
+        HUNTER_DELETE,
+    }
+
     public static int addCoord(int flag, int dx, int dy) {
         return (flag << BIT_IC_OFFSET) + (dx << BIT_DX_OFFSET) + dy;
     }

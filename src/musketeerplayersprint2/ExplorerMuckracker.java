@@ -49,7 +49,7 @@ public class ExplorerMuckracker extends Robot {
 
         RobotInfo closest_muk = null;
         int closest_muk_dist = Integer.MAX_VALUE;
-        boolean awayFromHome = false;
+        boolean spawnkillRunFromHome = false;
         for (RobotInfo robot : friendlySensable) {
             MapLocation tempLoc = robot.getLocation();
             int dist = currLoc.distanceSquaredTo(tempLoc);
@@ -59,7 +59,7 @@ public class ExplorerMuckracker extends Robot {
             }
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && home.equals(robot.getLocation())) {
-                    awayFromHome = true;
+                    spawnkillRunFromHome = true;
                 }
                 int botFlag = rc.getFlag(robot.getID());
                 Comms.InformationCategory flagIC = Comms.getIC(botFlag);
@@ -113,21 +113,17 @@ public class ExplorerMuckracker extends Robot {
                 main_direction = currLoc.directionTo(bestSlanderer.getLocation());
                 tryMoveDest(main_direction);
             }
-            if (awayFromHome == true) {
+            else if (spawnkillRunFromHome) {
                 main_direction = currLoc.directionTo(home).opposite();
-                tryMove(main_direction);
-            }
-            if (closest_muk != null && rc.isReady()){
-                main_direction = currLoc.directionTo(closest_muk.getLocation()).opposite();
                 tryMoveDest(main_direction);
             }
-            if (enemyLocation != null && rc.isReady()) {
-                tryMoveDest(currLoc.directionTo(enemyLocation));
+            else {
+                Nav.explore();
             }
-            main_direction = currLoc.directionTo(home).opposite();
-            while (!tryMove(main_direction) && rc.isReady()){
-                main_direction = Util.randomDirection();
-            }
+        }
+
+        if(turnCount > Util.explorerMuckrakerLifetime) {
+            changeTo = new LatticeMuckraker(rc);
         }
          
         broadcastECLocation();
