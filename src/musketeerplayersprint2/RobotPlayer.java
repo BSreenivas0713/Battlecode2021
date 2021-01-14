@@ -102,10 +102,12 @@ public strictfp class RobotPlayer {
                     if (flagIC == Comms.InformationCategory.ENEMY_EC_MUK) {
                         int[] dxdy = Comms.getDxDy(botFlag);
                         if (dxdy[0] == 0 && dxdy[0] == 0) {
+                            Debug.println(Debug.info, "Making hunter mucker with no destination.");
                             bot = new HunterMuckracker(rc);
                         } else {
                             MapLocation spawningLoc = robot.getLocation();
                             MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
+                            Debug.println(Debug.info, "Making hunter mucker with destination " + enemyLoc + ".");
                             bot = new HunterMuckracker(rc, enemyLoc);
                         }
                         break;
