@@ -101,9 +101,13 @@ public strictfp class RobotPlayer {
                     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
                     if (flagIC == Comms.InformationCategory.ENEMY_EC_MUK) {
                         int[] dxdy = Comms.getDxDy(botFlag);
-                        MapLocation spawningLoc = robot.getLocation();
-                        MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
-                        bot = new HunterMuckracker(rc, enemyLoc);
+                        if (dxdy[0] == 0 && dxdy[0] == 0) {
+                            bot = new HunterMuckracker(rc);
+                        } else {
+                            MapLocation spawningLoc = robot.getLocation();
+                            MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
+                            bot = new HunterMuckracker(rc, enemyLoc);
+                        }
                         break;
                     }
                 }    

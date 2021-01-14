@@ -8,10 +8,15 @@ public class HunterMuckracker extends Robot {
     static Direction main_direction;
     static MapLocation enemyLocation;
 
+    public HunterMuckracker(RobotController r) {
+        super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
+        enemyLocation = null;
+    }
     public HunterMuckracker(RobotController r, MapLocation enemyLoc) {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
-        enemyLocation = enemyLocation;
+        enemyLocation = enemyLoc;
     }
 
     public void takeTurn() throws GameActionException {
@@ -80,7 +85,14 @@ public class HunterMuckracker extends Robot {
         bestInfluence = Integer.MIN_VALUE;
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
+        int totalEnemyX = 0;
+        int totalEnemyY = 0;
+        int enemiesFound = 0;
         for (RobotInfo robot : rc.senseNearbyRobots(sensingRadius, enemy)) {
+            MapLocation tempLoc = robot.getLocation();
+            totalEnemyX += tempLoc.x - currLoc.x;
+            totalEnemyY += tempLoc.y - currLoc.y;
+            enemiesFound++;
             if (robot.getType() == RobotType.SLANDERER) {
                 int curr = robot.getConviction();
                 if (curr > bestInfluence) {
@@ -88,13 +100,14 @@ public class HunterMuckracker extends Robot {
                     bestSlanderer = robot;
                 }
             }
-            double temp = currLoc.distanceSquaredTo(robot.getLocation());
+            double temp = currLoc.distanceSquaredTo(tempLoc);
             if (temp < minDistSquared) {
                 minDistSquared = temp;
                 minRobot = robot;
             }
             // if (robot.getType() == RobotType.POLITICIAN && (robot.getConviction() >= 100 || ))
         }
+        MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
@@ -109,6 +122,9 @@ public class HunterMuckracker extends Robot {
             }
             if (enemyLocation != null && rc.isReady() && currLoc.distanceSquaredTo(enemyLocation) > sensorRadius) {
                 tryMoveDest(currLoc.directionTo(enemyLocation));
+            }
+            if (enemiesFound != 0) {
+                tryMoveDest(currLoc.directionTo(hunterLoc));
             }
             main_direction = currLoc.directionTo(home).opposite();
             while (!tryMove(main_direction) && rc.isReady()){
