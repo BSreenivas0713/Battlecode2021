@@ -17,6 +17,7 @@ have more muckrakers at the beginning so we explore quicker/dont auto lose on sm
 adjust our bidding strategy(stop bidding after we have enough also)
 Muckrakers should report slanderers to the EC
 MAYBE: Dont rush for the first 100 rounds if you dont see an enemy(greater coverage) ((if so, change cleanup mode back to 500))
+Protectors expand baby ducks absolutely destroy us
 */
 public class EC extends Robot {
     static enum State {
