@@ -219,8 +219,12 @@ public class EC extends Robot {
                     influence = Util.getBestSlandererInfluence(currInfluence);
                 } else {
                     RushFlag targetEC = ECflags.peek();
-                    if (targetEC != null && robotCounter % 2 == 0) {
-                        nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.requiredInfluence, targetEC.dx, targetEC.dy);
+                    if (robotCounter % 2 == 0) {
+                        if (targetEC != null) {
+                            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.requiredInfluence, targetEC.dx, targetEC.dy);
+                        } else {
+                            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, 0, 0, 0);
+                        }
                     }
                     toBuild = RobotType.MUCKRAKER;
                     influence = 1;
@@ -261,8 +265,12 @@ public class EC extends Robot {
                 }
                 else {
                     RushFlag targetEC = ECflags.peek();
-                    if (targetEC != null && robotCounter % 2 == 0) {
-                        nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.requiredInfluence, targetEC.dx, targetEC.dy);
+                    if (robotCounter % 2 == 0) {
+                        if (targetEC != null) {
+                            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.requiredInfluence, targetEC.dx, targetEC.dy);
+                        } else {
+                            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, 0, 0, 0);
+                        }
                     }
                     toBuild = RobotType.MUCKRAKER;
                     influence = 1;
