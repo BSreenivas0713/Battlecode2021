@@ -19,7 +19,7 @@ public class ExplorerMuckracker extends Robot {
         int sensingRadius = rc.getType().sensorRadiusSquared;
         MapLocation currLoc = rc.getLocation();
 
-        Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
+        Debug.println(Debug.info, "I am an explorer mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         if(main_direction == null){
