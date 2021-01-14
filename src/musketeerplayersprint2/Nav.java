@@ -472,7 +472,20 @@ public class Nav {
         
 		if(!rc.onTheMap(rc.getLocation().add(lastExploreDir))) {
             // lastExploreDir = lastExploreDir.opposite();
-            lastExploreDir = Util.randomDirection();
+            Direction tempExploreDir = null;
+            if((int) (Math.random() * 2) == 0) {
+                tempExploreDir = Util.turnLeft90(lastExploreDir);
+                if(!rc.onTheMap(rc.getLocation().add(tempExploreDir))) {
+                    tempExploreDir = Util.turnRight90(lastExploreDir);
+                }
+            }
+            else {
+                tempExploreDir = Util.turnRight90(lastExploreDir);
+                if(!rc.onTheMap(rc.getLocation().add(tempExploreDir))) {
+                    tempExploreDir = Util.turnLeft90(lastExploreDir);
+                }
+            lastExploreDir = tempExploreDir;
+            }
         }
         
         return lastExploreDir;
