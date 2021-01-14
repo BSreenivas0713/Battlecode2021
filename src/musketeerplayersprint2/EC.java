@@ -217,6 +217,10 @@ public class EC extends Robot {
                     signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
                     influence = Util.getBestSlandererInfluence(currInfluence);
                 } else {
+                    RushFlag targetEC = ECflags.peek();
+                    if (targetEC != null && robotCounter % 2 == 0) {
+                        nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.requiredInfluence, targetEC.dx, targetEC.dy);
+                    }
                     toBuild = RobotType.MUCKRAKER;
                     influence = 1;
                 }
@@ -256,6 +260,10 @@ public class EC extends Robot {
                     signalRobotType(SubRobotType.POL_PROTECTOR);
                 }
                 else {
+                    RushFlag targetEC = ECflags.peek();
+                    if (targetEC != null && robotCounter % 2 == 0) {
+                        nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.requiredInfluence, targetEC.dx, targetEC.dy);
+                    }
                     toBuild = RobotType.MUCKRAKER;
                     influence = 1;
                 }
@@ -302,6 +310,9 @@ public class EC extends Robot {
                 }
 
                 int[] currDxDy = {targetEC.dx, targetEC.dy};
+                if (robotCounter % 2 == 0) {
+                    nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, requiredInfluence, targetEC.dx, targetEC.dy);
+                }
                 toBuild = RobotType.MUCKRAKER;
                 influence = 1;
                 Debug.println(Debug.info, "Required Influence: " + requiredInfluence + "; DxDy: " + (currDxDy[0] - Util.dOffset) +  ", " + (currDxDy[1] - Util.dOffset));

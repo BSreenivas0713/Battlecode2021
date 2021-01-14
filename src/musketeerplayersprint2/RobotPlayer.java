@@ -95,7 +95,20 @@ public strictfp class RobotPlayer {
                 System.out.println("CRITICAL: Did not find flag directing type");
                 bot = new Slanderer(rc, Util.randomDirection());
                 break;
-            case MUCKRAKER:            bot = new Muckracker(rc);  break;
+            case MUCKRAKER: 
+                for (RobotInfo robot : sensableWithin2) {
+                    int botFlag = rc.getFlag(robot.getID());
+                    Comms.InformationCategory flagIC = Comms.getIC(botFlag);
+                    if (flagIC == Comms.InformationCategory.ENEMY_EC_MUK) {
+                        int[] dxdy = Comms.getDxDy(botFlag);
+                        MapLocation spawningLoc = robot.getLocation();
+                        MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
+                        bot = new HunterMuckracker(rc, enemyLoc);
+                        break;
+                    }
+                }    
+                bot = new ExplorerMuckracker(rc);  
+                break;
         }
 
         while (true) {
@@ -136,7 +149,7 @@ public strictfp class RobotPlayer {
                 bot = new Slanderer(rc);
                 break;
             case MUCKRAKER:
-                bot = new Muckracker(rc);
+                bot = new ExplorerMuckracker(rc);
                 break;
         }
     }
