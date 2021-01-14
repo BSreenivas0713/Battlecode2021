@@ -60,7 +60,9 @@ public class HunterMuckracker extends Robot {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 awayFromBase = true;
                 friendlyBase = robot;
-                if (tempLoc == enemyLocation) {
+                Debug.println(Debug.info, "friendly base at " + friendlyBase.getLocation() + "; enemy Location is " + enemyLocation);
+                if (tempLoc.equals(enemyLocation)) {
+                    Debug.println(Debug.info, "reset enemy location");
                     enemyLocation = null;
                 }
                 int botFlag = rc.getFlag(robot.getID());

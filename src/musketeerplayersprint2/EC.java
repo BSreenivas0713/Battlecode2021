@@ -10,9 +10,11 @@ import java.util.ArrayDeque;
 import java.util.PriorityQueue;
 /* 
 TODO: 
-have tower to tower communication(slanderers communicate best direction, tell protectors about enemies)
-have some muckrakers explore while others just attack enemy bases
+have tower to tower communication(slanderers tell protectors about enemies)
 have a better system for making protectors(we should not make 35 protectors for one muckraker)
+muckraker to muckraker communication(what base to attack, what base has been converted to ours)
+have some protectors go in the direction of the slanderers
+have more muckrakers at the beginning so we explore quicker/dont auto lose on small maps
 */
 public class EC extends Robot {
     static enum State {

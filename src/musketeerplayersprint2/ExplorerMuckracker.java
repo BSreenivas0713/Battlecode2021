@@ -58,7 +58,7 @@ public class ExplorerMuckracker extends Robot {
                 closest_muk_dist = dist;
             }
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
-                if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && home == robot.getLocation()) {
+                if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && home.equals(robot.getLocation())) {
                     awayFromHome = true;
                 }
                 int botFlag = rc.getFlag(robot.getID());
