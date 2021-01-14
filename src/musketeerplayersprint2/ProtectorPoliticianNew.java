@@ -74,8 +74,11 @@ public class ProtectorPoliticianNew extends Robot {
         
         boolean slandererOrECNearby = false;
         boolean slandererNearby = false;
-        MapLocation nearestSlandy = null;
-        int nearestSlandyDist = Integer.MAX_VALUE;
+        // MapLocation nearestSlandy = null;
+        // int nearestSlandyDist = Integer.MAX_VALUE;
+        int slandyX = 0;
+        int slandyY = 0;
+        int numSlandies = 0;
         boolean ECNearby = false;
         int numFollowingClosestMuckraker = 0;
         for (RobotInfo robot : friendlySensable) {
@@ -84,10 +87,15 @@ public class ProtectorPoliticianNew extends Robot {
                 ECNearby = true;
             } else {
                 MapLocation tempLoc = robot.getLocation();
-                int tempDist = currLoc.distanceSquaredTo(tempLoc);
-                if (robot.getType() == RobotType.SLANDERER && tempDist < nearestSlandyDist) {
+                // int tempDist = currLoc.distanceSquaredTo(tempLoc);
+                /* if (robot.getType() == RobotType.SLANDERER && tempDist < nearestSlandyDist) {
                     nearestSlandy = tempLoc;
                     nearestSlandyDist = tempDist;
+                }*/
+                if (robot.getType() == RobotType.SLANDERER) {
+                    slandyX += tempLoc.x;
+                    slandyY += tempLoc.y;
+                    numSlandies++;
                 }
                 if(rc.canGetFlag(robot.getID())) {
                     int flag = rc.getFlag(robot.getID());
@@ -104,6 +112,11 @@ public class ProtectorPoliticianNew extends Robot {
                     }
                 }
             }
+        }
+
+        MapLocation avgSlandy = null;
+        if (numSlandies != 0) {
+            avgSlandy = new MapLocation(slandyX / numSlandies, slandyY / numSlandies);
         }
 
         if (minRobot != null) {
@@ -148,16 +161,16 @@ public class ProtectorPoliticianNew extends Robot {
             return;
         }
 
-        //if too far away from nearest slandy, move towards it
-        if (nearestSlandy != null && nearestSlandyDist > 8) {
+        //if too far close to average slandy, move away it
+        if (avgSlandy != null && currLoc.distanceSquaredTo(avgSlandy) < 8) {
             Debug.println(Debug.info, "I am moving towards the slandies");
-            Direction toMove = currLoc.directionTo(nearestSlandy).rotateRight();
+            Direction toMove = avgSlandy.directionTo(currLoc).rotateLeft();
             tryMoveDest(toMove);
             return;
         }
 
-        if (nearestSlandy != null) {
-            main_direction = Util.rightOrLeftTurn(spinDirection, nearestSlandy.directionTo(currLoc));
+        if (avgSlandy != null) {
+            main_direction = Util.rightOrLeftTurn(spinDirection, avgSlandy.directionTo(currLoc));
         }
 
         //Rotates around slanderers and then home
@@ -166,9 +179,10 @@ public class ProtectorPoliticianNew extends Robot {
         while (!tryMoveDest(main_direction) && rc.isReady() && tryMove <= 1){
             Debug.println(Debug.info, "I am switching rotation direction");
             spinDirection = Util.switchSpinDirection(spinDirection);
-            if (nearestSlandy != null) {
-                main_direction = Util.rightOrLeftTurn(spinDirection, nearestSlandy.directionTo(currLoc));
+            if (avgSlandy != null) {
+                main_direction = Util.rightOrLeftTurn(spinDirection, avgSlandy.directionTo(currLoc));
             } else {
+                Debug.println(Debug.info, "Couldn't find slandies ): I am rotating around home");
                 main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
             }
             tryMove +=1;
