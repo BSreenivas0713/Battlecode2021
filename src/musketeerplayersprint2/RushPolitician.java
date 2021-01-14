@@ -17,6 +17,15 @@ public class RushPolitician extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_RUSH);
         Nav.setDest(enemyLoc);
     }
+    
+    public RushPolitician(RobotController r, MapLocation enemyLoc, MapLocation h) {
+        super(r);
+        enemyLocation = enemyLoc;
+        moveSemaphore = 2;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_RUSH);
+        Nav.setDest(enemyLoc);
+        home = h;
+    }
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
@@ -68,7 +77,7 @@ public class RushPolitician extends Robot {
                 MapLocation loc = robot.getLocation();
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 8) &&
                     loc.isWithinDistanceSquared(currLoc, actionRadius)) {
-                    changeTo = new GolemPolitician(rc);
+                    changeTo = new GolemPolitician(rc, home);
                     return;
                 }
             }

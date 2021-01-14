@@ -12,6 +12,12 @@ public class DefenderPolitician extends Robot {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_DEFENDER);
     }
+    
+    public DefenderPolitician(RobotController r, MapLocation h) {
+        super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_DEFENDER);
+        home = h;
+    }
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
@@ -53,7 +59,7 @@ public class DefenderPolitician extends Robot {
         }
 
         if(hasSeenEnemy && enemySensable.length == 0) {
-            changeTo = new ExplorerPolitician(rc);
+            changeTo = new ExplorerPolitician(rc, home);
             return;
         }
         

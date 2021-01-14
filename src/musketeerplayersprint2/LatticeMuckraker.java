@@ -13,13 +13,20 @@ public class LatticeMuckraker extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
         enemyLocation = null;
     }
+    
+    public LatticeMuckraker(RobotController r, MapLocation h) {
+        super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
+        enemyLocation = null;
+        home = h;
+    }
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
         int sensingRadius = rc.getType().sensorRadiusSquared;
         MapLocation currLoc = rc.getLocation();
 
-        Debug.println(Debug.info, "I am an explorer mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
+        Debug.println(Debug.info, "I am an lattice mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         if(main_direction == null){

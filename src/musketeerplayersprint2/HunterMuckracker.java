@@ -13,11 +13,18 @@ public class HunterMuckracker extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
         enemyLocation = null;
     }
-    
+
     public HunterMuckracker(RobotController r, MapLocation enemyLoc) {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
         enemyLocation = enemyLoc;
+    }
+
+    public HunterMuckracker(RobotController r, MapLocation enemyLoc, MapLocation h) {
+        super(r);
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
+        enemyLocation = enemyLoc;
+        home = h;
     }
 
     public void takeTurn() throws GameActionException {
@@ -137,7 +144,7 @@ public class HunterMuckracker extends Robot {
                 tryMoveDest(currLoc.directionTo(enemyLocation));
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation + ".");
             }
-            else if (awayFromBase == true) {
+            else if (awayFromBase) {
                 tryMoveDest(currLoc.directionTo(friendlyBase.getLocation()).opposite());
                 Debug.println(Debug.info, "Prioritizing moving away from friendly/neutral bases.");
             }
@@ -147,10 +154,8 @@ public class HunterMuckracker extends Robot {
                 Debug.println(Debug.info, "Prioritizing going towards " + hunterLoc + ".");
             }
             else {
-                main_direction = currLoc.directionTo(home).opposite();
-                while (!tryMoveDest(main_direction) && rc.isReady()){
-                    main_direction = Util.randomDirection();
-                }
+                Nav.explore();
+                Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);
             }
         }
          
