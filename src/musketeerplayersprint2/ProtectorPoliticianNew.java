@@ -95,7 +95,7 @@ public class ProtectorPoliticianNew extends Robot {
                     if(Comms.isSubRobotType(flag, Comms.SubRobotType.SLANDERER) || Comms.getIC(flag) == Comms.InformationCategory.AVG_ENEMY_DIR) {
                         slandererOrECNearby = true;
                         slandererNearby = true;
-                        if (tempDist < nearestSlandyDist) {
+                        if (tempDist < nearestSlandyDist && tempLoc.distanceSquaredTo(home) > currLoc.distanceSquaredTo(home)) {
                             nearestSlandy = tempLoc;
                             nearestSlandyDist = tempDist;
                         }
