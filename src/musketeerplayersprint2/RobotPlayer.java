@@ -44,7 +44,7 @@ public strictfp class RobotPlayer {
                                         bot = new CleanupPolitician(rc);
                                         break;
                                     case POL_PROTECTOR:
-                                        bot = new ProtectorPolitician(rc);
+                                        bot = new ProtectorPoliticianNew(rc);
                                         break;
                                     case POL_DEFENDER:
                                         bot = new DefenderPolitician(rc);
@@ -59,7 +59,7 @@ public strictfp class RobotPlayer {
                                 }
                                 break;
                             case AVG_ENEMY_DIR:
-                                bot = new ProtectorPolitician(rc);
+                                bot = new ProtectorPoliticianNew(rc);
                                 break;
                             default:
                                 break;
@@ -74,7 +74,7 @@ public strictfp class RobotPlayer {
                     break;
                 //TODO: write rush muckraker.
                 System.out.println("CRITICAL: Did not find flag directing type");
-                bot = new ProtectorPolitician(rc);
+                bot = new ProtectorPoliticianNew(rc);
                 break;
             case SLANDERER:
                 bot = new Slanderer(rc);
@@ -136,7 +136,7 @@ public strictfp class RobotPlayer {
                 EC.ECflags.clear();
                 break;
             case POLITICIAN: 
-                bot = new ProtectorPolitician(rc);
+                bot = new ProtectorPoliticianNew(rc);
                 break;
             case SLANDERER:
                 bot = new Slanderer(rc);
