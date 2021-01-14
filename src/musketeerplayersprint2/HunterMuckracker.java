@@ -107,7 +107,7 @@ public class HunterMuckracker extends Robot {
                 main_direction = currLoc.directionTo(bestSlanderer.getLocation());
                 tryMoveDest(main_direction);
             }
-            if (enemyLocation != null && rc.isReady()) {
+            if (enemyLocation != null && rc.isReady() && currLoc.distanceSquaredTo(enemyLocation) > sensorRadius) {
                 tryMoveDest(currLoc.directionTo(enemyLocation));
             }
             main_direction = currLoc.directionTo(home).opposite();
