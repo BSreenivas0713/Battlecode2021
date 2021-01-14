@@ -12,10 +12,9 @@ import java.util.Map;
 import java.util.PriorityQueue;
 /* 
 TODO: 
-implement spawn killing somehow
 have tower to tower communication(slanderers communicate best direction, tell protectors about enemies)
-pathfinding error - rushers are getting stuck behind heavy walls
-Big slanderers/exploreres should turn into Golems/protectors maybe, Golems/protectors should be able to turn into rushers
+have some muckrakers explore while others just attack enemy bases
+have a better system for making protectors(we should not make 35 protectors for one muckraker)
 */
 public class EC extends Robot {
     static enum State {
@@ -64,6 +63,7 @@ public class EC extends Robot {
     static int cleanUpCount;
     static int currRoundNum;
     static int currInfluence;
+    static int totalGolemConviction;
     static boolean noAdjacentEC;
 
     static boolean muckrackerNear;
@@ -164,6 +164,7 @@ public class EC extends Robot {
         Debug.println(Debug.info, "can reset flag on next turn: " + resetFlagOnNewTurn);
 
         processChildrenFlags();
+        Debug.println(Debug.info, "total Golem Conviction: " + totalGolemConviction);
 
         if (currRoundNum > 500)
             tryStartCleanup();
@@ -197,7 +198,11 @@ public class EC extends Robot {
 
                     MapLocation enemyLocation = home.translate(targetECFromSlanderers.dx - Util.dOffset, targetECFromSlanderers.dy - Util.dOffset);
                     Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
-
+                    if(requiredInfluence < totalGolemConviction) {
+                        resetFlagOnNewTurn = false;
+                        nextFlag = Comms.getFlag(Comms.InformationCategory.RUSH_EC_GOLEM, targetECFromSlanderers.dx, targetECFromSlanderers.dy);
+                        break;
+                    }
                     if(requiredInfluence < currInfluence) {
                         resetFlagOnNewTurn = false;
                         nextFlag = targetECFromSlanderers.flag;
@@ -283,13 +288,19 @@ public class EC extends Robot {
 
                 MapLocation enemyLocation = home.translate(targetEC.dx - Util.dOffset, targetEC.dy - Util.dOffset);
                 Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
-
+                if(requiredInfluence < totalGolemConviction) {
+                    resetFlagOnNewTurn = false;
+                    nextFlag = Comms.getFlag(Comms.InformationCategory.RUSH_EC_GOLEM, targetEC.dx, targetEC.dy);
+                    currentState = stateStack.pop();
+                    break;
+                }
                 if(requiredInfluence < currInfluence) {
                     resetFlagOnNewTurn = false;
                     nextFlag = targetEC.flag;
                     currentState = State.RUSHING;
                     break;
                 }
+
                 int[] currDxDy = {targetEC.dx, targetEC.dy};
                 toBuild = RobotType.MUCKRAKER;
                 influence = 1;
@@ -355,6 +366,7 @@ public class EC extends Robot {
         influence = 0;
         currRoundNum = rc.getRoundNum();
         currInfluence = rc.getInfluence();
+        totalGolemConviction = 0;
     }
 
     public void toggleBuildProtectors() throws GameActionException {
@@ -455,7 +467,21 @@ public class EC extends Robot {
             } else {
                 idSet.remove(id);
             }
+
+
         }
+
+        //find the combined sizes of the golems
+        for(RobotInfo robot: friendlySensable) {
+            if (rc.canGetFlag(robot.getID())) {
+                int currFlag = rc.getFlag(robot.getID());
+                if (Comms.getIC(currFlag) == Comms.InformationCategory.ROBOT_TYPE && Comms.getSubRobotType(currFlag) == Comms.SubRobotType.POL_GOLEM) {
+                    totalGolemConviction += robot.getConviction();
+                    Debug.println(Debug.info, "Total Golem Conviction Updated: " + totalGolemConviction);
+                }
+            }
+        }
+        
         //remove protector ids if dead
         int protectorID;
         for (int i = protectorIdSet.size - 1; i >= 0; i--) {
