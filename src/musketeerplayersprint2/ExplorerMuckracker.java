@@ -4,11 +4,11 @@ import battlecode.common.*;
 import musketeerplayersprint2.Util.*;
 import musketeerplayersprint2.Debug.*;
 
-public class Muckracker extends Robot {
+public class ExplorerMuckracker extends Robot {
     static Direction main_direction;
     static MapLocation enemyLocation;
 
-    public Muckracker(RobotController r) {
+    public ExplorerMuckracker(RobotController r) {
         super(r);
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.MUCKRAKER);
         enemyLocation = null;
