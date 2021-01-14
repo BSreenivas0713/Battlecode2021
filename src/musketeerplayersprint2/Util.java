@@ -72,6 +72,9 @@ public class Util {
         855, 855, 855, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 949};
 
     static final int maxFollowingSingleUnit = 4;
+
+    static final int turnsBetweenEnemyBroadcast = 5;
+    static final int turnsEnemyBroadcastValid = 5;
     
     /**
      * Returns a random Direction.

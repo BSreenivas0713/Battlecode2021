@@ -32,19 +32,6 @@ public class ProtectorPolitician extends Robot {
         main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc)); //Direction if we only want to rotate around the base
         /* Creating all the variables that we need to do the step by step decision making for later*/
 
-        boolean slandererNearby = false;
-        boolean ECNear = false;
-        for (RobotInfo robot : friendlySensable) {
-            if ((robot.getType() == RobotType.ENLIGHTENMENT_CENTER)){
-                ECNear = true;
-            } 
-            
-            if((rc.canGetFlag(robot.getID()) && 
-                rc.getFlag(robot.getID()) == slandererFlag)) {
-                slandererNearby = true;
-            }
-        }
-
         int distanceToEC = rc.getLocation().distanceSquaredTo(home);
         
         int maxEnemyAttackableDistSquared = Integer.MIN_VALUE;
@@ -80,23 +67,26 @@ public class ProtectorPolitician extends Robot {
         }
         
         boolean slandererOrECNearby = false;
+        boolean slandererNearby = false;
         boolean ECNearby = false;
         int numFollowingClosestMuckraker = 0;
         for (RobotInfo robot : friendlySensable) {
             if ((robot.getType() == RobotType.ENLIGHTENMENT_CENTER)){
                 slandererOrECNearby = true;
                 ECNearby = true;
-            } 
-            
-            if(rc.canGetFlag(robot.getID())) {
-                int flag = rc.getFlag(robot.getID());
-                if(flag == slandererFlag) {
-                    slandererOrECNearby = true;
-                }
-
-                if(closestMuckrakerSensable != null) {
-                    if(flag == Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestMuckrakerSensable.getID())) {
-                        numFollowingClosestMuckraker++;
+            } else {
+                if(rc.canGetFlag(robot.getID())) {
+                    int flag = rc.getFlag(robot.getID());
+                    // Only slanderers and EC's broadcast AVG_ENEMY_DIR so this is valid to check for slanderers
+                    if(flag == slandererFlag || Comms.getIC(flag) == Comms.InformationCategory.AVG_ENEMY_DIR) {
+                        slandererOrECNearby = true;
+                        slandererNearby = true;
+                    }
+    
+                    if(closestMuckrakerSensable != null) {
+                        if(flag == Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestMuckrakerSensable.getID())) {
+                            numFollowingClosestMuckraker++;
+                        }
                     }
                 }
             }
@@ -107,10 +97,10 @@ public class ProtectorPolitician extends Robot {
         }
         
         /* Step by Step decision making*/
-
         //empower if near 2 enemies or enemy is in sensing radius of our base
         if (((maxPoliticianSize > 0 && maxPoliticianSize <= 1.5 * rc.getInfluence()) || 
-            (enemyAttackable.length > 1 || (enemyAttackable.length >0 && (minMuckrakerDistance <= RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared))))
+            (enemyAttackable.length > 1 || 
+            (enemyAttackable.length > 0 && (slandererNearby || minMuckrakerDistance <= RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared))))
             && rc.canEmpower(maxEnemyAttackableDistSquared)) {
             Debug.println(Debug.info, "Enemy too close to base. I will empower");
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestEnemyAttackable, 255, 150, 50);

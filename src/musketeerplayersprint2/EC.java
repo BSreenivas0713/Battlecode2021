@@ -5,10 +5,8 @@ import musketeerplayersprint2.Comms.*;
 import musketeerplayersprint2.Util.*;
 import musketeerplayersprint2.Debug.*;
 import musketeerplayersprint2.fast.FastIterableIntSet;
-import musketeerplayersprint2.fast.FasterQueue;
 
 import java.util.ArrayDeque;
-import java.util.Map;
 import java.util.PriorityQueue;
 /* 
 TODO: 
@@ -25,7 +23,8 @@ public class EC extends Robot {
         RUSHING,
         SAVING_FOR_RUSH,
         CLEANUP,
-        REMOVING_BLOCKAGE
+        REMOVING_BLOCKAGE,
+        SIGNALING_AVG_ENEMY_DIR,
     };
 
     static class RushFlag implements Comparable<RushFlag> {
@@ -67,8 +66,8 @@ public class EC extends Robot {
     static boolean noAdjacentEC;
 
     static boolean muckrackerNear;
-    //start spawning slanderers in random directions until you find an enemy
     static Direction avgDirectionOfEnemies;
+    static int turnsSinceLastEnemyLocBroadcast;
     
     static FastIterableIntSet idSet;
     static FastIterableIntSet protectorIdSet;
@@ -97,8 +96,12 @@ public class EC extends Robot {
         ECflags = new PriorityQueue<RushFlag>();
         stateStack = new ArrayDeque<State>();
         currentState = State.BUILDING_SLANDERERS;
+
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
-        avgDirectionOfEnemies = Util.randomDirection();
+
+        avgDirectionOfEnemies = null;
+        turnsSinceLastEnemyLocBroadcast = Util.turnsBetweenEnemyBroadcast;
+
         cleanUpCount = 0;
         numProtectors = 0;
         lastRush = 0;
@@ -123,8 +126,10 @@ public class EC extends Robot {
                     Debug.println(Debug.info, "built robot: " + robot.getID());
                     idSet.add(robot.getID());
 
-                    if (Comms.getIC(nextFlag) == Comms.InformationCategory.TARGET_ROBOT && 
-                        Comms.getSubRobotType(nextFlag) == SubRobotType.POL_PROTECTOR) {
+                    Comms.InformationCategory IC = Comms.getIC(nextFlag);
+                    if ((IC == Comms.InformationCategory.TARGET_ROBOT && 
+                        Comms.getSubRobotType(nextFlag) == SubRobotType.POL_PROTECTOR) ||
+                        (IC == Comms.InformationCategory.AVG_ENEMY_DIR)) {
                         protectorIdSet.add(robot.getID());
                     }
                 } else {
@@ -142,8 +147,12 @@ public class EC extends Robot {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
+
         if (spawnKillLock < 10) {
             spawnKillLock++;
+        }
+        if(turnsSinceLastEnemyLocBroadcast < Util.turnsBetweenEnemyBroadcast) {
+            turnsSinceLastEnemyLocBroadcast++;
         }
 
         for (RobotInfo robot : rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, enemy)) {
@@ -153,16 +162,6 @@ public class EC extends Robot {
             noAdjacentEC = true;
         }
 
-        Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + currInfluence);
-        Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
-        Debug.println(Debug.info, "num of ec's found: " + ECflags.size());
-        Debug.println(Debug.info, "num ids found: " + idSet.size);
-        Debug.println(Debug.info, "num protectors currently: " + protectorIdSet.size);
-        Debug.println(Debug.info, "state: " + currentState);
-        Debug.println(Debug.info, "avg direction of enemies: " + avgDirectionOfEnemies);
-        Debug.println(Debug.info, "protectors built in a row: " + protectorsSpawnedInARow);
-        Debug.println(Debug.info, "can reset flag on next turn: " + resetFlagOnNewTurn);
-
         processChildrenFlags();
 
         if (currRoundNum > 500)
@@ -170,6 +169,7 @@ public class EC extends Robot {
 
         toggleBuildProtectors();
         tryStartBuildingSpawnKill();
+        tryStartSignalingAvgEnemyDir();
 
         //bidding code
         int biddingInfluence = currInfluence / 20;
@@ -185,6 +185,16 @@ public class EC extends Robot {
         //updating currInfluence after a bid
         currInfluence = rc.getInfluence();
         muckrackerNear = checkIfMuckrakerNear();
+
+        Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + currInfluence);
+        Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        Debug.println(Debug.info, "num of ec's found: " + ECflags.size());
+        Debug.println(Debug.info, "num ids found: " + idSet.size);
+        Debug.println(Debug.info, "num protectors currently: " + protectorIdSet.size);
+        Debug.println(Debug.info, "State stack size: " + stateStack.size() + ", state: " + currentState);
+        Debug.println(Debug.info, "avg direction of enemies: " + avgDirectionOfEnemies);
+        Debug.println(Debug.info, "protectors built in a row: " + protectorsSpawnedInARow);
+        Debug.println(Debug.info, "can reset flag on next turn: " + resetFlagOnNewTurn);
 
         switch(currentState) {
             case BUILDING_SLANDERERS:
@@ -209,7 +219,6 @@ public class EC extends Robot {
             
                 if(!muckrackerNear && robotCounter % 2 != 0) {
                     toBuild = RobotType.SLANDERER;
-                    signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
                     influence = Util.getBestSlandererInfluence(currInfluence);
                 } else {
                     toBuild = RobotType.MUCKRAKER;
@@ -220,7 +229,6 @@ public class EC extends Robot {
                     //the first robot built should be a 107 slanderer, otherwise in this state
                     //we will build 130 slanderers at minimum
                     toBuild = RobotType.SLANDERER;
-                    signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
                     influence = 107;
 
                     stateStack.push(currentState);
@@ -302,7 +310,6 @@ public class EC extends Robot {
             case CLEANUP:
                 if(Util.getBestSlandererInfluence(currInfluence) >= 100 && robotCounter % 3 == 1 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
-                    signalSlandererAwayDirection(avgDirectionOfEnemies.opposite());
                     influence = Util.getBestSlandererInfluence(currInfluence / 2);
                 }
                 else if(currInfluence >= 100 && robotCounter % 3 == 0) {
@@ -341,10 +348,23 @@ public class EC extends Robot {
                     currentState = stateStack.pop();
                 }
                 break;
+            case SIGNALING_AVG_ENEMY_DIR:
+                Debug.println(Debug.info, "Broadcasting average enemy direction: " + avgDirectionOfEnemies);
+                nextFlag = Comms.getFlag(Comms.InformationCategory.AVG_ENEMY_DIR, rc.getRoundNum(), avgDirectionOfEnemies);
+                turnsSinceLastEnemyLocBroadcast = 0;
+                currentState = stateStack.pop();
+
+                toBuild = RobotType.POLITICIAN;
+                influence = 18;
+                if(buildRobot(toBuild, influence)) {
+                    Debug.println(Debug.info, "Built a protector politician too");
+                }
+                break;
             default:
                 System.out.println("CRITICAL: Maxwell screwed up stateStack");
                 break;
         }
+
         Debug.println(Debug.info, "next flag that will be set: " + nextFlag);
     }
 
@@ -384,6 +404,17 @@ public class EC extends Robot {
             stateStack.push(currentState);
             resetFlagOnNewTurn = true;
             currentState = State.BUILDING_SPAWNKILLS;
+        }
+    }
+
+    public void tryStartSignalingAvgEnemyDir() throws GameActionException {
+        // Broadcast the average enemy direction every 5 turns.
+        // so long as we're not using the nextFlag already
+        if(resetFlagOnNewTurn && 
+            turnsSinceLastEnemyLocBroadcast >= Util.turnsBetweenEnemyBroadcast &&
+            avgDirectionOfEnemies != null) {
+            stateStack.push(currentState);
+            currentState = State.SIGNALING_AVG_ENEMY_DIR;
         }
     }
     
@@ -469,6 +500,8 @@ public class EC extends Robot {
         if (numChildrenFoundEnemies != 0) {
             MapLocation enemyTotalDirection = new MapLocation(totalEnemyX / numChildrenFoundEnemies, totalEnemyY / numChildrenFoundEnemies);
             avgDirectionOfEnemies = home.directionTo(enemyTotalDirection);
+        } else {
+            avgDirectionOfEnemies = null;
         }
 
         cleanUpCount++;
@@ -548,12 +581,6 @@ public class EC extends Robot {
         if (resetFlagOnNewTurn) {
             nextFlag = Comms.getFlag(Comms.InformationCategory.TARGET_ROBOT, type);
             resetFlagOnNewTurn = false;
-        }
-    }
-
-    void signalSlandererAwayDirection(Direction awayDirection) throws GameActionException {
-        if (resetFlagOnNewTurn) {
-            nextFlag = Comms.getFlag(Comms.InformationCategory.SPECIFYING_SLANDERER_DIRECTION, awayDirection);
         }
     }
 }
