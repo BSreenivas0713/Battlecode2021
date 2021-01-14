@@ -119,12 +119,15 @@ public class HunterMuckracker extends Robot {
             if (bestSlanderer != null && rc.isReady()) {
                 main_direction = currLoc.directionTo(bestSlanderer.getLocation());
                 tryMoveDest(main_direction);
+                Debug.println(Debug.info, "Prioritizing killing slandies.");
             }
             if (enemyLocation != null && rc.isReady() && currLoc.distanceSquaredTo(enemyLocation) > sensorRadius) {
                 tryMoveDest(currLoc.directionTo(enemyLocation));
+                Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation + ".");
             }
             if (enemiesFound != 0) {
                 tryMoveDest(currLoc.directionTo(hunterLoc));
+                Debug.println(Debug.info, "Prioritizing going towards " + hunterLoc + ".");
             }
             main_direction = currLoc.directionTo(home).opposite();
             while (!tryMove(main_direction) && rc.isReady()){
