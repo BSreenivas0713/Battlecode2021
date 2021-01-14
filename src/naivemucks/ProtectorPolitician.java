@@ -1,8 +1,8 @@
-package musketeerplayersprint2;
+package naivemucks;
 import battlecode.common.*;
 
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Debug.*;
+import naivemucks.Util.*;
+import naivemucks.Debug.*;
 /*1. blow up if around a muckraker if we also sense base/a slanderer
 2. blow up if around 2 or 3 muckrakers 
 3. push enemy muckrakers away from base/where slanderers are if we are within 2 sensor radiuses of base or we see a slanderer

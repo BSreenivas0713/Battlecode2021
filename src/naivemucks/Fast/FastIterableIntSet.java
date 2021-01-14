@@ -1,4 +1,4 @@
-package musketeerplayersprint2.fast;
+package naivemucks.fast;
 
 /**
  * Interface to represent ints up to 65535 (2^16-1)

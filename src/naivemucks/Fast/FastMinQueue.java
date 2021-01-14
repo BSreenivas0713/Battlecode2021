@@ -1,4 +1,4 @@
-package musketeerplayersprint2.fast;
+package naivemucks.fast;
 
 // Kinda buggy. Don't use.
 public class FastMinQueue<T extends Comparable<? super T>> {

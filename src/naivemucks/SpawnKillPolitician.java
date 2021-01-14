@@ -1,9 +1,9 @@
-package musketeerplayersprint2;
+package naivemucks;
 
 import battlecode.common.*;
 
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Debug.*;
+import naivemucks.Util.*;
+import naivemucks.Debug.*;
 
 public class SpawnKillPolitician extends Robot {
     static Direction main_direction;

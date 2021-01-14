@@ -1,11 +1,11 @@
-package musketeerplayersprint2;
+package naivemucks;
 import battlecode.common.*;
 
-import musketeerplayersprint2.Comms.*;
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Debug.*;
-import musketeerplayersprint2.fast.FastIterableIntSet;
-import musketeerplayersprint2.fast.FasterQueue;
+import naivemucks.Comms.*;
+import naivemucks.Util.*;
+import naivemucks.Debug.*;
+import naivemucks.fast.FastIterableIntSet;
+import naivemucks.fast.FasterQueue;
 
 import java.util.ArrayDeque;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package musketeerplayersprint2.fast;
+package naivemucks.fast;
 
 /**
  * An implementation of a ring buffer queue
