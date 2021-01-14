@@ -150,7 +150,7 @@ public class HunterMuckracker extends Robot {
             else if (enemiesFound != 0) {
                 MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
                 tryMoveDest(currLoc.directionTo(hunterLoc));
-                Debug.println(Debug.info, "Prioritizing going towards average enemy at " + hunterLoc;
+                Debug.println(Debug.info, "Prioritizing going towards average enemy at " + hunterLoc);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), hunterLoc, 255, 150, 50);
             }
             else {
