@@ -1,4 +1,4 @@
-package musketeerplayersprint2;
+package naivemucks;
 
 import battlecode.common.*;
 

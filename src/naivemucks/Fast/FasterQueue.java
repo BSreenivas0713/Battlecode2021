@@ -1,4 +1,4 @@
-package musketeerplayersprint2.fast;
+package naivemucks.fast;
 
 // Unsafe version of a queue that 
 // assumes you never try to add more items than maxlen

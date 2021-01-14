@@ -1,9 +1,9 @@
-package musketeerplayersprint2;
+package naivemucks;
 
 import battlecode.common.*;
 
-import musketeerplayersprint2.fast.FasterQueue;
-import musketeerplayersprint2.fast.FastIterableIntSet;
+import naivemucks.fast.FasterQueue;
+import naivemucks.fast.FastIterableIntSet;
 
 public class Nav {
     static RobotController rc;

@@ -1,10 +1,10 @@
-package musketeerplayersprint2;
+package naivemucks;
 
 import battlecode.common.*;
 
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Comms.*;
-import musketeerplayersprint2.Debug.*;
+import naivemucks.Util.*;
+import naivemucks.Comms.*;
+import naivemucks.Debug.*;
 
 public strictfp class RobotPlayer {
 
