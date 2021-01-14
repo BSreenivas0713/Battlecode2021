@@ -75,6 +75,8 @@ public class Util {
 
     static final int turnsBetweenEnemyBroadcast = 5;
     static final int turnsEnemyBroadcastValid = 5;
+
+    static final int explorerMuckrakerLifetime = 200;
     
     /**
      * Returns a random Direction.
