@@ -11,10 +11,13 @@ import java.util.PriorityQueue;
 /* 
 TODO: 
 have tower to tower communication(slanderers tell protectors about enemies)
-have a better system for making protectors(we should not make 35 protectors for one muckraker)
 muckraker to muckraker communication(what base to attack, what base has been converted to ours)
-have some protectors go in the direction of the slanderers
+have some protectors go in the direction of the slanderers DO NOT FORGET ABOUT THIS
 have more muckrakers at the beginning so we explore quicker/dont auto lose on small maps
+adjust our bidding strategy(stop bidding after we have enough also)
+Muckrakers should report slanderers to the EC
+MAYBE: Dont rush for the first 100 rounds if you dont see an enemy(greater coverage) ((if so, change cleanup mode back to 500))
+Protectors expand baby ducks absolutely destroy us
 */
 public class EC extends Robot {
     static enum State {
@@ -183,12 +186,15 @@ public class EC extends Robot {
 
         //bidding code
         int biddingInfluence = currInfluence / 20;
-        if (rc.canBid(biddingInfluence) && currRoundNum > 500) {
-            rc.bid(biddingInfluence);
-        } else {
-            biddingInfluence = Math.max(currInfluence / 100, 1);
-            if (rc.canBid(biddingInfluence)) {
+        boolean overbidthreshold = rc.getTeamVotes() >= 751;
+        if(!overbidthreshold) {
+            if (rc.canBid(biddingInfluence) && currRoundNum > 500) {
                 rc.bid(biddingInfluence);
+            } else {
+                biddingInfluence = Math.max(currInfluence / 100, 1);
+                if (rc.canBid(biddingInfluence)) {
+                    rc.bid(biddingInfluence);
+                }
             }
         }
 
