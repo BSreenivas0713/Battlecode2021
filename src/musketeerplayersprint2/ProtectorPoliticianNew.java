@@ -19,16 +19,14 @@ public class ProtectorPoliticianNew extends Robot {
     
     public ProtectorPoliticianNew(RobotController r) {
         super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_PROTECTOR);
+        subRobotType = Comms.SubRobotType.POL_PROTECTOR;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         lastSeenSlanderer = null;
         turnLastSeenSlanderer = 0;
     }
     
     public ProtectorPoliticianNew(RobotController r, MapLocation h) {
-        super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_PROTECTOR);
-        lastSeenSlanderer = null;
-        turnLastSeenSlanderer = 0;
+        this(r);
         home = h;
     }
 
@@ -94,10 +92,10 @@ public class ProtectorPoliticianNew extends Robot {
                 if(rc.canGetFlag(robot.getID())) {
                     int flag = rc.getFlag(robot.getID());
                     // Only slanderers and EC's broadcast AVG_ENEMY_DIR so this is valid to check for slanderers
-                    if(flag == slandererFlag || Comms.getIC(flag) == Comms.InformationCategory.AVG_ENEMY_DIR) {
+                    if(Comms.isSubRobotType(flag, Comms.SubRobotType.SLANDERER) || Comms.getIC(flag) == Comms.InformationCategory.AVG_ENEMY_DIR) {
                         slandererOrECNearby = true;
                         slandererNearby = true;
-                        if (tempDist < nearestSlandyDist) {
+                        if (tempDist < nearestSlandyDist && tempLoc.distanceSquaredTo(home) > currLoc.distanceSquaredTo(home)) {
                             nearestSlandy = tempLoc;
                             nearestSlandyDist = tempDist;
                         }

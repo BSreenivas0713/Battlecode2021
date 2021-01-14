@@ -9,12 +9,12 @@ public class GolemPolitician extends Robot {
     
     public GolemPolitician(RobotController r) {
         super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_GOLEM);
+        subRobotType = Comms.SubRobotType.POL_GOLEM;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
     }
     
     public GolemPolitician(RobotController r, MapLocation h) {
-        super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_GOLEM);
+        this(r);
         home = h;
     }
 
@@ -117,7 +117,8 @@ public class GolemPolitician extends Robot {
                 }
             }
             else if(rc.canGetFlag(robot.getID())) {
-                if(rc.getFlag(robot.getID()) == defaultFlag) {
+                int flag = rc.getFlag(robot.getID());
+                if(Comms.isSubRobotType(flag, subRobotType)) {
                     int distToCurrGolem = rc.getLocation().distanceSquaredTo(robot.getLocation());
                     if(distToCurrGolem < distToClosestGolem) {
                         distToClosestGolem = distToCurrGolem;

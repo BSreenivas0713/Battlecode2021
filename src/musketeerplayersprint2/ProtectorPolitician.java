@@ -17,12 +17,12 @@ public class ProtectorPolitician extends Robot {
     
     public ProtectorPolitician(RobotController r) {
         super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_PROTECTOR);
+        subRobotType = Comms.SubRobotType.POL_PROTECTOR;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
     }
     
     public ProtectorPolitician(RobotController r, MapLocation h) {
-        super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_PROTECTOR);
+        this(r);
         home = h;
     }
 
@@ -84,7 +84,7 @@ public class ProtectorPolitician extends Robot {
                 if(rc.canGetFlag(robot.getID())) {
                     int flag = rc.getFlag(robot.getID());
                     // Only slanderers and EC's broadcast AVG_ENEMY_DIR so this is valid to check for slanderers
-                    if(flag == slandererFlag || Comms.getIC(flag) == Comms.InformationCategory.AVG_ENEMY_DIR) {
+                    if(Comms.isSubRobotType(flag, Comms.SubRobotType.SLANDERER) || Comms.getIC(flag) == Comms.InformationCategory.AVG_ENEMY_DIR) {
                         slandererOrECNearby = true;
                         slandererNearby = true;
                     }
