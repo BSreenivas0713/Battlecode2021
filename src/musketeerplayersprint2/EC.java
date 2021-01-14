@@ -222,8 +222,10 @@ public class EC extends Robot {
                     if (robotCounter % 2 == 0) {
                         if (targetEC != null) {
                             nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.requiredInfluence, targetEC.dx, targetEC.dy);
+                            Debug.println(Debug.info, "Making hunter mucker with destination " + targetEC.dx + ", " + targetEC.dy + ".");
                         } else {
                             nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, 0, 0, 0);
+                            Debug.println(Debug.info, "Making hunter mucker with no destination.");
                         }
                     }
                     toBuild = RobotType.MUCKRAKER;
@@ -268,8 +270,10 @@ public class EC extends Robot {
                     if (robotCounter % 2 == 0) {
                         if (targetEC != null) {
                             nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.requiredInfluence, targetEC.dx, targetEC.dy);
+                            Debug.println(Debug.info, "Making hunter mucker with destination " + targetEC.dx + ", " + targetEC.dy + ".");
                         } else {
                             nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, 0, 0, 0);
+                            Debug.println(Debug.info, "Making hunter mucker with no destination.");
                         }
                     }
                     toBuild = RobotType.MUCKRAKER;
@@ -320,6 +324,7 @@ public class EC extends Robot {
                 int[] currDxDy = {targetEC.dx, targetEC.dy};
                 if (robotCounter % 2 == 0) {
                     nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, requiredInfluence, targetEC.dx, targetEC.dy);
+                    Debug.println(Debug.info, "Making hunter mucker with destination " + targetEC.dx + ", " + targetEC.dy + ".");
                 }
                 toBuild = RobotType.MUCKRAKER;
                 influence = 1;
