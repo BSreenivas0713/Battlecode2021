@@ -10,12 +10,12 @@ public class DefenderPolitician extends Robot {
     
     public DefenderPolitician(RobotController r) {
         super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_DEFENDER);
+        subRobotType = Comms.SubRobotType.POL_DEFENDER;
+        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
     }
     
     public DefenderPolitician(RobotController r, MapLocation h) {
-        super(r);
-        defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.POL_DEFENDER);
+        this(r);
         home = h;
     }
 
@@ -74,7 +74,8 @@ public class DefenderPolitician extends Robot {
         MapLocation ECLoc = null;
         for (RobotInfo robot: friendlySensable) {
             if(rc.canGetFlag(robot.getID())) {
-                if(rc.getFlag(robot.getID()) == defaultFlag) {
+                int flag = rc.getFlag(robot.getID());
+                if(Comms.isSubRobotType(flag, subRobotType)) {
                     int distToCurrDefender = rc.getLocation().distanceSquaredTo(robot.getLocation());
                     if(distToCurrDefender < distToClosestDefender) {
                         distToClosestDefender = distToCurrDefender;
