@@ -24,7 +24,7 @@ public class HunterMuckracker extends Robot {
         int sensingRadius = rc.getType().sensorRadiusSquared;
         MapLocation currLoc = rc.getLocation();
 
-        Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
+        Debug.println(Debug.info, "I am a hunter Mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         if(main_direction == null){
@@ -90,8 +90,8 @@ public class HunterMuckracker extends Robot {
         int enemiesFound = 0;
         for (RobotInfo robot : rc.senseNearbyRobots(sensingRadius, enemy)) {
             MapLocation tempLoc = robot.getLocation();
-            totalEnemyX += tempLoc.x - currLoc.x;
-            totalEnemyY += tempLoc.y - currLoc.y;
+            totalEnemyX += tempLoc.x;
+            totalEnemyY += tempLoc.y;
             enemiesFound++;
             if (robot.getType() == RobotType.SLANDERER) {
                 int curr = robot.getConviction();
@@ -107,7 +107,6 @@ public class HunterMuckracker extends Robot {
             }
             // if (robot.getType() == RobotType.POLITICIAN && (robot.getConviction() >= 100 || ))
         }
-        MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
@@ -126,6 +125,7 @@ public class HunterMuckracker extends Robot {
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation + ".");
             }
             if (enemiesFound != 0) {
+                MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
                 tryMoveDest(currLoc.directionTo(hunterLoc));
                 Debug.println(Debug.info, "Prioritizing going towards " + hunterLoc + ".");
             }

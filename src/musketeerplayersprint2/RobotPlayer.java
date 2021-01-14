@@ -99,17 +99,22 @@ public strictfp class RobotPlayer {
                 for (RobotInfo robot : sensableWithin2) {
                     int botFlag = rc.getFlag(robot.getID());
                     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
-                    if (flagIC == Comms.InformationCategory.ENEMY_EC_MUK) {
-                        int[] dxdy = Comms.getDxDy(botFlag);
-                        if (dxdy[0] == 0 && dxdy[0] == 0) {
-                            bot = new HunterMuckracker(rc);
-                        } else {
-                            MapLocation spawningLoc = robot.getLocation();
-                            MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
-                            bot = new HunterMuckracker(rc, enemyLoc);
+                    if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
+                        if (flagIC == Comms.InformationCategory.ENEMY_EC_MUK) {
+                            int[] dxdy = Comms.getDxDy(botFlag);
+                            if (dxdy[0] == 0 && dxdy[1] == 0) {
+                                bot = new HunterMuckracker(rc);
+                            } else {
+                                MapLocation spawningLoc = robot.getLocation();
+                                MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
+                                bot = new HunterMuckracker(rc, enemyLoc);
+                            }
+                            break;
                         }
-                        break;
                     }
+                }
+                if(bot != null) {
+                    break;
                 }    
                 bot = new ExplorerMuckracker(rc);  
                 break;
