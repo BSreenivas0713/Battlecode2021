@@ -52,20 +52,31 @@ public class HunterMuckracker extends Robot {
             }
         }
 
-        boolean awayFromHome = false;
+        boolean awayFromBase = false;
+        RobotInfo friendlyBase = null;
         for (RobotInfo robot : friendlySensable) {
             MapLocation tempLoc = robot.getLocation();
             int dist = currLoc.distanceSquaredTo(tempLoc);
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
-                if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && home == robot.getLocation()) {
-                    awayFromHome = true;
+                awayFromBase = true;
+                friendlyBase = robot;
+                if (tempLoc == enemyLocation) {
+                    enemyLocation = null;
                 }
                 int botFlag = rc.getFlag(robot.getID());
                 Comms.InformationCategory flagIC = Comms.getIC(botFlag);
                 if (flagIC == Comms.InformationCategory.ENEMY_EC) {
                     int[] dxdy = Comms.getDxDy(botFlag);
-                    MapLocation ecLoc = robot.getLocation();
-                    enemyLocation = new MapLocation(dxdy[0] + ecLoc.x - Util.dOffset, dxdy[1] + ecLoc.y - Util.dOffset);
+                    enemyLocation = new MapLocation(dxdy[0] + tempLoc.x - Util.dOffset, dxdy[1] + tempLoc.y - Util.dOffset);
+                    break;
+                }
+            }
+        }
+        for (RobotInfo robot : rc.senseNearbyRobots(sensingRadius, Team.NEUTRAL)) {
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
+                if (awayFromBase == false) {
+                    awayFromBase = true;
+                    friendlyBase = robot;
                 }
             }
         }
@@ -123,6 +134,10 @@ public class HunterMuckracker extends Robot {
             if (enemyLocation != null && rc.isReady() && currLoc.distanceSquaredTo(enemyLocation) > sensorRadius) {
                 tryMoveDest(currLoc.directionTo(enemyLocation));
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation + ".");
+            }
+            if (awayFromBase == true) {
+                tryMoveDest(currLoc.directionTo(friendlyBase.getLocation()).opposite());
+                Debug.println(Debug.info, "Prioritizing moving away from friendly/neutral bases.");
             }
             if (enemiesFound != 0) {
                 MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
