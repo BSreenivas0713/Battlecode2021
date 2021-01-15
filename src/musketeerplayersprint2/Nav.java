@@ -26,8 +26,9 @@ public class Nav {
     static int closestDistanceToDest;
     static int turnsSinceClosestDistanceDecreased;
 
+
     static Direction lastExploreDir;
-    static final int EXPLORE_BOREDOM = 5;
+    static final int EXPLORE_BOREDOM = 10;
     static int boredom;
 
     static void init(RobotController r) {
@@ -444,6 +445,23 @@ public class Nav {
         return src.directionTo(minLoc);
     }
     
+    public static void updateLocationForDescent(Direction dir) throws GameActionException {
+        MapLocation currLoc = rc.getLocation();
+        for(int z = 0; z < Util.pathfindingDistances.length; z++) {
+            int numMovesAhead = Math.max((int) (Util.pathfindingDistances[z] * Math.sqrt(rc.getType().sensorRadiusSquared)), 1);
+            MapLocation possibleDest = new MapLocation(rc.getLocation().x + dir.dx*numMovesAhead, rc.getLocation().y + dir.dy*numMovesAhead);
+            if(rc.onTheMap(possibleDest)) {
+                Debug.print(Debug.info, "Location in direction " + dir + " on the map while looking " + numMovesAhead + " ahead. Coordinate: " + possibleDest);
+                setDest(possibleDest);
+                Debug.setIndicatorLine(Debug.info, rc.getLocation(), possibleDest, 255, 150, 50);
+                break;
+            }
+            else {
+                Debug.print(Debug.info, "Location in direction " + dir + " not on the map while looking " + z + " ahead. Coordinate: " + possibleDest);
+            }
+        }
+    }
+
 	public static Direction explore() throws GameActionException {
         Debug.println(Debug.pathfinding, "Exploring");
         if(!rc.isReady())
@@ -451,6 +469,7 @@ public class Nav {
         
 		if(lastExploreDir == null) {
             lastExploreDir = rc.getLocation().directionTo(Robot.home).opposite();
+            // updateLocationForDescent(lastExploreDir);
 			boredom = 0;
         }
         
@@ -467,6 +486,7 @@ public class Nav {
                 lastExploreDir,
                 lastExploreDir.rotateRight(),};
 			lastExploreDir = newDirChoices[(int) (Math.random() * newDirChoices.length)];
+            // updateLocationForDescent(lastExploreDir);
 		}
         boredom++;
         
@@ -486,6 +506,7 @@ public class Nav {
                 }
             lastExploreDir = tempExploreDir;
             }
+            // updateLocationForDescent(lastExploreDir);
         }
         
         return lastExploreDir;
