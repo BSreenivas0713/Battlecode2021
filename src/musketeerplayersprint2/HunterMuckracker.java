@@ -7,7 +7,7 @@ import musketeerplayersprint2.Debug.*;
 public class HunterMuckracker extends Robot {
     static Direction main_direction;
     static MapLocation enemyLocation;
-    static int baseCrowdedSempahor;
+    static int baseCrowdedSemaphor;
     static int distSquaredToBase;
 
     public HunterMuckracker(RobotController r, MapLocation enemyLoc) {
@@ -15,7 +15,7 @@ public class HunterMuckracker extends Robot {
         subRobotType = Comms.SubRobotType.MUC_HUNTER;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         enemyLocation = enemyLoc;
-        baseCrowdedSempahor = 5;
+        baseCrowdedSemaphor = 5;
         if(enemyLocation != null) {
             distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
         }
@@ -44,7 +44,7 @@ public class HunterMuckracker extends Robot {
         }
         else {
             Debug.println(Debug.info, "no enemy location, reseting baseCrowdedSemaphor");
-            baseCrowdedSempahor = 5;
+            baseCrowdedSemaphor = 5;
         }
 
         if(main_direction == null){
@@ -250,15 +250,15 @@ public class HunterMuckracker extends Robot {
                 tryMoveDest(main_direction);
                 Debug.println(Debug.info, "Dispersing to avoid rusher.");
             }
-            else if (enemyLocation != null && rc.isReady() && baseCrowdedSempahor != 0) {
+            else if (enemyLocation != null && rc.isReady() && baseCrowdedSemaphor != 0) {
                 tryMoveDest(currLoc.directionTo(enemyLocation));
                 if(rc.getLocation().distanceSquaredTo(enemyLocation) < distSquaredToBase) {
-                    baseCrowdedSempahor = 5;
+                    baseCrowdedSemaphor = 5;
                     Debug.println(Debug.info, "got closer to enemy base, resetting semaphor");
                 }
                 else {
-                    baseCrowdedSempahor--;
-                    Debug.println(Debug.info, "did not get closer to enemy base, semaphor getting lower: " + baseCrowdedSempahor);
+                    baseCrowdedSemaphor--;
+                    Debug.println(Debug.info, "did not get closer to enemy base, semaphor getting lower: " + baseCrowdedSemaphor);
                 }
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
@@ -289,7 +289,7 @@ public class HunterMuckracker extends Robot {
                 }
                 Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);
             }
-            if(baseCrowdedSempahor == 0) {
+            if(baseCrowdedSemaphor == 0) {
                 enemyLocation = null;
             }
         }
