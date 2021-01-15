@@ -55,7 +55,7 @@ public class LatticeProtector extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        Debug.println(Debug.info, "I am a protector politician; current influence: " + rc.getInfluence());
+        Debug.println(Debug.info, "I am a lattice protector politician; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
@@ -114,7 +114,7 @@ public class LatticeProtector extends Robot {
         for(RobotInfo robot: rc.senseNearbyRobots(actionRadius, rc.getTeam())) {
             if(rc.canGetFlag(robot.getID())) {
                 int robotFlag = rc.getFlag(robot.getID());
-                if(Comms.getIC(robotFlag) == Comms.InformationCategory.ROBOT_TYPE && Comms.getSubRobotType(robotFlag) == Comms.SubRobotType.POL_PROTECTOR) {
+                if(Comms.isSubRobotType(robotFlag, Comms.SubRobotType.POL_PROTECTOR)) {
                     ProtectorNearby = true;
                     int currDistToProtector = robot.getLocation().distanceSquaredTo(rc.getLocation());
                     if (currDistToProtector < closestProtectorDist) {

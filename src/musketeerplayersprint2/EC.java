@@ -615,7 +615,7 @@ public class EC extends Robot {
         for(RobotInfo robot: friendlySensable) {
             if (rc.canGetFlag(robot.getID())) {
                 int currFlag = rc.getFlag(robot.getID());
-                if (Comms.getIC(currFlag) == Comms.InformationCategory.ROBOT_TYPE && Comms.getSubRobotType(currFlag) == Comms.SubRobotType.POL_GOLEM) {
+                if(Comms.isSubRobotType(currFlag, Comms.SubRobotType.POL_GOLEM)) {
                     totalGolemConviction += robot.getConviction();
                     Debug.println(Debug.info, "Total Golem Conviction Updated: " + totalGolemConviction);
                 }
