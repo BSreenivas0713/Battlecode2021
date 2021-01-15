@@ -102,7 +102,7 @@ public class LatticeProtector extends Robot {
                     seenECs.remove(tempLoc);
                 }
                 int distToEmpower = currLoc.distanceSquaredTo(robot.getLocation());
-                if (rc.canEmpower(distToEmpower)) {
+                if (distToEmpower <= 2 && rc.canEmpower(distToEmpower)) {
                     rc.empower(distToEmpower);
                 }
             }
