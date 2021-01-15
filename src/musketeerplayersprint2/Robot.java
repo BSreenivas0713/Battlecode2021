@@ -39,6 +39,7 @@ public class Robot {
         sensorRadius = rc.getType().sensorRadiusSquared;
         actionRadius = rc.getType().actionRadiusSquared;
         defaultFlag = 0;
+        ICtoTurnMap = new FastIntIntMap();
         if(rc.getType() == RobotType.ENLIGHTENMENT_CENTER) {
             home = rc.getLocation();
         } else {
@@ -177,15 +178,15 @@ public class Robot {
                             MapLocation robotLoc = robot.getLocation();
                             int[] DxDyFromRobot = Comms.getDxDy(flag);
                             
-                            MapLocation enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dSmallOffset, 
-                                                        DxDyFromRobot[1] + robotLoc.y - Util.dSmallOffset);
+                            MapLocation enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, 
+                                                        DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
 
                             Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
     
                             int dx = enemyLoc.x - currLoc.x;
                             int dy = enemyLoc.y - currLoc.y;
     
-                            int newFlag = Comms.getFlag(IC, dx, dy);
+                            int newFlag = Comms.getFlag(IC, dx + Util.dOffset, dy + Util.dOffset);
                             setFlag(newFlag);
     
                             ICtoTurnMap.add(IC.ordinal(), rc.getRoundNum());
@@ -198,7 +199,7 @@ public class Robot {
             }
         }
 
-        return true;
+        return false;
     }
 
     MapLocation findClosestEnemyGlobal() throws GameActionException {

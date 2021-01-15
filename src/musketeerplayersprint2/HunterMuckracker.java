@@ -30,6 +30,12 @@ public class HunterMuckracker extends Robot {
 
         Debug.println(Debug.info, "I am a hunter Mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        if(enemyLocation != null) {
+            Debug.println(Debug.info, "enemy location: " + enemyLocation);
+        }
+        else {
+            Debug.println(Debug.info, "no enemy location");
+        }
 
         if(main_direction == null){
             main_direction = Util.randomDirection();
@@ -44,14 +50,41 @@ public class HunterMuckracker extends Robot {
             }
         }
         
+
+        for(RobotInfo robot: friendlySensable) {
+            if(rc.canGetFlag(robot.getID())) {
+                int flag = rc.getFlag(robot.getID());
+                if(Comms.getIC(flag) == Comms.InformationCategory.ENEMY_EC_ATTACK_CALL) {
+                    Debug.println(Debug.info, "Found Propogated flag. Acting on it. ");
+                    MapLocation robotLoc = robot.getLocation();
+                    int[] DxDyFromRobot = Comms.getDxDy(flag);
+                    MapLocation enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
+                    Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                    enemyLocation = enemyLoc;
+                }
+            }
+        }
+        boolean setAttackCall = false;
         boolean muckraker_Found_EC = false;
         for (RobotInfo robot : enemySensable) {
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
                 MapLocation tempLoc = robot.getLocation();
+
                 if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
                     muckraker_Found_EC = true;
                 } else {
                     enemyLocation = tempLoc;
+                    if(!ICtoTurnMap.contains(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL.ordinal())) {
+                        Debug.println(Debug.info, "Found Enemy EC, Generating Attack call");
+                        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
+                        
+                        int dx = enemyLocation.x - currLoc.x;
+                        int dy = enemyLocation.y - currLoc.y;
+
+                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, dx + Util.dOffset, dy + Util.dOffset);
+                        setFlag(newFlag);
+                        setAttackCall = true;
+                    }
                 }
             }
         }
@@ -149,12 +182,13 @@ public class HunterMuckracker extends Robot {
                         break;
                     }
                 }
-            }
             if(baseCrowded) {
                 Debug.println(Debug.info, "reset enemy location");
                 enemyLocation = null;
                 muckraker_Found_EC = false;
             }
+            }
+
         }
         // int ECInfluence = Integer.MAX_VALUE;
         // if() {
@@ -184,7 +218,7 @@ public class HunterMuckracker extends Robot {
                 Debug.println(Debug.info, "Prioritizing killing slandies.");
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), bestSlanderer.getLocation(), 255, 150, 50);
             }
-            else if (enemyLocation != null && rc.isReady() && currLoc.distanceSquaredTo(enemyLocation) > sensorRadius) {
+            else if (enemyLocation != null && rc.isReady()) {
                 tryMoveDest(currLoc.directionTo(enemyLocation));
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
@@ -195,10 +229,17 @@ public class HunterMuckracker extends Robot {
             }
             else if (enemiesFound != 0 && numFollowingClosestEnemy < Util.maxFollowingSingleUnit) {
                 MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
-                setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID()));
-                resetFlagOnNewTurn = false;
+                if(!setAttackCall) {
+                    setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID()));
+                    resetFlagOnNewTurn = false;
+                }
                 tryMoveDest(currLoc.directionTo(hunterLoc));
-                Debug.println(Debug.info, "Prioritizing going towards average enemy at " + hunterLoc);
+                if(rc.isReady()) {
+                    Debug.println(Debug.info, "Prioritizing going towards average enemy at " + hunterLoc);
+                }
+                else {
+                    Debug.println(Debug.info, "Sending info about averate enemy location(if attack call not set)");
+                }
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), hunterLoc, 255, 150, 50);
             }
             else {
