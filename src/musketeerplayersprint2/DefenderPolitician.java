@@ -54,9 +54,9 @@ public class DefenderPolitician extends Robot {
             }
         }
         
-        if (enemyRobot != null) {
-            broadcastEnemyFound(enemyRobot.getLocation());
-        }
+        // if (enemyRobot != null) {
+        //     broadcastEnemyFound(enemyRobot.getLocation());
+        // }
 
         if(hasSeenEnemy && enemySensable.length == 0) {
             changeTo = new ExplorerPolitician(rc, home);
@@ -106,5 +106,8 @@ public class DefenderPolitician extends Robot {
             Direction toMove = rc.getLocation().directionTo(closestDefenderLoc).opposite();
             tryMoveDest(toMove);
         }
+        
+        if(broadcastECLocation());
+        else if(broadcastEnemyLocalOrGlobal());
     }
 }

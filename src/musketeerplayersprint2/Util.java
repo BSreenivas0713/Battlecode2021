@@ -47,6 +47,7 @@ public class Util {
 
     static final int spawnKillThreshold = 5;
     static final int dOffset = 64;
+    static final int dSmallOffset = 8;
 
     static final int phaseOne = 30;
     static final int phaseTwo = 2000;
@@ -82,6 +83,7 @@ public class Util {
     static final int minRotationRadius = 15;
     static final int maxRotationRadius = 30;
 
+    static final int minDistFromEnemy = 100;
     
     /**
      * Returns a random Direction.

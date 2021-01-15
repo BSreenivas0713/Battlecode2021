@@ -98,9 +98,9 @@ public class ProtectorPolitician extends Robot {
             }
         }
 
-        if (minRobot != null) {
-            broadcastEnemyFound(minRobot.getLocation());
-        }
+        // if (minRobot != null) {
+        //     broadcastEnemyFound(minRobot.getLocation());
+        // }
         
         /* Step by Step decision making*/
         //empower if near 2 enemies or enemy is in sensing radius of our base
@@ -137,15 +137,13 @@ public class ProtectorPolitician extends Robot {
             Debug.println(Debug.info, "I am moving away from the base");
             Direction toMove = Util.rotateInSpinDirection(spinDirection, rc.getLocation().directionTo(home).opposite());
             tryMoveDest(toMove);
-            return;
         }
 
         //if too far away from sensor radius of Enlightenment center, move towards Enlgihtenment Center
-        if (distanceToEC > (int) (sensorRadius * 2)) {
+        else if (distanceToEC > (int) (sensorRadius * 2)) {
             Debug.println(Debug.info, "I am moving toward the base");
             Direction toMove = rc.getLocation().directionTo(home);
             tryMoveDest(toMove);
-            return;
         }
 
         //Rotates around the base
@@ -159,7 +157,7 @@ public class ProtectorPolitician extends Robot {
 
         }
 
-        broadcastECLocation();
-        return;
+        if(broadcastECLocation());
+        else if(broadcastEnemyLocalOrGlobal());
     }
 }
