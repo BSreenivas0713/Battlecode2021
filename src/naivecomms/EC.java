@@ -1,10 +1,10 @@
-package musketeerplayersprint2;
+package naivecomms;
 import battlecode.common.*;
 
-import musketeerplayersprint2.Comms.*;
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Debug.*;
-import musketeerplayersprint2.fast.FastIterableIntSet;
+import naivecomms.Comms.*;
+import naivecomms.Util.*;
+import naivecomms.Debug.*;
+import naivecomms.fast.FastIterableIntSet;
 
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
