@@ -10,11 +10,13 @@ public class Comms {
     static final int BIT_MASK_COORD = 0x7F;
     static final int BIT_MASK_COORDS = 0x3FFF;
     static final int BIT_INF_OFFSET = 14;
-    static final int BIT_TURNCOUNT_OFFSET = 7;
+    static final int BIT_TURNCOUNT_OFFSET = 8;
+    static final int BIT_SMALL_DX_OFFSET = 4;
+    static final int BIT_MASK_SMALL_COORD = 0xF;
     static final int BIT_MASK_DIR = 0xF;
 
     public enum InformationCategory {
-        EMPTY,
+        EMPTY,                      // UNUSED BUT BREAKS IF REMOVED? TODO: LOOK INTO
         NEUTRAL_EC,
         ENEMY_EC,
         ENEMY_EC_MUK,
@@ -25,8 +27,10 @@ public class Comms {
         ROBOT_TYPE,
         ENEMY_FOUND,
         FOLLOWING,
-        AVG_ENEMY_DIR,
-        ROBOT_TYPE_AND_CLOSEST_ENEMY,
+        AVG_ENEMY_DIR,                // UNUSED? Though might do one for slanderers specifically
+        ROBOT_TYPE_AND_CLOSEST_ENEMY, // UNUSED?
+        SLA_CLOSEST_ENEMY,
+        CLOSEST_ENEMY,
     }
 
     public enum SubRobotType {
@@ -53,6 +57,11 @@ public class Comms {
 
     public static int addCoord(int flag, int dx, int dy) {
         return (flag << BIT_IC_OFFSET) + (dx << BIT_DX_OFFSET) + dy;
+    }
+
+    // dx/dy max 4 bits
+    public static int getFlagTurn(InformationCategory cat, int turnCount, int dx, int dy) {
+        return (cat.ordinal() << BIT_IC_OFFSET) + (turnCount << BIT_TURNCOUNT_OFFSET) + (dx << BIT_SMALL_DX_OFFSET) + dy;
     }
 
     public static int getFlag(InformationCategory cat, SubRobotType type, int dx, int dy) {
@@ -104,6 +113,13 @@ public class Comms {
         return res;
     }
 
+    public static int[] getSmallDxDy(int flag) {
+        int[] res = new int[2];
+        res[0] = (flag >> BIT_SMALL_DX_OFFSET) & BIT_MASK_SMALL_COORD;
+        res[1] = flag & BIT_MASK_SMALL_COORD;
+        return res;
+    }
+
     public static int getInf(int flag) {
         return (flag & ~BIT_MASK_IC) >> BIT_INF_OFFSET;
     }
@@ -136,6 +152,8 @@ public class Comms {
                 return Comms.getSubRobotType(flag) == type;
             case ROBOT_TYPE_AND_CLOSEST_ENEMY:
                 return Comms.getSubRobotTypeClosestEnemy(flag) == type;
+            case SLA_CLOSEST_ENEMY:
+                return SubRobotType.SLANDERER == type;
             default:
                 return false;
         }

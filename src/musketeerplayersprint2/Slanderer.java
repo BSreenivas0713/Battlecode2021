@@ -38,7 +38,7 @@ public class Slanderer extends Robot {
         Debug.println(Debug.info, "I am a slanderer; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
-        checkForAvgEnemyDir();
+        // checkForAvgEnemyDir();
 
         MapLocation curr = rc.getLocation();
 
@@ -56,9 +56,9 @@ public class Slanderer extends Robot {
                 minRobot = robot;
             }
         }
-        if (minRobot != null) {
-            broadcastEnemyFound(minRobot.getLocation());
-        }
+        // if (minRobot != null) {
+        //     broadcastEnemyFound(minRobot.getLocation());
+        // }
         
         RobotInfo minNeutralRobot = null;
         double minNeutralDistSquared = Integer.MAX_VALUE;
@@ -111,25 +111,31 @@ public class Slanderer extends Robot {
         }
         main_direction = maxDir;
 
-        if (minRobot != null) {
-            avgEnemyDir = curr.directionTo(minRobot.getLocation());
-            avgEnemyDirTurn = rc.getRoundNum();
-            int flag = Comms.getFlag(Comms.InformationCategory.AVG_ENEMY_DIR, avgEnemyDirTurn, avgEnemyDir);
-            // Rebroadcast the flag right away
-            if(rc.canSetFlag(flag)) {
-                rc.setFlag(flag);
-            }
-            
-            resetFlagOnNewTurn = false;
-            main_direction = avgEnemyDir.opposite();
+        // findClosestEnemyGlobal();
+
+        if(closestKnownEnemy != null && curr.isWithinDistanceSquared(closestKnownEnemy, Util.minDistFromEnemy)) {
+            main_direction = curr.directionTo(closestKnownEnemy).opposite();
             Debug.println(Debug.info, "Prioritizing moving away from enemies: " + main_direction);
         }
-        else if(avgEnemyDir != null) {
-            // Direction[] candidateDirs = {avgEnemyDir.opposite(), avgEnemyDir.opposite().rotateLeft(), avgEnemyDir.opposite().rotateRight()};
-            // main_direction = candidateDirs[(int)(Math.random() * candidateDirs.length)];
-            main_direction = avgEnemyDir.opposite();
-            Debug.println(Debug.info, "Prioritizing moving away from average enemy location: " + main_direction);
-        }
+        // if (minRobot != null) {
+        //     avgEnemyDir = curr.directionTo(minRobot.getLocation());
+        //     avgEnemyDirTurn = rc.getRoundNum();
+        //     int flag = Comms.getFlag(Comms.InformationCategory.AVG_ENEMY_DIR, avgEnemyDirTurn, avgEnemyDir);
+        //     // Rebroadcast the flag right away
+        //     if(rc.canSetFlag(flag)) {
+        //         rc.setFlag(flag);
+        //     }
+            
+        //     resetFlagOnNewTurn = false;
+        //     main_direction = avgEnemyDir.opposite();
+        //     Debug.println(Debug.info, "Prioritizing moving away from enemies: " + main_direction);
+        // }
+        // else if(avgEnemyDir != null) {
+        //     // Direction[] candidateDirs = {avgEnemyDir.opposite(), avgEnemyDir.opposite().rotateLeft(), avgEnemyDir.opposite().rotateRight()};
+        //     // main_direction = candidateDirs[(int)(Math.random() * candidateDirs.length)];
+        //     main_direction = avgEnemyDir.opposite();
+        //     Debug.println(Debug.info, "Prioritizing moving away from average enemy location: " + main_direction);
+        // }
         else if (spawnKillDude != null) {
             main_direction = curr.directionTo(spawnKillDude).opposite();
         }
@@ -156,13 +162,16 @@ public class Slanderer extends Robot {
                 main_direction = Util.randomDirection();
             }
         }
-        
-        if(avgEnemyDir != null && rc.getRoundNum() > avgEnemyDirTurn + Util.turnsEnemyBroadcastValid) {
-            avgEnemyDir = null;
-            resetFlagOnNewTurn = true;
-        }
 
-        broadcastECLocation();
+        Debug.setIndicatorLine(Debug.pathfinding, curr, target, 100, 100, 255);
+        
+        // if(avgEnemyDir != null && rc.getRoundNum() > avgEnemyDirTurn + Util.turnsEnemyBroadcastValid) {
+        //     avgEnemyDir = null;
+        //     resetFlagOnNewTurn = true;
+        // }
+
+        if(broadcastECLocation());
+        else if(broadcastEnemyLocalOrGlobal());
         // Old 50-300 turn stuff
         /* else {
             if(main_direction == null) {

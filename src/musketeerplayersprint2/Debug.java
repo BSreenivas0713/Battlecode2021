@@ -27,13 +27,13 @@ public class Debug {
     }
 
     static void setIndicatorDot(boolean cond, MapLocation loc, int r, int g, int b) {
-        if(verbose && indicators && cond) {
+        if(verbose && indicators && cond && loc != null) {
             rc.setIndicatorDot(loc, r, g, b);
         }
     }
 
     static void setIndicatorLine(boolean cond, MapLocation startLoc, MapLocation endLoc, int r, int g, int b) {
-        if(verbose && indicators && cond) {
+        if(verbose && indicators && cond && startLoc != null && endLoc != null) {
             rc.setIndicatorLine(startLoc, endLoc, r, g, b);
         }
     }

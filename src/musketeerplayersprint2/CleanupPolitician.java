@@ -6,7 +6,6 @@ import musketeerplayersprint2.Debug.*;
 
 public class CleanupPolitician extends Robot {
     static Direction main_direction;
-    static boolean   toDetonate = false;
 
     //TOCONSIDER: allow for these types to attack neutrals
     public CleanupPolitician(RobotController r) {
@@ -65,9 +64,9 @@ public class CleanupPolitician extends Robot {
             }
         }
 
-        if (minRobot != null) {
-            broadcastEnemyFound(minRobot.getLocation());
-        }
+        // if (minRobot != null) {
+        //     broadcastEnemyFound(minRobot.getLocation());
+        // }
         
         if (powerful != null) {
             Direction toMove = rc.getLocation().directionTo(powerful.getLocation());
@@ -78,6 +77,7 @@ public class CleanupPolitician extends Robot {
             main_direction = Util.randomDirection();
         }
 
-        broadcastECLocation();
+        if(broadcastECLocation());
+        else if(broadcastEnemyLocalOrGlobal());
     }
 }

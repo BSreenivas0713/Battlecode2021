@@ -35,9 +35,9 @@ public class SpawnKillPolitician extends Robot {
                 minRobot = robot;
             }
         }
-        if (minRobot != null) {
-            broadcastEnemyFound(minRobot.getLocation());
-        }
+        // if (minRobot != null) {
+        //     broadcastEnemyFound(minRobot.getLocation());
+        // }
 
         if(rc.getEmpowerFactor(rc.getTeam(), 0) > Util.spawnKillThreshold) {
             int radius = Math.max(1, home.distanceSquaredTo(rc.getLocation()));
@@ -49,5 +49,8 @@ public class SpawnKillPolitician extends Robot {
         } else {
             changeTo = new GolemPolitician(rc, home);
         }
+        
+        if(broadcastECLocation());
+        else if(broadcastEnemyLocalOrGlobal());
     }
 }

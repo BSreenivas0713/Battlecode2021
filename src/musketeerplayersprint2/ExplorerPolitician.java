@@ -68,9 +68,9 @@ public class ExplorerPolitician extends Robot {
             }
         }
 
-        if (minRobot != null) {
-            broadcastEnemyFound(minRobot.getLocation());
-        }
+        // if (minRobot != null) {
+        //     broadcastEnemyFound(minRobot.getLocation());
+        // }
         
         if (powerful != null) {
             Direction toMove = rc.getLocation().directionTo(powerful.getLocation());
@@ -96,6 +96,7 @@ public class ExplorerPolitician extends Robot {
             main_direction = Util.randomDirection();
         }
 
-        broadcastECLocation();
+        if(broadcastECLocation());
+        else if(broadcastEnemyLocalOrGlobal());
     }
 }

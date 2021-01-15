@@ -127,9 +127,9 @@ public class HunterMuckracker extends Robot {
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
-        if (minRobot != null) {
-            broadcastEnemyFound(minRobot.getLocation());
-        }
+        // if (minRobot != null) {
+        //     broadcastEnemyFound(minRobot.getLocation());
+        // }
 
         if(!muckraker_Found_EC){
             if (bestSlanderer != null && rc.isReady()) {
@@ -150,7 +150,7 @@ public class HunterMuckracker extends Robot {
             else if (enemiesFound != 0) {
                 MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
                 tryMoveDest(currLoc.directionTo(hunterLoc));
-                Debug.println(Debug.info, "Prioritizing going towards average enemy at " + hunterLoc;
+                Debug.println(Debug.info, "Prioritizing going towards average enemy at " + hunterLoc);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), hunterLoc, 255, 150, 50);
             }
             else {
@@ -162,6 +162,7 @@ public class HunterMuckracker extends Robot {
             }
         }
          
-        broadcastECLocation();
+        if(broadcastECLocation());
+        else if(broadcastEnemyLocalOrGlobal());
     }
 }

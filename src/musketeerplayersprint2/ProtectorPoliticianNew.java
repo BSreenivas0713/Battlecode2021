@@ -119,9 +119,9 @@ public class ProtectorPoliticianNew extends Robot {
             lastSeenSlanderer = null;
         }
 
-        if (minRobot != null) {
-            broadcastEnemyFound(minRobot.getLocation());
-        }
+        // if (minRobot != null) {
+        //     broadcastEnemyFound(minRobot.getLocation());
+        // }
         
         /* Step by Step decision making*/
         //empower if near 2 enemies or enemy is in sensing radius of our base
@@ -148,7 +148,6 @@ public class ProtectorPoliticianNew extends Robot {
             MapLocation squareToBlock = closestMuckrakerSensableLoc.add(muckrakerPathtoBase);
             Direction toMove = rc.getLocation().directionTo(squareToBlock);
             tryMoveDest(toMove);
-            return;
         } else {
             resetFlagOnNewTurn = true;
         }
@@ -157,7 +156,7 @@ public class ProtectorPoliticianNew extends Robot {
         if (ECNearby) {
             Debug.println(Debug.info, "I am moving away from the base");
             main_direction = Util.rotateInSpinDirection(spinDirection, currLoc.directionTo(home).opposite());
-            Debug.setIndicatorLine(Debug.pathfinding, currLoc, lastSeenSlanderer, 200, 0, 255);
+            Debug.setIndicatorLine(Debug.pathfinding, currLoc, home, 200, 0, 255);
         }
         else if(lastSeenSlanderer != null) {
             Debug.setIndicatorDot(Debug.pathfinding, lastSeenSlanderer, 200, 0, 255);
@@ -213,7 +212,7 @@ public class ProtectorPoliticianNew extends Robot {
             tryMove +=1;
         }
 
-        broadcastECLocation();
-        return;
+        if(broadcastECLocation());
+        else if(broadcastEnemyLocalOrGlobal());
     }
 }
