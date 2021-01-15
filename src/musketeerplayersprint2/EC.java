@@ -156,11 +156,6 @@ public class EC extends Robot {
                 return true;
             }
         }
-        if(influence != 1) {
-            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK);
-            buildRobot(RobotType.MUCKRAKER, 1);
-        }
-
         return false;
     }
 
