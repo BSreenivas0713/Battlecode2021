@@ -1,4 +1,4 @@
-package musketeerplayersprint2;
+package naivecomms;
 
 import battlecode.common.*;
 
