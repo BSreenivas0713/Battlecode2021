@@ -15,6 +15,9 @@ muckraker to muckraker communication(what base to attack, what base has been con
 have some protectors go in the direction of the slanderers DO NOT FORGET ABOUT THIS
 have more muckrakers at the beginning so we explore quicker/dont auto lose on small maps
 Muckrakers should report slanderers to the EC
+
+not sure how protectors should figure out who slanderers are since they basically never have the slanderer flag
+Right now ECs do not propogate flags
 */
 public class EC extends Robot {
     static enum State {
@@ -152,6 +155,10 @@ public class EC extends Robot {
                 robotCounter += 1;
                 return true;
             }
+        }
+        if(influence != 1) {
+            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK);
+            buildRobot(RobotType.MUCKRAKER, 1);
         }
 
         return false;
@@ -324,7 +331,7 @@ public class EC extends Robot {
                     }  
                 }
 
-                if (robotCounter % 4 != 0) {
+                if (robotCounter % 3 != 0) {
                     toBuild = RobotType.POLITICIAN;
                     influence = 18;
                     signalRobotType(SubRobotType.POL_PROTECTOR);
@@ -550,6 +557,9 @@ public class EC extends Robot {
                     case ENEMY_EC:
                         int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
                         int currReqInf = (int)  neededInf * 4 + 10;
+                        if(currRoundNum <=150) {
+                            currReqInf = (int) neededInf * 2 + 10;
+                        }
                         if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
                             // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                             int[] currDxDy = Comms.getDxDy(flag);
@@ -605,7 +615,7 @@ public class EC extends Robot {
         for(RobotInfo robot: friendlySensable) {
             if (rc.canGetFlag(robot.getID())) {
                 int currFlag = rc.getFlag(robot.getID());
-                if (Comms.getIC(currFlag) == Comms.InformationCategory.ROBOT_TYPE && Comms.getSubRobotType(currFlag) == Comms.SubRobotType.POL_GOLEM) {
+                if(Comms.isSubRobotType(currFlag, Comms.SubRobotType.POL_GOLEM)) {
                     totalGolemConviction += robot.getConviction();
                     Debug.println(Debug.info, "Total Golem Conviction Updated: " + totalGolemConviction);
                 }

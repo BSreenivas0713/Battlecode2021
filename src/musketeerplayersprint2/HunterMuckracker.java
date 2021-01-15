@@ -30,6 +30,12 @@ public class HunterMuckracker extends Robot {
 
         Debug.println(Debug.info, "I am a hunter Mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        if(enemyLocation != null) {
+            Debug.println(Debug.info, "enemy location: " + enemyLocation);
+        }
+        else {
+            Debug.println(Debug.info, "no enemy location");
+        }
 
         if(main_direction == null){
             main_direction = Util.randomDirection();
@@ -44,14 +50,63 @@ public class HunterMuckracker extends Robot {
             }
         }
         
+
+        for(RobotInfo robot: friendlySensable) {
+            if(rc.canGetFlag(robot.getID())) {
+                int flag = rc.getFlag(robot.getID());
+                MapLocation robotLoc;
+                int []DxDyFromRobot;
+                MapLocation enemyLoc;
+                int dx;
+                int dy;
+                int newFlag; //These are here so I don't have to make different variable names in the different cases
+                switch(Comms.getIC(flag)) {
+                case ENEMY_EC_ATTACK_CALL:
+                    Debug.println(Debug.info, "Found Propogated flag(Attack). Acting on it. ");
+                    robotLoc = robot.getLocation();
+                    DxDyFromRobot = Comms.getDxDy(flag);
+                    enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
+                    Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                    enemyLocation = enemyLoc;
+                    break;
+                case ENEMY_EC_CHILL_CALL:
+                    Debug.println(Debug.info, "Found Propogated flag(Chill). Acting on it. ");
+                    robotLoc = robot.getLocation();
+                    DxDyFromRobot = Comms.getDxDy(flag);
+                    enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
+                    Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                    if(enemyLoc.equals(enemyLocation)) {
+                        enemyLocation = null;
+                        Debug.println(Debug.info, "Reset enemy location as a result of the chill flag");
+                    }
+                    break;
+                default: 
+                    break;
+                }
+            }
+        }
+
+        boolean setAttackCall = false;
         boolean muckraker_Found_EC = false;
-        for (RobotInfo robot : rc.senseNearbyRobots(sensorRadius, enemy)) {
+        for (RobotInfo robot : enemySensable) {
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
                 MapLocation tempLoc = robot.getLocation();
+
                 if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
                     muckraker_Found_EC = true;
                 } else {
                     enemyLocation = tempLoc;
+                    if(!ICtoTurnMap.contains(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL.ordinal())) {
+                        Debug.println(Debug.info, "Found Enemy EC, Generating Attack call");
+                        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
+                        
+                        int dx = enemyLocation.x - currLoc.x;
+                        int dy = enemyLocation.y - currLoc.y;
+
+                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, dx + Util.dOffset, dy + Util.dOffset);
+                        setFlag(newFlag);
+                        setAttackCall = true;
+                    }
                 }
             }
         }
@@ -91,6 +146,7 @@ public class HunterMuckracker extends Robot {
 
         boolean awayFromBase = false;
         RobotInfo friendlyBase = null;
+        boolean setChillFlag = false;
         int numFollowingClosestEnemy = 0;
         for (RobotInfo robot : friendlySensable) {
             MapLocation tempLoc = robot.getLocation();
@@ -101,8 +157,16 @@ public class HunterMuckracker extends Robot {
                 friendlyBase = robot;
                 Debug.println(Debug.info, "friendly base at " + friendlyBase.getLocation() + "; enemy Location is " + enemyLocation);
                 if (tempLoc.equals(enemyLocation)) {
-                    Debug.println(Debug.info, "reset enemy location");
-                    enemyLocation = null;
+                        Debug.println(Debug.info, "Enemy EC overtaken, setting chill flag, reseting enemyLocation");
+                        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
+                        
+                        int dx = enemyLocation.x - currLoc.x;
+                        int dy = enemyLocation.y - currLoc.y;
+
+                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_CHILL_CALL, dx + Util.dOffset, dy + Util.dOffset);
+                        setFlag(newFlag);
+                        setChillFlag = true;
+                        enemyLocation = null;
                 }
                 Comms.InformationCategory flagIC = Comms.getIC(botFlag);
                 if (flagIC == Comms.InformationCategory.ENEMY_EC) {
@@ -116,6 +180,48 @@ public class HunterMuckracker extends Robot {
                     numFollowingClosestEnemy++;
                 }
             }
+        }
+        if(closestEnemy != null) {
+            Debug.println(Debug.info, "Num Following Closest Enemy: " + numFollowingClosestEnemy + "; closest Enemy at position: " + closestEnemy.getLocation());
+        }
+        if(enemyLocation != null) {
+            boolean canSenseAroundBase = true;
+            if(!rc.canSenseLocation(enemyLocation)) {
+                canSenseAroundBase = false;
+            }
+            for(int x = 0; x < Util.directions.length; x++) {
+                MapLocation newLocation = enemyLocation.add(Util.directions[x]);
+                if(!rc.canSenseLocation(newLocation) && rc.onTheMap(newLocation)) {
+                    canSenseAroundBase = false;
+                    break;
+                }
+            }
+            boolean baseCrowded = true;
+            if(canSenseAroundBase) {
+                Debug.println(Debug.info, "Hunter able to look at base and 8 surrounding squares");
+                RobotInfo enemyBase = rc.senseRobotAtLocation(enemyLocation);
+                if(enemyBase.getTeam() != enemy) {
+                    baseCrowded = false;
+                    Debug.println(Debug.info, "Base not held by opponent");
+                }
+                for(int x = 0; x < Util.directions.length; x++) {
+                    MapLocation newLocation = enemyLocation.add(Util.directions[x]);
+                    if(rc.onTheMap(newLocation)) {
+                        RobotInfo possibleMuckraker = rc.senseRobotAtLocation(newLocation);
+                        if(possibleMuckraker.getType() != RobotType.MUCKRAKER && possibleMuckraker.getTeam() == rc.getTeam()) {
+                            baseCrowded = false;
+                            Debug.println(Debug.info, "No muckraker " + Util.directions[x] + " of enemy base");
+                            break;
+                        }
+                    }
+                }
+                if(baseCrowded) {
+                    Debug.println(Debug.info, "reset enemy location");
+                    enemyLocation = null;
+                    muckraker_Found_EC = false;
+                }
+            }
+
         }
         // int ECInfluence = Integer.MAX_VALUE;
         // if() {
@@ -134,10 +240,7 @@ public class HunterMuckracker extends Robot {
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
-        if (minRobot != null) {
-            broadcastEnemyFound(minRobot.getLocation());
-        }
-
+        
         //reset flag next turn unless chasing down an enemy
         resetFlagOnNewTurn = true;
 
@@ -148,7 +251,7 @@ public class HunterMuckracker extends Robot {
                 Debug.println(Debug.info, "Prioritizing killing slandies.");
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), bestSlanderer.getLocation(), 255, 150, 50);
             }
-            else if (enemyLocation != null && rc.isReady() && currLoc.distanceSquaredTo(enemyLocation) > sensorRadius) {
+            else if (enemyLocation != null && rc.isReady()) {
                 tryMoveDest(currLoc.directionTo(enemyLocation));
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
@@ -159,10 +262,17 @@ public class HunterMuckracker extends Robot {
             }
             else if (enemiesFound != 0 && numFollowingClosestEnemy < Util.maxFollowingSingleUnit) {
                 MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
-                setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID()));
-                resetFlagOnNewTurn = false;
+                if(!setAttackCall && !setChillFlag) {
+                    setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID()));
+                    resetFlagOnNewTurn = false;
+                }
                 tryMoveDest(currLoc.directionTo(hunterLoc));
-                Debug.println(Debug.info, "Prioritizing going towards average enemy at " + hunterLoc);
+                if(rc.isReady()) {
+                    Debug.println(Debug.info, "Prioritizing going towards average enemy at " + hunterLoc);
+                }
+                else {
+                    Debug.println(Debug.info, "Sending info about average enemy location(if attack call/chill call not set)");
+                }
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), hunterLoc, 255, 150, 50);
             }
             else {
@@ -174,7 +284,8 @@ public class HunterMuckracker extends Robot {
             }
         }
          
-        if(broadcastECLocation());
+        if(propagateFlags());
+        else if(broadcastECLocation());
         else if(broadcastEnemyLocalOrGlobal());
     }
 }

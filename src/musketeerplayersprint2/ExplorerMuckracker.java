@@ -27,6 +27,12 @@ public class ExplorerMuckracker extends Robot {
 
         Debug.println(Debug.info, "I am an explorer mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        if(enemyLocation != null) {
+            Debug.println(Debug.info, "enemy location: " + enemyLocation);
+        }
+        else {
+            Debug.println(Debug.info, "no enemy location");
+        }
 
         if(main_direction == null){
             main_direction = Util.randomDirection();
@@ -40,6 +46,41 @@ public class ExplorerMuckracker extends Robot {
                 powerful = robot;
             }
         }
+
+        for(RobotInfo robot: friendlySensable) {
+            if(rc.canGetFlag(robot.getID())) {
+                int flag = rc.getFlag(robot.getID());
+                MapLocation robotLoc;
+                int []DxDyFromRobot;
+                MapLocation enemyLoc;
+                int dx;
+                int dy;
+                int newFlag; //These are here so I don't have to make different variable names in the different cases
+                switch(Comms.getIC(flag)) {
+                case ENEMY_EC_ATTACK_CALL:
+                    Debug.println(Debug.info, "Found Propogated flag(Attack). Acting on it. ");
+                    robotLoc = robot.getLocation();
+                    DxDyFromRobot = Comms.getDxDy(flag);
+                    enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
+                    Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                    enemyLocation = enemyLoc;
+                    break;
+                case ENEMY_EC_CHILL_CALL:
+                    Debug.println(Debug.info, "Found Propogated flag(Chill). Acting on it. ");
+                    robotLoc = robot.getLocation();
+                    DxDyFromRobot = Comms.getDxDy(flag);
+                    enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
+                    Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                    if(enemyLoc.equals(enemyLocation)) {
+                        enemyLocation = null;
+                        Debug.println(Debug.info, "Reset enemy location as a result of the chill flag");
+                    }
+                    break;
+                default: 
+                    break;
+                }
+            }
+        }
         
         boolean muckraker_Found_EC = false;
         for (RobotInfo robot : rc.senseNearbyRobots(sensingRadius, enemy)) {
@@ -49,6 +90,16 @@ public class ExplorerMuckracker extends Robot {
                     muckraker_Found_EC = true;
                 } else {
                     enemyLocation = tempLoc;
+                    if(!ICtoTurnMap.contains(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL.ordinal())) {
+                        Debug.println(Debug.info, "Found Enemy EC, Generating Attack call");
+                        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
+                        
+                        int dx = enemyLocation.x - currLoc.x;
+                        int dy = enemyLocation.y - currLoc.y;
+
+                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, dx + Util.dOffset, dy + Util.dOffset);
+                        setFlag(newFlag);
+                    }
                 }
             }
         }
@@ -56,6 +107,7 @@ public class ExplorerMuckracker extends Robot {
         RobotInfo closest_muk = null;
         int closest_muk_dist = Integer.MAX_VALUE;
         boolean spawnKillRunFromHome = false;
+        boolean setChillFlag = false;
         for (RobotInfo robot : friendlySensable) {
             MapLocation tempLoc = robot.getLocation();
             int dist = currLoc.distanceSquaredTo(tempLoc);
@@ -66,6 +118,18 @@ public class ExplorerMuckracker extends Robot {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && home.equals(robot.getLocation())) {
                     spawnKillRunFromHome = true;
+                }
+                if (tempLoc.equals(enemyLocation)) {
+                    Debug.println(Debug.info, "Enemy EC overtaken, setting chill flag, reseting enemyLocation");
+                        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
+                        
+                        int dx = enemyLocation.x - currLoc.x;
+                        int dy = enemyLocation.y - currLoc.y;
+
+                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_CHILL_CALL, dx + Util.dOffset, dy + Util.dOffset);
+                        setFlag(newFlag);
+                        setChillFlag = true;
+                        enemyLocation = null;
                 }
                 int botFlag = rc.getFlag(robot.getID());
                 Comms.InformationCategory flagIC = Comms.getIC(botFlag);
@@ -110,9 +174,6 @@ public class ExplorerMuckracker extends Robot {
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
-        // if (minRobot != null) {
-        //     broadcastEnemyFound(minRobot.getLocation());
-        // }
 
         if(!muckraker_Found_EC){
             if (bestSlanderer != null && rc.isReady()) {
@@ -127,6 +188,11 @@ public class ExplorerMuckracker extends Robot {
                 Debug.println(Debug.info, "Moving away from home");
 
             }
+            else if (enemyLocation != null && rc.isReady()) {
+                tryMoveDest(currLoc.directionTo(enemyLocation));
+                Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation);
+                Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
+            }
             else {
                 main_direction = Nav.explore();
                 if(main_direction != null) {
@@ -140,7 +206,8 @@ public class ExplorerMuckracker extends Robot {
             changeTo = new LatticeMuckraker(rc, home);
         }
          
-        if(broadcastECLocation());
+        if(propagateFlags());
+        else if(broadcastECLocation());
         else if(broadcastEnemyLocalOrGlobal());
     }
 }

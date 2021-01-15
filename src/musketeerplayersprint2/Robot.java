@@ -4,6 +4,7 @@ import battlecode.common.*;
 import musketeerplayersprint2.Util.*;
 import musketeerplayersprint2.Comms.*;
 import musketeerplayersprint2.Debug.*;
+import musketeerplayersprint2.fast.FastIntIntMap;
 
 public class Robot {
     static RobotController rc;
@@ -27,6 +28,8 @@ public class Robot {
     static int turnClosestKnownEnemy;
     static final int parityBroadcastEnemy = (int) (Math.random() * 2);
 
+    static FastIntIntMap ICtoTurnMap;
+
     public static Robot changeTo = null;
 
     public Robot(RobotController r) {
@@ -36,6 +39,7 @@ public class Robot {
         sensorRadius = rc.getType().sensorRadiusSquared;
         actionRadius = rc.getType().actionRadiusSquared;
         defaultFlag = 0;
+        ICtoTurnMap = new FastIntIntMap();
         if(rc.getType() == RobotType.ENLIGHTENMENT_CENTER) {
             home = rc.getLocation();
         } else {
@@ -149,6 +153,78 @@ public class Robot {
         return res;
     }
 
+    // Returns true if a flag was propagated
+    boolean propagateFlags() throws GameActionException {
+        // Remove keys that we don't need
+        int[] keys = ICtoTurnMap.getKeys();
+        for(int key : keys) {
+            if(rc.getRoundNum() > ICtoTurnMap.getVal(key) + Util.flagCooldown) {
+                ICtoTurnMap.remove(key);
+            }
+        }
+
+        MapLocation currLoc = rc.getLocation();
+        for(RobotInfo robot : friendlySensable) {
+            if(rc.canGetFlag(robot.getID())) {
+                int flag = rc.getFlag(robot.getID());
+                InformationCategory IC = Comms.getIC(flag);
+
+                // Do not propagate if we have propagated recently
+                if(!ICtoTurnMap.contains(IC.ordinal())) {
+                    // Only propgatable flags
+                    MapLocation robotLoc;
+                    int []DxDyFromRobot;
+                    MapLocation enemyLoc;
+                    int dx;
+                    int dy;
+                    int newFlag;
+                    switch(IC) {
+                        case ENEMY_EC_ATTACK_CALL:
+                            Debug.println(Debug.info, "Propagating Attack Flag");
+                            robotLoc = robot.getLocation();
+                            DxDyFromRobot = Comms.getDxDy(flag);
+                            
+                            enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, 
+                                                        DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
+                            Debug.println(Debug.info, "Apparant enemy location: " + enemyLoc);
+                            Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+    
+                            dx = enemyLoc.x - currLoc.x;
+                            dy = enemyLoc.y - currLoc.y;
+    
+                            newFlag = Comms.getFlag(IC, dx + Util.dOffset, dy + Util.dOffset);
+                            setFlag(newFlag);
+    
+                            ICtoTurnMap.add(IC.ordinal(), rc.getRoundNum());
+    
+                            return true;
+                        case ENEMY_EC_CHILL_CALL:
+                            Debug.println(Debug.info, "Propagating Chill Flag");
+                            robotLoc = robot.getLocation();
+                            DxDyFromRobot = Comms.getDxDy(flag);
+                            
+                            enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, 
+                                                        DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
+                            Debug.println(Debug.info, "Apparant enemy location: " + enemyLoc);
+                            Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+    
+                            dx = enemyLoc.x - currLoc.x;
+                            dy = enemyLoc.y - currLoc.y;
+    
+                            newFlag = Comms.getFlag(IC, dx + Util.dOffset, dy + Util.dOffset);
+                            setFlag(newFlag);
+    
+                            ICtoTurnMap.add(IC.ordinal(), rc.getRoundNum());
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
     MapLocation findClosestEnemyGlobal() throws GameActionException {
         int dx = 0;
         int dy = 0;
@@ -243,11 +319,13 @@ public class Robot {
         if(Math.abs(dx) < Util.dSmallOffset && Math.abs(dy) < Util.dSmallOffset) {
             Debug.println(Debug.info, "Broadcasting closest enemy from turn: " + turnClosestKnownEnemy + " at: dX: " + dx + ", dY: " + dy);
             if(subRobotType == Comms.SubRobotType.SLANDERER) {
-                nextFlag = Comms.getFlagTurn(InformationCategory.SLA_CLOSEST_ENEMY, 
+                int flag = Comms.getFlagTurn(InformationCategory.SLA_CLOSEST_ENEMY, 
                                             turnClosestKnownEnemy, dx + Util.dSmallOffset, dy + Util.dSmallOffset);
+                setFlag(flag);
             } else {
-                nextFlag = Comms.getFlagTurn(InformationCategory.CLOSEST_ENEMY, 
+                int flag = Comms.getFlagTurn(InformationCategory.CLOSEST_ENEMY, 
                                             turnClosestKnownEnemy, dx + Util.dSmallOffset, dy + Util.dSmallOffset);
+                setFlag(flag);
             }
 
             return true;
