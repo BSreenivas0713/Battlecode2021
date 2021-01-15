@@ -43,7 +43,7 @@ public class RushPolitician extends Robot {
                 int dist = currLoc.distanceSquaredTo(loc);
                 if(dist < minEnemyDistSquared) {
                     minEnemyDistSquared = dist;
-                    closestEnemy = robot.getLocation();
+                    closestEnemy = loc;
                 }
             }
         }
@@ -55,7 +55,20 @@ public class RushPolitician extends Robot {
                 int dist = currLoc.distanceSquaredTo(loc);
                 if(dist < minEnemyDistSquared) {
                     minEnemyDistSquared = dist;
-                    closestEnemy = robot.getLocation();
+                    closestEnemy = loc;
+                }
+            }
+        }
+
+        if (minEnemyDistSquared == Integer.MAX_VALUE) {
+            for (RobotInfo robot : friendlySensable) {
+                MapLocation loc = robot.getLocation();
+                if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 8)) {
+                    int dist = currLoc.distanceSquaredTo(loc);
+                    if(dist < minEnemyDistSquared) {
+                        minEnemyDistSquared = dist;
+                        closestEnemy = loc;
+                    }
                 }
             }
         }
@@ -66,18 +79,6 @@ public class RushPolitician extends Robot {
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), closestEnemy, 255, 150, 50);
             rc.empower(radius);
             return;
-        }
-
-        // Haven't found enemy EC
-        if (minEnemyDistSquared == Integer.MAX_VALUE) {
-            for (RobotInfo robot : friendlySensable) {
-                MapLocation loc = robot.getLocation();
-                if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 8) &&
-                    loc.isWithinDistanceSquared(currLoc, actionRadius)) {
-                    changeTo = new GolemPolitician(rc, home);
-                    return;
-                }
-            }
         }
 
         if(currLoc.isWithinDistanceSquared(enemyLocation, actionRadius)) {
