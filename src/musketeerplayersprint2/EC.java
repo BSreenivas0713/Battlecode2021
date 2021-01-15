@@ -93,6 +93,8 @@ public class EC extends Robot {
     static int lastRush;
     static int spawnKillLock;
 
+    static boolean overBidThreshold;
+
     public EC(RobotController r) {
         super(r);
         idSet = new FastIterableIntSet(1000);
@@ -115,6 +117,7 @@ public class EC extends Robot {
         lastRush = 0;
         canGoBackToBuildingProtectors = true;
         spawnKillLock = 10;
+        overBidThreshold = false;
     }
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
@@ -177,25 +180,46 @@ public class EC extends Robot {
         processChildrenFlags();
         Debug.println(Debug.info, "total Golem Conviction: " + totalGolemConviction);
 
-        if (currRoundNum > 250)
+        if (currRoundNum > 500)
             tryStartCleanup();
 
         toggleBuildProtectors();
         tryStartBuildingSpawnKill();
         tryStartSignalingAvgEnemyDir();
 
+
         //bidding code
-        int biddingInfluence = currInfluence / 20;
-        boolean overbidthreshold = rc.getTeamVotes() >= 751;
-        if(!overbidthreshold) {
-            if (rc.canBid(biddingInfluence) && currRoundNum > 500) {
-                rc.bid(biddingInfluence);
+        if(!overBidThreshold) {
+            int biddingInfluence;
+            if (rc.getTeamVotes() >= 750) {
+                overBidThreshold = true;
+            }
+            if (currRoundNum < 200) {
+                biddingInfluence = Math.max(currInfluence / 100, 2);
             } else {
-                biddingInfluence = Math.max(currInfluence / 100, 1);
+                switch (currentState) {
+                    case CLEANUP:
+                    case BUILDING_SLANDERERS:
+                    case BUILDING_PROTECTORS:
+                        Debug.println(Debug.info, "Bidding high.");
+                        biddingInfluence = currInfluence / 10;
+                        break;
+                    case SAVING_FOR_RUSH:
+                    case BUILDING_SPAWNKILLS:
+                    case RUSHING:
+                        Debug.println(Debug.info, "Bidding low.");
+                        biddingInfluence = currInfluence / 50;
+                        break;
+                    default:
+                        Debug.println(Debug.info, "Bidding medium.");
+                        biddingInfluence = currInfluence / 20;
+                        break;
+                }
                 if (rc.canBid(biddingInfluence)) {
                     rc.bid(biddingInfluence);
                 }
             }
+            Debug.println(Debug.info, "Amount bid: " + biddingInfluence);
         }
 
         //updating currInfluence after a bid

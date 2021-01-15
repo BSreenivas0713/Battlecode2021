@@ -31,6 +31,7 @@ public class ProtectorPolitician extends Robot {
 
         Debug.println(Debug.info, "I am a protector politician; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        Debug.println(Debug.info, "current home: " + home);
 
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         MapLocation currLoc = rc.getLocation();
