@@ -43,7 +43,7 @@ public class ExplorerMuckracker extends Robot {
             main_direction = Util.randomDirection();
         }
 
-        if(rc.canSenseLocation(enemyLocation) ) {
+        if(enemyLocation != null && rc.canSenseLocation(enemyLocation) ) {
             RobotInfo supposedToBeAnEC = rc.senseRobotAtLocation(enemyLocation);
             if(supposedToBeAnEC == null || supposedToBeAnEC.getType() != RobotType.ENLIGHTENMENT_CENTER) {
                 enemyLocation = null;
