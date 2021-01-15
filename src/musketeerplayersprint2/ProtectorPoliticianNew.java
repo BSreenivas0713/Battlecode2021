@@ -28,19 +28,20 @@ public class ProtectorPoliticianNew extends Robot {
         turnLastSeenSlanderer = 0;
         seenECs = new FastIterableLocSet();
         seenECs.add(home);
+        currMinEC = home;
     }
     
     public ProtectorPoliticianNew(RobotController r, MapLocation h) {
         this(r);
         home = h;
-        seenECs = new FastIterableLocSet();
-        seenECs.add(home);
     }
 
-    public MapLocation seenECmin(MapLocation[] ecs, MapLocation currLoc) {
+    public MapLocation seenECmin(MapLocation currLoc) {
         int min = Integer.MAX_VALUE;
         MapLocation minLoc = null;
-        for (MapLocation loc : ecs) {
+        seenECs.updateIterable();
+        for(int j = seenECs.size - 1; j >= 0; j--) {
+            MapLocation loc = seenECs.locs[j];
             int tempDist = loc.distanceSquaredTo(currLoc);
             if (tempDist < min) {
                 min = tempDist;
@@ -138,7 +139,8 @@ public class ProtectorPoliticianNew extends Robot {
             }
         }
         if (seenECs.size != 0) {
-            currMinEC = seenECmin(seenECs.locs, currLoc);
+            Debug.println(Debug.info, "seensECs.locs: " + seenECs.locs + "; currLoc: " + currLoc);
+            currMinEC = seenECmin(currLoc);
         } else {
             currMinEC = home;
         }
@@ -205,10 +207,10 @@ public class ProtectorPoliticianNew extends Robot {
             } else {
                 Debug.println(Debug.info, "I am rotating around last seen slanderer");
                 if(distToSlandy > Util.maxRotationRadius) {
-                    main_direction = Util.rotateOppositeSpinDirection(spinDirection, currLoc.directionTo(nearestSlandy));
+                    main_direction = Util.rotateOppositeSpinDirection(spinDirection, currLoc.directionTo(lastSeenSlanderer));
                     Debug.println(Debug.info, "Rotating TOWARDS");
                 } else if(distToSlandy < Util.minRotationRadius) {
-                    main_direction = Util.rotateInSpinDirection(spinDirection, currLoc.directionTo(nearestSlandy).opposite());
+                    main_direction = Util.rotateInSpinDirection(spinDirection, currLoc.directionTo(lastSeenSlanderer).opposite());
                     Debug.println(Debug.info, "Rotating AWAY");
                 } else {
                     main_direction = Util.rightOrLeftTurn(spinDirection, lastSeenSlanderer.directionTo(currLoc));
