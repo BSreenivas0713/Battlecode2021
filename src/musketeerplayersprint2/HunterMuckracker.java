@@ -191,7 +191,7 @@ public class HunterMuckracker extends Robot {
             }
             for(int x = 0; x < Util.directions.length; x++) {
                 MapLocation newLocation = enemyLocation.add(Util.directions[x]);
-                if(!rc.canSenseLocation(newLocation) && rc.onTheMap(newLoaction)) {
+                if(!rc.canSenseLocation(newLocation) && rc.onTheMap(newLocation)) {
                     canSenseAroundBase = false;
                     break;
                 }
