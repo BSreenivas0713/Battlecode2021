@@ -183,6 +183,7 @@ public class EC extends Robot {
                 rc.bid(biddingInfluence);
             }
         }
+        Debug.println(Debug.info, "Amount bid: " + biddingInfluence);
 
         //updating currInfluence after a bid
         currInfluence = rc.getInfluence();
