@@ -31,6 +31,8 @@ public class Comms {
         ROBOT_TYPE_AND_CLOSEST_ENEMY, // UNUSED?
         SLA_CLOSEST_ENEMY,
         CLOSEST_ENEMY,
+        ENEMY_EC_ATTACK_CALL,
+        ENEMY_EC_CHILL_CALL
     }
 
     public enum SubRobotType {

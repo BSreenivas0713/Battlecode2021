@@ -68,11 +68,11 @@ public strictfp class RobotPlayer {
         //     System.out.println("Resigning");
         //     rc.resign();
         // }
-
+        
         int currRoundNum = rc.getRoundNum();
         int currInfluence = rc.getInfluence();
-        int biddingInfluence = currInfluence - 10;
-        if(biddingInfluence != 0  && currRoundNum > 200){
+        int biddingInfluence = currInfluence; //- 10;
+        if(biddingInfluence != 0){
         rc.bid(biddingInfluence);
         }
         RobotType toBuild = randomSpawnableRobotType();

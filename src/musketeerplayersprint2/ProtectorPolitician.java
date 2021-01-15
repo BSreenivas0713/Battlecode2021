@@ -98,10 +98,6 @@ public class ProtectorPolitician extends Robot {
                 }
             }
         }
-
-        // if (minRobot != null) {
-        //     broadcastEnemyFound(minRobot.getLocation());
-        // }
         
         /* Step by Step decision making*/
         //empower if near 2 enemies or enemy is in sensing radius of our base
@@ -158,7 +154,8 @@ public class ProtectorPolitician extends Robot {
 
         }
 
-        if(broadcastECLocation());
+        if(propagateFlags());
+        else if(broadcastECLocation());
         else if(broadcastEnemyLocalOrGlobal());
     }
 }
