@@ -547,40 +547,34 @@ public class EC extends Robot {
             if(rc.canGetFlag(id)) {
                 int flag = rc.getFlag(id);
                 Comms.InformationCategory flagIC = Comms.getIC(flag);
+                int[] currDxDy;
+                RushFlag rushFlag;
                 switch (flagIC) {
                     case NEUTRAL_EC:
                     case ENEMY_EC:
-                        int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
-                        int currReqInf = (int)  neededInf * 4 + 10;
-                        if(currRoundNum <=150) {
-                            currReqInf = (int) neededInf * 2 + 10;
+                        // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
+                        currDxDy = Comms.getDxDy(flag);
+                        Team team = null;
+                        if(flagIC == Comms.InformationCategory.NEUTRAL_EC) {
+                            team = Team.NEUTRAL;
                         }
-                        if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
-                            // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
-                            int[] currDxDy = Comms.getDxDy(flag);
-                            Team team = null;
-                            if(flagIC == Comms.InformationCategory.NEUTRAL_EC) {
-                                team = Team.NEUTRAL;
-                            }
-                            else {
-                                team = rc.getTeam().opponent();
-                            }
-                            RushFlag rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag, team);
-                            ECflags.remove(rushFlag);
-                            ECflags.add(rushFlag);
-                            cleanUpCount = -1;
-                            if (currentState == State.CLEANUP) {
-                                currentState = stateStack.pop();
-                            }
+                        else {
+                            team = rc.getTeam().opponent();
+                        }
+                        rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag, team);
+                        ECflags.remove(rushFlag);
+                        ECflags.add(rushFlag);
+                        cleanUpCount = -1;
+                        if (currentState == State.CLEANUP) {
+                            currentState = stateStack.pop();
                         }
                         break;
                     case FRIENDLY_EC:
-                        int[] currDxDy = Comms.getDxDy(flag);
-                        RushFlag rushFlag = new RushFlag(0, currDxDy[0], currDxDy[1], 0, rc.getTeam());
+                        currDxDy = Comms.getDxDy(flag);
+                        rushFlag = new RushFlag(0, currDxDy[0], currDxDy[1], 0, rc.getTeam());
                         ECflags.remove(rushFlag);
                         break;
                     case ENEMY_FOUND:
-
                         int[] enemyDxDy = Comms.getDxDy(flag);
                         int enemyLocX = enemyDxDy[0] + home.x - Util.dOffset;
                         int enemyLocY = enemyDxDy[1] + home.y - Util.dOffset;
@@ -649,10 +643,18 @@ public class EC extends Robot {
 
     public boolean tryStartSavingForRush() throws GameActionException {
         if (!ECflags.isEmpty() && turnCount > lastRush + Util.minTimeBetweenRushes) {
-            stateStack.push(currentState);
-            currentState = State.SAVING_FOR_RUSH;
-            Debug.println(Debug.info, "tryStartSavingForRush is returning true");
-            return true;
+            int flag = ECflags.peek().flag;
+            int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
+            int currReqInf = (int)  neededInf * 4 + 10;
+            if(currRoundNum <=150) {
+                currReqInf = (int) neededInf * 2 + 10;
+            }
+            if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
+                stateStack.push(currentState);
+                currentState = State.SAVING_FOR_RUSH;
+                Debug.println(Debug.info, "tryStartSavingForRush is returning true");
+                return true;
+            }
         }
         return false;
     }
