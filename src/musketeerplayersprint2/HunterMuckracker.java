@@ -117,6 +117,45 @@ public class HunterMuckracker extends Robot {
                 }
             }
         }
+        if(closestEnemy != null) {
+            Debug.println(Debug.info, "Num Following Closest Enemy: " + numFollowingClosestEnemy + "; closest Enemy at position: " + closestEnemy.getLocation());
+        }
+        if(enemyLocation != null) {
+            boolean canSenseAroundBase = true;
+            if(!rc.canSenseLocation(enemyLocation)) {
+                canSenseAroundBase = false;
+            }
+            for(int x = 0; x < Util.directions.length; x++) {
+                MapLocation newLocation = enemyLocation.add(Util.directions[x]);
+                if(!rc.canSenseLocation(newLocation)) {
+                    canSenseAroundBase = false;
+                    break;
+                }
+            }
+            boolean baseCrowded = true;
+            if(canSenseAroundBase) {
+                Debug.println(Debug.info, "Hunter able to look at base and 8 surrounding squares");
+                RobotInfo enemyBase = rc.senseRobotAtLocation(enemyLocation);
+                if(enemyBase.getTeam() != enemy) {
+                    baseCrowded = false;
+                    Debug.println(Debug.info, "Base not held by opponent");
+                }
+                for(int x = 0; x < Util.directions.length; x++) {
+                    MapLocation newLocation = enemyLocation.add(Util.directions[x]);
+                    RobotInfo possibleMuckraker = rc.senseRobotAtLocation(newLocation);
+                    if(possibleMuckraker == null || possibleMuckraker.getType() != RobotType.MUCKRAKER) {
+                        baseCrowded = false;
+                        Debug.println(Debug.info, "No muckraker " + Util.directions[x] + " of enemy base");
+                        break;
+                    }
+                }
+            }
+            if(baseCrowded) {
+                Debug.println(Debug.info, "reset enemy location");
+                enemyLocation = null;
+                muckraker_Found_EC = false;
+            }
+        }
         // int ECInfluence = Integer.MAX_VALUE;
         // if() {
         // if(rc.senseRobotAtLocation(home) == RobotInfo.ENLIGHTENMENT_CENTER) {
