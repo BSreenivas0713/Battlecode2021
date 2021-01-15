@@ -324,7 +324,7 @@ public class EC extends Robot {
                     }  
                 }
 
-                if (robotCounter % 4 != 0) {
+                if (robotCounter % 3 != 0) {
                     toBuild = RobotType.POLITICIAN;
                     influence = 18;
                     signalRobotType(SubRobotType.POL_PROTECTOR);
@@ -550,6 +550,9 @@ public class EC extends Robot {
                     case ENEMY_EC:
                         int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
                         int currReqInf = (int)  neededInf * 4 + 10;
+                        if(currRoundNum <=150) {
+                            currReqInf = (int) neededInf * 2 + 10;
+                        }
                         if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
                             // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                             int[] currDxDy = Comms.getDxDy(flag);
