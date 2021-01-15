@@ -1,9 +1,9 @@
-package musketeerplayersprint2;
+package naivecomms;
 
 import battlecode.common.*;
 
-import musketeerplayersprint2.fast.FasterQueue;
-import musketeerplayersprint2.fast.FastIterableIntSet;
+import naivecomms.fast.FasterQueue;
+import naivecomms.fast.FastIterableIntSet;
 
 public class Nav {
     static RobotController rc;
@@ -527,22 +527,14 @@ public class Nav {
 
         MapLocation[] targets = {rc.getLocation().add(lastExploreDir), rc.getLocation().add(left), rc.getLocation().add(right)};
         
-        if(!rc.onTheMap(rc.getLocation().add(lastExploreDir))) {
-            // lastExploreDir = lastExploreDir.opposite();
-            Direction tempExploreDir = null;
-            if((int) (Math.random() * 2) == 0) {
-                tempExploreDir = Util.turnLeft90(lastExploreDir);
-                if(!rc.onTheMap(rc.getLocation().add(tempExploreDir))) {
-                    tempExploreDir = Util.turnRight90(lastExploreDir);
-                }
-            }
-            else {
-                tempExploreDir = Util.turnRight90(lastExploreDir);
-                if(!rc.onTheMap(rc.getLocation().add(tempExploreDir))) {
-                    tempExploreDir = Util.turnLeft90(lastExploreDir);
-                }
-            lastExploreDir = tempExploreDir;
-            }
+        while(!rc.onTheMap(targets[0]) || !rc.onTheMap(targets[1]) || !rc.onTheMap(targets[2])) {
+            lastExploreDir = Util.randomDirection();
+            left = lastExploreDir.rotateLeft();
+            right = lastExploreDir.rotateRight();
+    
+            targets[0] = rc.getLocation().add(lastExploreDir);
+            targets[1] = rc.getLocation().add(left);
+            targets[2] = rc.getLocation().add(right);
         }
 
         double totalPassability = 0;

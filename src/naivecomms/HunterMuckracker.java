@@ -1,8 +1,8 @@
-package musketeerplayersprint2;
+package naivecomms;
 import battlecode.common.*;
 
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Debug.*;
+import naivecomms.Util.*;
+import naivecomms.Debug.*;
 
 public class HunterMuckracker extends Robot {
     static Direction main_direction;
@@ -45,7 +45,7 @@ public class HunterMuckracker extends Robot {
         }
         
         boolean muckraker_Found_EC = false;
-        for (RobotInfo robot : enemySensable) {
+        for (RobotInfo robot : rc.senseNearbyRobots(sensorRadius, enemy)) {
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
                 MapLocation tempLoc = robot.getLocation();
                 if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
@@ -117,45 +117,6 @@ public class HunterMuckracker extends Robot {
                 }
             }
         }
-        if(closestEnemy != null) {
-            Debug.println(Debug.info, "Num Following Closest Enemy: " + numFollowingClosestEnemy + "; closest Enemy at position: " + closestEnemy.getLocation());
-        }
-        if(enemyLocation != null) {
-            boolean canSenseAroundBase = true;
-            if(!rc.canSenseLocation(enemyLocation)) {
-                canSenseAroundBase = false;
-            }
-            for(int x = 0; x < Util.directions.length; x++) {
-                MapLocation newLocation = enemyLocation.add(Util.directions[x]);
-                if(!rc.canSenseLocation(newLocation)) {
-                    canSenseAroundBase = false;
-                    break;
-                }
-            }
-            boolean baseCrowded = true;
-            if(canSenseAroundBase) {
-                Debug.println(Debug.info, "Hunter able to look at base and 8 surrounding squares");
-                RobotInfo enemyBase = rc.senseRobotAtLocation(enemyLocation);
-                if(enemyBase.getTeam() != enemy) {
-                    baseCrowded = false;
-                    Debug.println(Debug.info, "Base not held by opponent");
-                }
-                for(int x = 0; x < Util.directions.length; x++) {
-                    MapLocation newLocation = enemyLocation.add(Util.directions[x]);
-                    RobotInfo possibleMuckraker = rc.senseRobotAtLocation(newLocation);
-                    if(possibleMuckraker == null || possibleMuckraker.getType() != RobotType.MUCKRAKER) {
-                        baseCrowded = false;
-                        Debug.println(Debug.info, "No muckraker " + Util.directions[x] + " of enemy base");
-                        break;
-                    }
-                }
-            }
-            if(baseCrowded) {
-                Debug.println(Debug.info, "reset enemy location");
-                enemyLocation = null;
-                muckraker_Found_EC = false;
-            }
-        }
         // int ECInfluence = Integer.MAX_VALUE;
         // if() {
         // if(rc.senseRobotAtLocation(home) == RobotInfo.ENLIGHTENMENT_CENTER) {
@@ -173,7 +134,10 @@ public class HunterMuckracker extends Robot {
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
-        
+        if (minRobot != null) {
+            broadcastEnemyFound(minRobot.getLocation());
+        }
+
         //reset flag next turn unless chasing down an enemy
         resetFlagOnNewTurn = true;
 
@@ -210,8 +174,7 @@ public class HunterMuckracker extends Robot {
             }
         }
          
-        if(propagateFlags());
-        else if(broadcastECLocation());
+        if(broadcastECLocation());
         else if(broadcastEnemyLocalOrGlobal());
     }
 }

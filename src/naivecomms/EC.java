@@ -1,10 +1,10 @@
-package musketeerplayersprint2;
+package naivecomms;
 import battlecode.common.*;
 
-import musketeerplayersprint2.Comms.*;
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Debug.*;
-import musketeerplayersprint2.fast.FastIterableIntSet;
+import naivecomms.Comms.*;
+import naivecomms.Util.*;
+import naivecomms.Debug.*;
+import naivecomms.fast.FastIterableIntSet;
 
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
@@ -324,7 +324,7 @@ public class EC extends Robot {
                     }  
                 }
 
-                if (robotCounter % 3 != 0) {
+                if (robotCounter % 4 != 0) {
                     toBuild = RobotType.POLITICIAN;
                     influence = 18;
                     signalRobotType(SubRobotType.POL_PROTECTOR);
@@ -550,9 +550,6 @@ public class EC extends Robot {
                     case ENEMY_EC:
                         int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
                         int currReqInf = (int)  neededInf * 4 + 10;
-                        if(currRoundNum <=150) {
-                            currReqInf = (int) neededInf * 2 + 10;
-                        }
                         if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
                             // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                             int[] currDxDy = Comms.getDxDy(flag);
