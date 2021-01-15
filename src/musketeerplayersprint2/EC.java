@@ -199,14 +199,14 @@ public class EC extends Robot {
             } else {
                 switch (currentState) {
                     case CLEANUP:
+                    case BUILDING_SLANDERERS:
+                    case BUILDING_PROTECTORS:
                         Debug.println(Debug.info, "Bidding high.");
                         biddingInfluence = currInfluence / 10;
                         break;
                     case SAVING_FOR_RUSH:
-                    case BUILDING_SLANDERERS:
                     case BUILDING_SPAWNKILLS:
                     case RUSHING:
-                    case BUILDING_PROTECTORS:
                         Debug.println(Debug.info, "Bidding low.");
                         biddingInfluence = currInfluence / 50;
                         break;
@@ -219,6 +219,7 @@ public class EC extends Robot {
                     rc.bid(biddingInfluence);
                 }
             }
+            Debug.println(Debug.info, "Amount bid: " + biddingInfluence);
         }
 
         //updating currInfluence after a bid
