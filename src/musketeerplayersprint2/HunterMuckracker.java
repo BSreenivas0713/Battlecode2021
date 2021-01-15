@@ -117,14 +117,6 @@ public class HunterMuckracker extends Robot {
                 }
             }
         }
-        for (RobotInfo robot : rc.senseNearbyRobots(sensorRadius, Team.NEUTRAL)) {
-            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
-                if (awayFromBase == false) {
-                    awayFromBase = true;
-                    friendlyBase = robot;
-                }
-            }
-        }
         // int ECInfluence = Integer.MAX_VALUE;
         // if() {
         // if(rc.senseRobotAtLocation(home) == RobotInfo.ENLIGHTENMENT_CENTER) {
@@ -142,10 +134,10 @@ public class HunterMuckracker extends Robot {
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
-        // if (minRobot != null) {
-        //     broadcastEnemyFound(minRobot.getLocation());
-        // }
-        
+        if (minRobot != null) {
+            broadcastEnemyFound(minRobot.getLocation());
+        }
+
         //reset flag next turn unless chasing down an enemy
         resetFlagOnNewTurn = true;
 
@@ -163,7 +155,7 @@ public class HunterMuckracker extends Robot {
             }
             else if (awayFromBase) {
                 tryMoveDest(currLoc.directionTo(friendlyBase.getLocation()).opposite());
-                Debug.println(Debug.info, "Prioritizing moving away from friendly/neutral bases.");
+                Debug.println(Debug.info, "Prioritizing moving away from friendly.");
             }
             else if (enemiesFound != 0 && numFollowingClosestEnemy < Util.maxFollowingSingleUnit) {
                 MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
