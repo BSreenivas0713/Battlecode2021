@@ -97,8 +97,14 @@ public class LatticeProtector extends Robot {
                 minDistSquared = temp;
                 minRobot = robot;
             }
-            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && seenECs.contains(tempLoc)) {
-                seenECs.remove(tempLoc);
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                if (seenECs.contains(tempLoc)) {
+                    seenECs.remove(tempLoc);
+                }
+                int distToEmpower = currLoc.distanceSquaredTo(robot.getLocation());
+                if (rc.canEmpower(distToEmpower)) {
+                    rc.empower(distToEmpower);
+                }
             }
         }
         
