@@ -148,7 +148,15 @@ public class HunterMuckracker extends Robot {
         RobotInfo friendlyBase = null;
         boolean setChillFlag = false;
         int numFollowingClosestEnemy = 0;
+        RobotInfo disperseBot = null;
         for (RobotInfo robot : friendlySensable) {
+            if(rc.canGetFlag(robot.getID())) {
+                int flag = rc.getFlag(robot.getID());
+                if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_RUSH)) {
+                    Debug.println(Debug.info, "Found a rusher.");
+                    disperseBot = robot;
+                }
+            }
             MapLocation tempLoc = robot.getLocation();
             int dist = currLoc.distanceSquaredTo(tempLoc);
             int botFlag = rc.getFlag(robot.getID());
@@ -250,6 +258,11 @@ public class HunterMuckracker extends Robot {
                 tryMoveDest(main_direction);
                 Debug.println(Debug.info, "Prioritizing killing slandies.");
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), bestSlanderer.getLocation(), 255, 150, 50);
+            }
+            else if (disperseBot != null) {
+                main_direction = currLoc.directionTo(disperseBot.getLocation()).opposite();
+                tryMoveDest(main_direction);
+                Debug.println(Debug.info, "Dispersing to avoid rusher.");
             }
             else if (enemyLocation != null && rc.isReady()) {
                 tryMoveDest(currLoc.directionTo(enemyLocation));
