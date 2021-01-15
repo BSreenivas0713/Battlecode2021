@@ -56,7 +56,15 @@ public class LatticeMuckraker extends Robot {
         RobotInfo closest_muk = null;
         int closest_muk_dist = Integer.MAX_VALUE;
         boolean spawnKillRunFromHome = false;
+        RobotInfo disperseBot = null;
         for (RobotInfo robot : friendlySensable) {
+            if(rc.canGetFlag(robot.getID())) {
+                int flag = rc.getFlag(robot.getID());
+                if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_RUSH)) {
+                    Debug.println(Debug.info, "Found a rusher.");
+                    disperseBot = robot;
+                }
+            }
             MapLocation tempLoc = robot.getLocation();
             int dist = currLoc.distanceSquaredTo(tempLoc);
             if (robot.getType() == RobotType.MUCKRAKER && dist < closest_muk_dist) {
@@ -115,6 +123,11 @@ public class LatticeMuckraker extends Robot {
             if (bestSlanderer != null && rc.isReady()) {
                 main_direction = currLoc.directionTo(bestSlanderer.getLocation());
                 tryMoveDest(main_direction);
+            }            
+            else if (disperseBot != null && rc.isReady()) {
+                main_direction = currLoc.directionTo(disperseBot.getLocation()).opposite();
+                tryMoveDest(main_direction);
+                Debug.println(Debug.info, "Dispersing to avoid rusher.");
             }
             else if (spawnKillRunFromHome) {
                 main_direction = currLoc.directionTo(home).opposite();
