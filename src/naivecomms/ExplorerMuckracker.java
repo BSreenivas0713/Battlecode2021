@@ -1,8 +1,8 @@
-package musketeerplayersprint2;
+package naivecomms;
 import battlecode.common.*;
 
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Debug.*;
+import naivecomms.Util.*;
+import naivecomms.Debug.*;
 
 public class ExplorerMuckracker extends Robot {
     static Direction main_direction;
@@ -110,6 +110,9 @@ public class ExplorerMuckracker extends Robot {
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
+        // if (minRobot != null) {
+        //     broadcastEnemyFound(minRobot.getLocation());
+        // }
 
         if(!muckraker_Found_EC){
             if (bestSlanderer != null && rc.isReady()) {
@@ -137,8 +140,7 @@ public class ExplorerMuckracker extends Robot {
             changeTo = new LatticeMuckraker(rc, home);
         }
          
-        if(propagateFlags());
-        else if(broadcastECLocation());
+        if(broadcastECLocation());
         else if(broadcastEnemyLocalOrGlobal());
     }
 }
