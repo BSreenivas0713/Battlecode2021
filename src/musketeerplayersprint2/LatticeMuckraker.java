@@ -110,9 +110,6 @@ public class LatticeMuckraker extends Robot {
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
-        if (minRobot != null) {
-            broadcastEnemyFound(minRobot.getLocation());
-        }
 
         if(!muckraker_Found_EC){
             if (bestSlanderer != null && rc.isReady()) {
@@ -138,7 +135,8 @@ public class LatticeMuckraker extends Robot {
             }
         }
          
-        if(broadcastECLocation());
+        if(propagateFlags());
+        else if(broadcastECLocation());
         else if(broadcastEnemyLocalOrGlobal());
     }
 }

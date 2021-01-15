@@ -51,9 +51,6 @@ public class Slanderer extends Robot {
                 minRobot = robot;
             }
         }
-        // if (minRobot != null) {
-        //     broadcastEnemyFound(minRobot.getLocation());
-        // }
         
         RobotInfo minNeutralRobot = null;
         double minNeutralDistSquared = Integer.MAX_VALUE;

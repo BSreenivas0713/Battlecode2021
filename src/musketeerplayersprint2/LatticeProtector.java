@@ -176,10 +176,6 @@ public class LatticeProtector extends Robot {
         if(rc.getRoundNum() > turnLastSeenSlanderer + Util.turnsSlandererLocValid) {
             lastSeenSlanderer = null;
         }
-
-        if (minRobot != null) {
-            broadcastEnemyFound(minRobot.getLocation());
-        }
         
         /* Step by Step decision making*/
         //empower if near 2 enemies or enemy is in sensing radius of our base
@@ -258,7 +254,8 @@ public class LatticeProtector extends Robot {
             tryMove +=1;
         }
 
-        broadcastECLocation();
-        return;
+        if(propagateFlags());
+        else if(broadcastECLocation());
+        else if(broadcastEnemyLocalOrGlobal());
     }
 }
