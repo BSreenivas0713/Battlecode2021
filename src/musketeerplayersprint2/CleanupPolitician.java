@@ -63,10 +63,6 @@ public class CleanupPolitician extends Robot {
                 minRobot = robot;
             }
         }
-
-        // if (minRobot != null) {
-        //     broadcastEnemyFound(minRobot.getLocation());
-        // }
         
         if (powerful != null) {
             Direction toMove = rc.getLocation().directionTo(powerful.getLocation());
@@ -77,7 +73,8 @@ public class CleanupPolitician extends Robot {
             main_direction = Util.randomDirection();
         }
 
-        if(broadcastECLocation());
+        if(propagateFlags());
+        else if(broadcastECLocation());
         else if(broadcastEnemyLocalOrGlobal());
     }
 }

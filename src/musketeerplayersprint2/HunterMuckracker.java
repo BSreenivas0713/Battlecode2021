@@ -45,7 +45,7 @@ public class HunterMuckracker extends Robot {
         }
         
         boolean muckraker_Found_EC = false;
-        for (RobotInfo robot : rc.senseNearbyRobots(sensorRadius, enemy)) {
+        for (RobotInfo robot : enemySensable) {
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
                 MapLocation tempLoc = robot.getLocation();
                 if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
@@ -142,9 +142,6 @@ public class HunterMuckracker extends Robot {
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
-        // if (minRobot != null) {
-        //     broadcastEnemyFound(minRobot.getLocation());
-        // }
         
         //reset flag next turn unless chasing down an enemy
         resetFlagOnNewTurn = true;
@@ -182,7 +179,8 @@ public class HunterMuckracker extends Robot {
             }
         }
          
-        if(broadcastECLocation());
+        if(propagateFlags());
+        else if(broadcastECLocation());
         else if(broadcastEnemyLocalOrGlobal());
     }
 }
