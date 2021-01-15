@@ -177,7 +177,7 @@ public class EC extends Robot {
         processChildrenFlags();
         Debug.println(Debug.info, "total Golem Conviction: " + totalGolemConviction);
 
-        if (currRoundNum > 250)
+        if (currRoundNum > 500)
             tryStartCleanup();
 
         toggleBuildProtectors();
@@ -185,13 +185,13 @@ public class EC extends Robot {
         tryStartSignalingAvgEnemyDir();
 
         //bidding code
-        int biddingInfluence = currInfluence / 20;
         boolean overbidthreshold = rc.getTeamVotes() >= 751;
         if(!overbidthreshold) {
-            if (rc.canBid(biddingInfluence) && currRoundNum > 500) {
+            int biddingInfluence = currInfluence / 20;
+            if (rc.canBid(biddingInfluence) && currRoundNum > 200) {
                 rc.bid(biddingInfluence);
             } else {
-                biddingInfluence = Math.max(currInfluence / 100, 1);
+                biddingInfluence = Math.max(currInfluence / 100, 2);
                 if (rc.canBid(biddingInfluence)) {
                     rc.bid(biddingInfluence);
                 }
