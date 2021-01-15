@@ -326,7 +326,7 @@ public class EC extends Robot {
                     }  
                 }
 
-                if (robotCounter % 3 != 0) {
+                if (robotCounter % 4 != 0) {
                     toBuild = RobotType.POLITICIAN;
                     influence = 18;
                     signalRobotType(SubRobotType.POL_PROTECTOR);
