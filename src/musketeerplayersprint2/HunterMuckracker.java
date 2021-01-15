@@ -56,11 +56,46 @@ public class HunterMuckracker extends Robot {
             }
         }
 
+        RobotInfo bestSlanderer = null;
+        bestInfluence = Integer.MIN_VALUE;
+        RobotInfo minRobot = null;
+        double minDistSquared = Integer.MAX_VALUE;
+        int totalEnemyX = 0;
+        int totalEnemyY = 0;
+        int enemiesFound = 0;
+        RobotInfo closestEnemy = null;
+        int closestEnemyDist = Integer.MAX_VALUE;
+        for (RobotInfo robot : enemySensable) {
+            MapLocation tempLoc = robot.getLocation();
+            totalEnemyX += tempLoc.x;
+            totalEnemyY += tempLoc.y;
+            enemiesFound++;
+            if (currLoc.distanceSquaredTo(tempLoc) < closestEnemyDist) {
+                closestEnemyDist = currLoc.distanceSquaredTo(tempLoc);
+                closestEnemy = robot;
+            }
+            if (robot.getType() == RobotType.SLANDERER) {
+                int curr = robot.getConviction();
+                if (curr > bestInfluence) {
+                    bestInfluence = curr;
+                    bestSlanderer = robot;
+                }
+            }
+            double temp = currLoc.distanceSquaredTo(tempLoc);
+            if (temp < minDistSquared) {
+                minDistSquared = temp;
+                minRobot = robot;
+            }
+            // if (robot.getType() == RobotType.POLITICIAN && (robot.getConviction() >= 100 || ))
+        }
+
         boolean awayFromBase = false;
         RobotInfo friendlyBase = null;
+        int numFollowingClosestEnemy = 0;
         for (RobotInfo robot : friendlySensable) {
             MapLocation tempLoc = robot.getLocation();
             int dist = currLoc.distanceSquaredTo(tempLoc);
+            int botFlag = rc.getFlag(robot.getID());
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 awayFromBase = true;
                 friendlyBase = robot;
@@ -69,12 +104,16 @@ public class HunterMuckracker extends Robot {
                     Debug.println(Debug.info, "reset enemy location");
                     enemyLocation = null;
                 }
-                int botFlag = rc.getFlag(robot.getID());
                 Comms.InformationCategory flagIC = Comms.getIC(botFlag);
                 if (flagIC == Comms.InformationCategory.ENEMY_EC) {
                     int[] dxdy = Comms.getDxDy(botFlag);
                     enemyLocation = new MapLocation(dxdy[0] + tempLoc.x - Util.dOffset, dxdy[1] + tempLoc.y - Util.dOffset);
                     break;
+                }
+            }
+            if(enemiesFound != 0) {
+                if(botFlag == Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID())) {
+                    numFollowingClosestEnemy++;
                 }
             }
         }
@@ -98,38 +137,17 @@ public class HunterMuckracker extends Robot {
                 rc.expose(powerful.location);
             }
         }
-        RobotInfo bestSlanderer = null;
-        bestInfluence = Integer.MIN_VALUE;
-        RobotInfo minRobot = null;
-        double minDistSquared = Integer.MAX_VALUE;
-        int totalEnemyX = 0;
-        int totalEnemyY = 0;
-        int enemiesFound = 0;
-        for (RobotInfo robot : rc.senseNearbyRobots(sensorRadius, enemy)) {
-            MapLocation tempLoc = robot.getLocation();
-            totalEnemyX += tempLoc.x;
-            totalEnemyY += tempLoc.y;
-            enemiesFound++;
-            if (robot.getType() == RobotType.SLANDERER) {
-                int curr = robot.getConviction();
-                if (curr > bestInfluence) {
-                    bestInfluence = curr;
-                    bestSlanderer = robot;
-                }
-            }
-            double temp = currLoc.distanceSquaredTo(tempLoc);
-            if (temp < minDistSquared) {
-                minDistSquared = temp;
-                minRobot = robot;
-            }
-            // if (robot.getType() == RobotType.POLITICIAN && (robot.getConviction() >= 100 || ))
-        }
+
+
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
         // if (minRobot != null) {
         //     broadcastEnemyFound(minRobot.getLocation());
         // }
+        
+        //reset flag next turn unless chasing down an enemy
+        resetFlagOnNewTurn = true;
 
         if(!muckraker_Found_EC){
             if (bestSlanderer != null && rc.isReady()) {
@@ -147,8 +165,10 @@ public class HunterMuckracker extends Robot {
                 tryMoveDest(currLoc.directionTo(friendlyBase.getLocation()).opposite());
                 Debug.println(Debug.info, "Prioritizing moving away from friendly/neutral bases.");
             }
-            else if (enemiesFound != 0) {
+            else if (enemiesFound != 0 && numFollowingClosestEnemy < Util.maxFollowingSingleUnit) {
                 MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
+                setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID()));
+                resetFlagOnNewTurn = false;
                 tryMoveDest(currLoc.directionTo(hunterLoc));
                 Debug.println(Debug.info, "Prioritizing going towards average enemy at " + hunterLoc);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), hunterLoc, 255, 150, 50);
