@@ -172,26 +172,49 @@ public class Robot {
                 // Do not propagate if we have propagated recently
                 if(!ICtoTurnMap.contains(IC.ordinal())) {
                     // Only propgatable flags
+                    MapLocation robotLoc;
+                    int []DxDyFromRobot;
+                    MapLocation enemyLoc;
+                    int dx;
+                    int dy;
+                    int newFlag;
                     switch(IC) {
                         case ENEMY_EC_ATTACK_CALL:
-                            Debug.println(Debug.info, "Propagating Flag IC: " + IC);
-                            MapLocation robotLoc = robot.getLocation();
-                            int[] DxDyFromRobot = Comms.getDxDy(flag);
+                            Debug.println(Debug.info, "Propagating Attack Flag");
+                            robotLoc = robot.getLocation();
+                            DxDyFromRobot = Comms.getDxDy(flag);
                             
-                            MapLocation enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, 
+                            enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, 
                                                         DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
-
+                            Debug.println(Debug.info, "Apparant enemy location: " + enemyLoc);
                             Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
     
-                            int dx = enemyLoc.x - currLoc.x;
-                            int dy = enemyLoc.y - currLoc.y;
+                            dx = enemyLoc.x - currLoc.x;
+                            dy = enemyLoc.y - currLoc.y;
     
-                            int newFlag = Comms.getFlag(IC, dx + Util.dOffset, dy + Util.dOffset);
+                            newFlag = Comms.getFlag(IC, dx + Util.dOffset, dy + Util.dOffset);
                             setFlag(newFlag);
     
                             ICtoTurnMap.add(IC.ordinal(), rc.getRoundNum());
     
                             return true;
+                        case ENEMY_EC_CHILL_CALL:
+                            Debug.println(Debug.info, "Propagating Chill Flag");
+                            robotLoc = robot.getLocation();
+                            DxDyFromRobot = Comms.getDxDy(flag);
+                            
+                            enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, 
+                                                        DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
+                            Debug.println(Debug.info, "Apparant enemy location: " + enemyLoc);
+                            Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+    
+                            dx = enemyLoc.x - currLoc.x;
+                            dy = enemyLoc.y - currLoc.y;
+    
+                            newFlag = Comms.getFlag(IC, dx + Util.dOffset, dy + Util.dOffset);
+                            setFlag(newFlag);
+    
+                            ICtoTurnMap.add(IC.ordinal(), rc.getRoundNum());
                         default:
                             break;
                     }

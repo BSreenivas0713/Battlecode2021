@@ -15,6 +15,9 @@ muckraker to muckraker communication(what base to attack, what base has been con
 have some protectors go in the direction of the slanderers DO NOT FORGET ABOUT THIS
 have more muckrakers at the beginning so we explore quicker/dont auto lose on small maps
 Muckrakers should report slanderers to the EC
+
+not sure how protectors should figure out who slanderers are since they basically never have the slanderer flag
+Right now ECs do not propogate flags
 */
 public class EC extends Robot {
     static enum State {
@@ -152,6 +155,10 @@ public class EC extends Robot {
                 robotCounter += 1;
                 return true;
             }
+        }
+        if(influence != 1) {
+            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK);
+            buildRobot(RobotType.MUCKRAKER, 1);
         }
 
         return false;
