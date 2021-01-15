@@ -19,6 +19,7 @@ public class LatticeProtector extends Robot {
     static int turnLastSeenSlanderer;
     static FastIterableLocSet seenECs;
     static MapLocation currMinEC;
+
     
     public LatticeProtector(RobotController r) {
         super(r);
