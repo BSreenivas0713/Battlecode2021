@@ -164,7 +164,7 @@ public class Robot {
         }
 
         MapLocation currLoc = rc.getLocation();
-        for(RobotInfo robot : friendlySensable) {
+        for(RobotInfo robot : rc.senseNearbyRobots(sensorRadius, rc.getTeam())) { //have to use sense nearby robots since we move before calling this function
             if(rc.canGetFlag(robot.getID())) {
                 int flag = rc.getFlag(robot.getID());
                 InformationCategory IC = Comms.getIC(flag);
