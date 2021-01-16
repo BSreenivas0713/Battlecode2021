@@ -156,7 +156,6 @@ public class ProtectorPolitician extends Robot {
             spinDirection = Util.switchSpinDirection(spinDirection);
             main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
             tryMove +=1;
-
         }
 
         if(propagateFlags());
