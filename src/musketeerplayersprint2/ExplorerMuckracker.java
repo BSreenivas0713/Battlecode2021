@@ -163,10 +163,10 @@ public class ExplorerMuckracker extends Robot {
                     Debug.println(Debug.info, "Enemy EC overtaken, setting chill flag, reseting enemyLocation");
                         Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
                         
-                        dx = enemyLocation.x - rc.getLocation().x;
-                        dy = enemyLocation.y - rc.getLocation().y;
+                        int dx = enemyLocation.x - rc.getLocation().x;
+                        int dy = enemyLocation.y - rc.getLocation().y;
 
-                        newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_CHILL_CALL, dx + Util.dOffset, dy + Util.dOffset);
+                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_CHILL_CALL, dx + Util.dOffset, dy + Util.dOffset);
                         setFlag(newFlag);
                         setChillFlag = true;
                         lastAttacked.add(enemyLocation);
@@ -224,10 +224,10 @@ public class ExplorerMuckracker extends Robot {
                             Debug.println(Debug.info, "Found Enemy EC, Generating Attack call");
                             Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
                             
-                            dx = enemyLocation.x - currLoc.x;
-                            dy = enemyLocation.y - currLoc.y;
+                            int dx = enemyLocation.x - currLoc.x;
+                            int dy = enemyLocation.y - currLoc.y;
 
-                            newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, dx + Util.dOffset, dy + Util.dOffset);
+                            int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, dx + Util.dOffset, dy + Util.dOffset);
                             setFlag(newFlag);
                         }
                     }
