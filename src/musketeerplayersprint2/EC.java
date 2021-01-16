@@ -568,6 +568,11 @@ public class EC extends Robot {
                         else {
                             team = rc.getTeam().opponent();
                         }
+                        int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
+                        int currReqInf = (int)  neededInf * 4 + 10;
+                        if(currRoundNum <=150) {
+                            currReqInf = (int) neededInf * 2 + 10;
+                        }
                         rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag, team);
                         ECflags.remove(rushFlag);
                         ECflags.add(rushFlag);
