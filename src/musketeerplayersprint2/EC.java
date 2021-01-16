@@ -70,7 +70,6 @@ public class EC extends Robot {
     static int currRoundNum;
     static int numMucks = 0;
     static int currInfluence;
-    static int totalGolemConviction;
     static boolean noAdjacentEC;
 
     static boolean muckrackerNear;
@@ -177,48 +176,60 @@ public class EC extends Robot {
         }
 
         processChildrenFlags();
-        Debug.println(Debug.info, "total Golem Conviction: " + totalGolemConviction);
-
-        if (currRoundNum > 500)
+        if (readyToRush) {
+            if (currentState != State.SAVING_FOR_RUSH) {
+                stateStack.push(currentState);
+            }
+            if (currenState != State.BUILDING_SLANDERERS) {
+                canGoBackToBuildingProtectors = false;
+            }
+            currentState == State.RUSHING;
+            
+        } else if (tryStartSavingForRush()) {
+            stateStack.push(currentState);
+            currentState = State.SAVING_FOR_RUSH;
+        } else if (currRoundNum > 500) {
             tryStartCleanup();
-
+        }
+        
         toggleBuildProtectors();
-        tryStartBuildingSpawnKill();
         tryStartSignalingAvgEnemyDir();
-
+        tryStartBuildingSpawnKill();
 
         //bidding code
         if(!overBidThreshold) {
-            int biddingInfluence;
             if (rc.getTeamVotes() > 750) {
                 overBidThreshold = true;
-            }
-            if (currRoundNum < 200) {
-                biddingInfluence = Math.max(currInfluence / 100, 2);
+                Debug.println(Debug.info, "Not bidding. Already won, suckers!");
             } else {
-                switch (currentState) {
-                    case CLEANUP:
-                    case BUILDING_SLANDERERS:
-                    case BUILDING_PROTECTORS:
-                        Debug.println(Debug.info, "Bidding high.");
-                        biddingInfluence = currInfluence / 10;
-                        break;
-                    case SAVING_FOR_RUSH:
-                    case BUILDING_SPAWNKILLS:
-                    case RUSHING:
-                        Debug.println(Debug.info, "Bidding low.");
-                        biddingInfluence = currInfluence / 50;
-                        break;
-                    default:
-                        Debug.println(Debug.info, "Bidding medium.");
-                        biddingInfluence = currInfluence / 20;
-                        break;
+                int biddingInfluence;
+                if (currRoundNum < 200) {
+                    biddingInfluence = Math.max(currInfluence / 100, 2);
+                } else {
+                    switch (currentState) {
+                        case CLEANUP:
+                        case BUILDING_SLANDERERS:
+                        case BUILDING_PROTECTORS:
+                            Debug.println(Debug.info, "Bidding high.");
+                            biddingInfluence = currInfluence / 10;
+                            break;
+                        case SAVING_FOR_RUSH:
+                        case BUILDING_SPAWNKILLS:
+                        case RUSHING:
+                            Debug.println(Debug.info, "Bidding low.");
+                            biddingInfluence = currInfluence / 50;
+                            break;
+                        default:
+                            Debug.println(Debug.info, "Bidding medium.");
+                            biddingInfluence = currInfluence / 20;
+                            break;
+                    }
+                    if (rc.canBid(biddingInfluence)) {
+                        rc.bid(biddingInfluence);
+                    }
                 }
-                if (rc.canBid(biddingInfluence)) {
-                    rc.bid(biddingInfluence);
-                }
+                Debug.println(Debug.info, "Amount bid: " + biddingInfluence);
             }
-            Debug.println(Debug.info, "Amount bid: " + biddingInfluence);
         }
 
         //updating currInfluence after a bid
@@ -236,22 +247,7 @@ public class EC extends Robot {
 
         switch(currentState) {
             case BUILDING_SLANDERERS:
-                Debug.println(Debug.info, "building slanderers state");
-
-                //rush if we can
-                RushFlag targetECFromSlanderers = ECflags.peek();
-                if(targetECFromSlanderers != null) {
-                    int requiredInfluence = targetECFromSlanderers.requiredInfluence;
-
-                    MapLocation enemyLocation = home.translate(targetECFromSlanderers.dx - Util.dOffset, targetECFromSlanderers.dy - Util.dOffset);
-                    Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
-                    if(requiredInfluence < currInfluence) {
-                        stateStack.push(currentState);
-                        currentState = State.RUSHING;
-                        break;
-                    }  
-                }
-            
+                Debug.println(Debug.info, "building slanderers state");            
                 if(!muckrackerNear && robotCounter % 2 != 0) {
                     toBuild = RobotType.SLANDERER;
                     influence = Util.getBestSlandererInfluence(currInfluence);
@@ -459,7 +455,6 @@ public class EC extends Robot {
         influence = 0;
         currRoundNum = rc.getRoundNum();
         currInfluence = rc.getInfluence();
-        totalGolemConviction = 0;
         noAdjacentEC = true;
     }
 
@@ -584,17 +579,6 @@ public class EC extends Robot {
 
 
         }
-
-        //find the combined sizes of the golems
-        for(RobotInfo robot: friendlySensable) {
-            if (rc.canGetFlag(robot.getID())) {
-                int currFlag = rc.getFlag(robot.getID());
-                if(Comms.isSubRobotType(currFlag, Comms.SubRobotType.POL_GOLEM)) {
-                    totalGolemConviction += robot.getConviction();
-                    Debug.println(Debug.info, "Total Golem Conviction Updated: " + totalGolemConviction);
-                }
-            }
-        }
         
         //remove protector ids if dead
         int protectorID;
@@ -635,8 +619,6 @@ public class EC extends Robot {
                 currReqInf = (int) neededInf * 2 + 10;
             }
             if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
-                stateStack.push(currentState);
-                currentState = State.SAVING_FOR_RUSH;
                 Debug.println(Debug.info, "tryStartSavingForRush is returning true");
                 return true;
             }
@@ -680,7 +662,7 @@ public class EC extends Robot {
         Debug.setIndicatorLine(Debug.info, home, enemyLocation, 255, 150, 50);
 
         if (influence >= currInfluence) {
-            currentState = State.SAVING_FOR_RUSH;
+            currentState = stateStack.pop();
             return false;
         }
         
@@ -689,12 +671,28 @@ public class EC extends Robot {
             nextFlag = rushFlag.flag;
             currentState = stateStack.pop();
             lastRush = turnCount;
+            if (currentState != State.BUILDING_SLANDERERS) {
+                canGoBackToBuildingProtectors = true;
+            }
+            return true;
         }
-
-        return true;
+        return false;   
     }
 
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {
         nextFlag = Comms.getFlag(Comms.InformationCategory.TARGET_ROBOT, type);
+    }
+    
+    //rush if we can
+    public boolean readyToRush() {
+        RushFlag targetEC = ECflags.peek();
+        if(targetEC != null) {
+            int requiredInfluence = targetEC.requiredInfluence;
+            MapLocation enemyLocation = home.translate(targetECFromSlanderers.dx - Util.dOffset, 
+                targetECFromSlanderers.dy - Util.dOffset);
+            Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
+            if(requiredInfluence < currInfluence) return true;
+        }
+        return false;
     }
 }
