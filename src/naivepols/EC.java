@@ -1,11 +1,11 @@
-package musketeerplayersprint2;
+package naivepols;
 import battlecode.common.*;
 
-import musketeerplayersprint2.Comms.*;
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Debug.*;
-import musketeerplayersprint2.fast.FastIterableIntSet;
-import musketeerplayersprint2.fast.FastIterableLocSet;
+import naivepols.Comms.*;
+import naivepols.Util.*;
+import naivepols.Debug.*;
+import naivepols.fast.FastIterableIntSet;
+import naivepols.fast.FastIterableLocSet;
 
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
@@ -442,6 +442,9 @@ public class EC extends Robot {
         idSet.updateIterable();
         protectorIdSet.updateIterable();
 
+        int totalEnemyX = 0;
+        int totalEnemyY = 0;
+
         int id;
         MapLocation tempMapLoc;
         int neededInf;
@@ -494,9 +497,12 @@ public class EC extends Robot {
                         if (enemyECsFound.contains(tempMapLoc)) enemyECsFound.remove(tempMapLoc);
                         break;
                     case ENEMY_FOUND:
+                        haveSeenEnemy = true;
                         int[] enemyDxDy = Comms.getDxDy(flag);
                         int enemyLocX = enemyDxDy[0] + home.x - Util.dOffset;
                         int enemyLocY = enemyDxDy[1] + home.y - Util.dOffset;
+                        totalEnemyX += enemyLocX;
+                        totalEnemyY += enemyLocY;
 
                         MapLocation enemyLoc = new MapLocation(enemyLocX, enemyLocY);
                         if (rc.getLocation().isWithinDistanceSquared(enemyLoc, rc.getType().sensorRadiusSquared * 4) &&
