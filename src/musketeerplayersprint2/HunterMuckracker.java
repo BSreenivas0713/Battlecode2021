@@ -8,10 +8,6 @@ import musketeerplayersprint2.fast.FastIterableLocSet;
 public class HunterMuckracker extends Robot {
     static Direction main_direction;
     static MapLocation enemyLocation;
-    static int baseCrowdedSemaphor;
-    static int distSquaredToBase;
-    static FastIterableLocSet lastAttacked;
-    static int numRoundsSinceLastAttacked;
     static boolean seenEnemyLocation;
     static RotationDirection spinDirection = Util.RotationDirection.COUNTERCLOCKWISE;
 
@@ -20,15 +16,6 @@ public class HunterMuckracker extends Robot {
         subRobotType = Comms.SubRobotType.MUC_HUNTER;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         enemyLocation = enemyLoc;
-        baseCrowdedSemaphor = 4;
-        if(enemyLocation != null) {
-            distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
-        }
-        else {
-            distSquaredToBase = -1;
-        }
-        lastAttacked = new FastIterableLocSet();
-        numRoundsSinceLastAttacked = 0;
         seenEnemyLocation = false;
     }
 
@@ -48,43 +35,30 @@ public class HunterMuckracker extends Robot {
         Debug.println(Debug.info, "I am a hunter Mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
         if(enemyLocation != null) {
-            Debug.println(Debug.info, "enemy location: " + enemyLocation + ";semaphor value: " + baseCrowdedSemaphor);
+            Debug.println(Debug.info, "enemy location: " + enemyLocation);
         }
-        else {
-            Debug.println(Debug.info, "no enemy location, reseting baseCrowdedSemaphor");
-            baseCrowdedSemaphor = 5;
-        }
-
-
-
-        // if(lastAttacked.locs.length != 0) {
-        //     Debug.println(Debug.info, "last attacked: " + lastAttacked.locs);
-        // }
-        // else {
-        //     Debug.println(Debug.info, "last attacked list empty");
-        // }
-
-        // if(lastAttacked.locs.length != 0) {
-        //     if(numRoundsSinceLastAttacked >= Util.MuckAttackCooldown) {
-        //         numRoundsSinceLastAttacked = 0;
-        //     }
-        //     else {
-        //         numRoundsSinceLastAttacked++;
-        //     }
-        // }
 
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
 
+        boolean setChillFlag = false;
+
         if(enemyLocation != null && rc.canSenseLocation(enemyLocation) ) {
             RobotInfo supposedToBeAnEC = rc.senseRobotAtLocation(enemyLocation);
             if(supposedToBeAnEC == null || supposedToBeAnEC.getType() != RobotType.ENLIGHTENMENT_CENTER) {
-                Debug.println(Debug.info, "reset the EC flag as it was at a wrong location");
-                lastAttacked.add(enemyLocation);
-                numRoundsSinceLastAttacked = 0;
                 enemyLocation = null;
-                baseCrowdedSemaphor = 5;
+                
+                Debug.println(Debug.info, "Enemy EC not found, setting chill flag, reseting enemyLocation");
+                Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
+                
+                int dx = enemyLocation.x - currLoc.x;
+                int dy = enemyLocation.y - currLoc.y;
+
+                int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_CHILL_CALL, dx + Util.dOffset, dy + Util.dOffset);
+                setFlag(newFlag);
+                setChillFlag = true;
+                enemyLocation = null;
             }
         }
 
@@ -138,20 +112,17 @@ public class HunterMuckracker extends Robot {
                 if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
                     muckraker_Found_EC = true;
                 } else {
-                    if(!lastAttacked.contains(tempLoc)) {
-                        enemyLocation = tempLoc;
-                        distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
-                        if(!ICtoTurnMap.contains(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL.ordinal())) {
-                            Debug.println(Debug.info, "Found Enemy EC, Generating Attack call");
-                            Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
-                            
-                            int dx = enemyLocation.x - rc.getLocation().x;
-                            int dy = enemyLocation.y - rc.getLocation().y;
+                    enemyLocation = tempLoc;
+                    if(!ICtoTurnMap.contains(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL.ordinal())) {
+                        Debug.println(Debug.info, "Found Enemy EC, Generating Attack call");
+                        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
+                        
+                        int dx = enemyLocation.x - rc.getLocation().x;
+                        int dy = enemyLocation.y - rc.getLocation().y;
 
-                            int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, dx + Util.dOffset, dy + Util.dOffset);
-                            setFlag(newFlag);
-                            setAttackCall = true;
-                        }
+                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, dx + Util.dOffset, dy + Util.dOffset);
+                        setFlag(newFlag);
+                        setAttackCall = true;
                     }
                 }
             }
@@ -162,7 +133,6 @@ public class HunterMuckracker extends Robot {
 
         boolean awayFromBase = false;
         RobotInfo friendlyBase = null;
-        boolean setChillFlag = false;
         int numFollowingClosestEnemy = 0;
         RobotInfo disperseBot = null;
 
@@ -188,12 +158,7 @@ public class HunterMuckracker extends Robot {
                         DxDyFromRobot = Comms.getDxDy(flag);
                         enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
                         Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
-                        // if(enemyLocation != null && !enemyLoc.equals(enemyLocation)) {
-                        //     baseCrowdedSemaphor = 5;
-                        //     Debug.println(Debug.info, "reset semaphor because of changed enemy location");
-                        // }
                         enemyLocation = enemyLoc;
-                        distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
                     }
                     break;
                 case ENEMY_EC_CHILL_CALL:
@@ -205,7 +170,6 @@ public class HunterMuckracker extends Robot {
                         Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
                         if(enemyLoc.equals(enemyLocation)) {
                             enemyLocation = null;
-                            distSquaredToBase = -1;
                             Debug.println(Debug.info, "Reset enemy location as a result of the chill flag");
                         }
                     }
@@ -243,10 +207,7 @@ public class HunterMuckracker extends Robot {
                         int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_CHILL_CALL, dx + Util.dOffset, dy + Util.dOffset);
                         setFlag(newFlag);
                         setChillFlag = true;
-                        lastAttacked.add(enemyLocation);
-                        numRoundsSinceLastAttacked = 0;
                         enemyLocation = null;
-                        distSquaredToBase = -1;
                 }
                 if(rc.canGetFlag(robot.getID())) {
                     botFlag = rc.getFlag(robot.getID());
@@ -320,15 +281,6 @@ public class HunterMuckracker extends Robot {
                     tryMove +=1;
                 }
 
-                // tryMoveDest(currLoc.directionTo(enemyLocation));
-                // if(rc.getLocation().distanceSquaredTo(enemyLocation) < distSquaredToBase) {
-                //     baseCrowdedSemaphor = 5;
-                //     Debug.println(Debug.info, "got closer to enemy base, resetting semaphor");
-                // }
-                // else {
-                //     baseCrowdedSemaphor--;
-                //     Debug.println(Debug.info, "did not get closer to enemy base, semaphor getting lower: " + baseCrowdedSemaphor);
-                // }
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
             }
@@ -358,13 +310,8 @@ public class HunterMuckracker extends Robot {
                 }
                 Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);
             }
-            if(baseCrowdedSemaphor == 0) {
-                lastAttacked.add(enemyLocation);
-                numRoundsSinceLastAttacked = 0;
-                enemyLocation = null;
-            }
         }
-         
+        
         if(propagateFlags());
         else if(broadcastECLocation());
         else if(broadcastEnemyLocalOrGlobal());
