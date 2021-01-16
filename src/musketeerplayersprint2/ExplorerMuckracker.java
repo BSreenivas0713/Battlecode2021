@@ -9,14 +9,17 @@ public class ExplorerMuckracker extends Robot {
     static MapLocation enemyLocation;
     static int baseCrowdedSemaphor;
     static int distSquaredToBase;
+    static MapLocation lastAttacked = null;
+    static int numRoundsSinceLastAttacked = 0;
 
     public ExplorerMuckracker(RobotController r) {
         super(r);
         subRobotType = Comms.SubRobotType.MUC_EXPLORER;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         enemyLocation = null;
-        baseCrowdedSemaphor = 5;
+        baseCrowdedSemaphor = 4;
         distSquaredToBase = -1;
+
     }
 
     public ExplorerMuckracker(RobotController r, MapLocation h) {
@@ -38,14 +41,31 @@ public class ExplorerMuckracker extends Robot {
             Debug.println(Debug.info, "no enemy location, resetting base crowded semaphor");
             baseCrowdedSemaphor = 5;
         }
-
+        if(lastAttacked != null) {
+            Debug.println(Debug.info, "last attacked location: " + lastAttacked);
+        }
+        else {
+            Debug.println(Debug.info, "no last attacked location");
+        }
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
 
+        if(lastAttacked != null) {
+            if(numRoundsSinceLastAttacked >= Util.MuckAttackCooldown) {
+                lastAttacked = null;
+                numRoundsSinceLastAttacked = 0;
+            }
+            else {
+                numRoundsSinceLastAttacked++;
+            }
+        }
+
+
         if(enemyLocation != null && rc.canSenseLocation(enemyLocation) ) {
             RobotInfo supposedToBeAnEC = rc.senseRobotAtLocation(enemyLocation);
             if(supposedToBeAnEC == null || supposedToBeAnEC.getType() != RobotType.ENLIGHTENMENT_CENTER) {
+                lastAttacked = enemyLocation;
                 enemyLocation = null;
                 baseCrowdedSemaphor = 5;
             }
@@ -93,17 +113,20 @@ public class ExplorerMuckracker extends Robot {
                 int newFlag; //These are here so I don't have to make different variable names in the different cases
                 switch(Comms.getIC(flag)) {
                 case ENEMY_EC_ATTACK_CALL:
-                    Debug.println(Debug.info, "Found Propogated flag(Attack). Acting on it. ");
+                    Debug.println(Debug.info, "Found Propogated flag(Attack). Acting on it if not in lastAttacked. ");
                     robotLoc = robot.getLocation();
                     DxDyFromRobot = Comms.getDxDy(flag);
                     enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
                     Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
-                    if(enemyLocation != null && !enemyLoc.equals(enemyLocation)) {
-                        baseCrowdedSemaphor = 5;
-                        Debug.println(Debug.info, "reset semaphor because of changed enemy location");
+                    if(!enemyLoc.equals(lastAttacked)) {
+                        Debug.println(Debug.info, "LastAttacked not equal to this new location. New Location: " + enemyLoc + "; Old location: " + lastAttacked);
+                        if(enemyLocation != null && !enemyLoc.equals(enemyLocation)) {
+                            baseCrowdedSemaphor = 5;
+                            Debug.println(Debug.info, "reset semaphor because of changed enemy location");
+                        }
+                        enemyLocation = enemyLoc;
+                        distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
                     }
-                    enemyLocation = enemyLoc;
-                    distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
                     break;
                 case ENEMY_EC_CHILL_CALL:
                     Debug.println(Debug.info, "Found Propogated flag(Chill). Acting on it. ");
@@ -112,6 +135,7 @@ public class ExplorerMuckracker extends Robot {
                     enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
                     Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
                     if(enemyLoc.equals(enemyLocation)) {
+                        lastAttacked = enemyLocation;
                         enemyLocation = null;
                         distSquaredToBase = -1;
                         Debug.println(Debug.info, "Reset enemy location as a result of the chill flag");
@@ -137,12 +161,13 @@ public class ExplorerMuckracker extends Robot {
                     Debug.println(Debug.info, "Enemy EC overtaken, setting chill flag, reseting enemyLocation");
                         Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
                         
-                        int dx = enemyLocation.x - currLoc.x;
-                        int dy = enemyLocation.y - currLoc.y;
+                        int dx = enemyLocation.x - rc.getLocation().x;
+                        int dy = enemyLocation.y - rc.getLocation().y;
 
                         int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_CHILL_CALL, dx + Util.dOffset, dy + Util.dOffset);
                         setFlag(newFlag);
                         setChillFlag = true;
+                        lastAttacked = enemyLocation;
                         enemyLocation = null;
                         distSquaredToBase = -1;
                 }
@@ -190,17 +215,19 @@ public class ExplorerMuckracker extends Robot {
                 if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
                     muckraker_Found_EC = true;
                 } else {
-                    enemyLocation = tempLoc;
-                    distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
-                    if(!ICtoTurnMap.contains(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL.ordinal())) {
-                        Debug.println(Debug.info, "Found Enemy EC, Generating Attack call");
-                        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
-                        
-                        int dx = enemyLocation.x - currLoc.x;
-                        int dy = enemyLocation.y - currLoc.y;
+                    if(!tempLoc.equals(lastAttacked)) {
+                        enemyLocation = tempLoc;
+                        distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
+                        if(!ICtoTurnMap.contains(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL.ordinal())) {
+                            Debug.println(Debug.info, "Found Enemy EC, Generating Attack call");
+                            Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
+                            
+                            int dx = enemyLocation.x - currLoc.x;
+                            int dy = enemyLocation.y - currLoc.y;
 
-                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, dx + Util.dOffset, dy + Util.dOffset);
-                        setFlag(newFlag);
+                            int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, dx + Util.dOffset, dy + Util.dOffset);
+                            setFlag(newFlag);
+                        }
                     }
                 }
             }
@@ -250,6 +277,7 @@ public class ExplorerMuckracker extends Robot {
                 Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);
             }
             if(baseCrowdedSemaphor == 0) {
+                lastAttacked = enemyLocation;
                 enemyLocation = null;
             }
         }
