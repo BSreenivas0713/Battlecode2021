@@ -27,12 +27,12 @@ public class Comms {
         ROBOT_TYPE,
         ENEMY_FOUND,
         FOLLOWING,
-        AVG_ENEMY_DIR,                // UNUSED? Though might do one for slanderers specifically
         ROBOT_TYPE_AND_CLOSEST_ENEMY, // UNUSED?
         SLA_CLOSEST_ENEMY,
         CLOSEST_ENEMY,
         ENEMY_EC_ATTACK_CALL,
-        ENEMY_EC_CHILL_CALL
+        ENEMY_EC_CHILL_CALL,
+        SLA_FLEEING,
     }
 
     public enum SubRobotType {
@@ -140,10 +140,6 @@ public class Comms {
         return SubRobotType.values()[(flag & ~BIT_MASK_IC) >> BIT_INF_OFFSET];
     }
 
-    public static Direction getAwayDirection(int flag) {
-        return Direction.values()[(flag & ~BIT_MASK_IC)];
-    }
-
     public static Direction getDirection(int flag) {
         return Direction.values()[(flag & BIT_MASK_DIR)];
     }
@@ -155,6 +151,7 @@ public class Comms {
             case ROBOT_TYPE_AND_CLOSEST_ENEMY:
                 return Comms.getSubRobotTypeClosestEnemy(flag) == type;
             case SLA_CLOSEST_ENEMY:
+            case SLA_FLEEING:
                 return SubRobotType.SLANDERER == type;
             default:
                 return false;
