@@ -74,6 +74,14 @@ public class ExplorerMuckracker extends Robot {
         boolean spawnKillRunFromHome = false;
         boolean setChillFlag = false;
         RobotInfo disperseBot = null;
+
+        MapLocation robotLoc;
+        int []DxDyFromRobot;
+        MapLocation enemyLoc;
+        int dx;
+        int dy;
+        int newFlag;
+
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
             robot = friendlySensable[i];
             if(rc.canGetFlag(robot.getID())) {
@@ -85,40 +93,36 @@ public class ExplorerMuckracker extends Robot {
                 }
                 
                 // React to attack calls
-                MapLocation robotLoc;
-                int []DxDyFromRobot;
-                MapLocation enemyLoc;
-                int dx;
-                int dy;
-                int newFlag; //These are here so I don't have to make different variable names in the different cases
-                switch(Comms.getIC(flag)) {
-                case ENEMY_EC_ATTACK_CALL:
-                    Debug.println(Debug.info, "Found Propogated flag(Attack). Acting on it. ");
-                    robotLoc = robot.getLocation();
-                    DxDyFromRobot = Comms.getDxDy(flag);
-                    enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
-                    Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
-                    if(enemyLocation != null && !enemyLoc.equals(enemyLocation)) {
-                        baseCrowdedSemaphor = 5;
-                        Debug.println(Debug.info, "reset semaphor because of changed enemy location");
+                if(enemyLocation == null) {
+                    switch(Comms.getIC(flag)) {
+                    case ENEMY_EC_ATTACK_CALL:
+                        Debug.println(Debug.info, "Found Propogated flag(Attack). Acting on it. ");
+                        robotLoc = robot.getLocation();
+                        DxDyFromRobot = Comms.getDxDy(flag);
+                        enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
+                        Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                        if(enemyLocation != null && !enemyLoc.equals(enemyLocation)) {
+                            baseCrowdedSemaphor = 5;
+                            Debug.println(Debug.info, "reset semaphor because of changed enemy location");
+                        }
+                        enemyLocation = enemyLoc;
+                        distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
+                        break;
+                    case ENEMY_EC_CHILL_CALL:
+                        Debug.println(Debug.info, "Found Propogated flag(Chill). Acting on it. ");
+                        robotLoc = robot.getLocation();
+                        DxDyFromRobot = Comms.getDxDy(flag);
+                        enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
+                        Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                        if(enemyLoc.equals(enemyLocation)) {
+                            enemyLocation = null;
+                            distSquaredToBase = -1;
+                            Debug.println(Debug.info, "Reset enemy location as a result of the chill flag");
+                        }
+                        break;
+                    default: 
+                        break;
                     }
-                    enemyLocation = enemyLoc;
-                    distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
-                    break;
-                case ENEMY_EC_CHILL_CALL:
-                    Debug.println(Debug.info, "Found Propogated flag(Chill). Acting on it. ");
-                    robotLoc = robot.getLocation();
-                    DxDyFromRobot = Comms.getDxDy(flag);
-                    enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
-                    Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
-                    if(enemyLoc.equals(enemyLocation)) {
-                        enemyLocation = null;
-                        distSquaredToBase = -1;
-                        Debug.println(Debug.info, "Reset enemy location as a result of the chill flag");
-                    }
-                    break;
-                default: 
-                    break;
                 }
             }
 

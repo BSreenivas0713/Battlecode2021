@@ -44,9 +44,11 @@ public class Slanderer extends Robot {
         RobotInfo robot;
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
+        double temp;
+
         for(int i = enemySensable.length - 1; i >= 0; i--) {
             robot = enemySensable[i];
-            double temp = curr.distanceSquaredTo(robot.getLocation());
+            temp = curr.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
                 minRobot = robot;
@@ -57,7 +59,7 @@ public class Slanderer extends Robot {
         double minNeutralDistSquared = Integer.MAX_VALUE;
         for(int i = neutralSensable.length - 1; i >= 0; i--) {
             robot = neutralSensable[i];
-            double temp = curr.distanceSquaredTo(robot.getLocation());
+            temp = curr.distanceSquaredTo(robot.getLocation());
             if (temp < minNeutralDistSquared) {
                 minNeutralDistSquared = temp;
                 minNeutralRobot = robot;
@@ -69,16 +71,12 @@ public class Slanderer extends Robot {
         int closestSlandDist = Integer.MAX_VALUE;
         MapLocation spawnKillDude = null;
         Direction otherSlaFleeingDir = null;
+        int flag;
+        int dist;
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
             robot = friendlySensable[i];
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 friendlyEC = robot;
-            }
-
-            int dist = robot.getLocation().distanceSquaredTo(curr);
-            if (robot.getType() == RobotType.SLANDERER && dist < closestSlandDist) {
-                closestSlanderer = robot;
-                closestSlandDist = dist;
             }
 
             if (robot.getType() == RobotType.POLITICIAN && home.isAdjacentTo(robot.getLocation()) && rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
@@ -86,7 +84,14 @@ public class Slanderer extends Robot {
             }
             
             if(rc.canGetFlag(robot.getID())) {
-                int flag = rc.getFlag(robot.getID());
+                flag = rc.getFlag(robot.getID());
+                dist = robot.getLocation().distanceSquaredTo(curr);
+                
+                if (Comms.isSubRobotType(flag, subRobotType) && dist < closestSlandDist) {
+                    closestSlanderer = robot;
+                    closestSlandDist = dist;
+                }
+
                 if(Comms.getIC(flag) == Comms.InformationCategory.SLA_FLEEING) {
                     otherSlaFleeingDir = Comms.getDirection(flag);
                 }
