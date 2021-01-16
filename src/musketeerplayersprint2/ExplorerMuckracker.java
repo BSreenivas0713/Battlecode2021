@@ -53,7 +53,9 @@ public class ExplorerMuckracker extends Robot {
 
         RobotInfo powerful = null;
         int bestInfluence = Integer.MIN_VALUE;
-        for (RobotInfo robot : enemyAttackable) {
+        RobotInfo robot;
+        for(int i = enemyAttackable.length - 1; i >= 0; i--) {
+            robot = enemyAttackable[i];
             int curr = robot.getInfluence();
             if (curr > bestInfluence && robot.type.canBeExposed()) {
                 bestInfluence = curr;
@@ -61,9 +63,28 @@ public class ExplorerMuckracker extends Robot {
             }
         }
 
-        for(RobotInfo robot: friendlySensable) {
+        for(int i = friendlySensable.length - 1; i >= 0; i--) {
+            robot = friendlySensable[i];
+        }
+        
+        boolean muckraker_Found_EC = false;
+
+        RobotInfo closest_muk = null;
+        int closest_muk_dist = Integer.MAX_VALUE;
+        boolean spawnKillRunFromHome = false;
+        boolean setChillFlag = false;
+        RobotInfo disperseBot = null;
+        for(int i = friendlySensable.length - 1; i >= 0; i--) {
+            robot = friendlySensable[i];
             if(rc.canGetFlag(robot.getID())) {
                 int flag = rc.getFlag(robot.getID());
+                // Move out of the way of rush pols
+                if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_RUSH)) {
+                    Debug.println(Debug.info, "Found a rusher.");
+                    disperseBot = robot;
+                }
+                
+                // React to attack calls
                 MapLocation robotLoc;
                 int []DxDyFromRobot;
                 MapLocation enemyLoc;
@@ -100,44 +121,8 @@ public class ExplorerMuckracker extends Robot {
                     break;
                 }
             }
-        }
-        
-        boolean muckraker_Found_EC = false;
-        for (RobotInfo robot : rc.senseNearbyRobots(sensingRadius, enemy)) {
-            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
-                MapLocation tempLoc = robot.getLocation();
-                if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
-                    muckraker_Found_EC = true;
-                } else {
-                    enemyLocation = tempLoc;
-                    distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
-                    if(!ICtoTurnMap.contains(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL.ordinal())) {
-                        Debug.println(Debug.info, "Found Enemy EC, Generating Attack call");
-                        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
-                        
-                        int dx = enemyLocation.x - currLoc.x;
-                        int dy = enemyLocation.y - currLoc.y;
 
-                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, dx + Util.dOffset, dy + Util.dOffset);
-                        setFlag(newFlag);
-                    }
-                }
-            }
-        }
-
-        RobotInfo closest_muk = null;
-        int closest_muk_dist = Integer.MAX_VALUE;
-        boolean spawnKillRunFromHome = false;
-        boolean setChillFlag = false;
-        RobotInfo disperseBot = null;
-        for (RobotInfo robot : friendlySensable) {
-            if(rc.canGetFlag(robot.getID())) {
-                int flag = rc.getFlag(robot.getID());
-                if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_RUSH)) {
-                    Debug.println(Debug.info, "Found a rusher.");
-                    disperseBot = robot;
-                }
-            }
+            // Send chill flag
             MapLocation tempLoc = robot.getLocation();
             int dist = currLoc.distanceSquaredTo(tempLoc);
             if (robot.getType() == RobotType.MUCKRAKER && dist < closest_muk_dist) {
@@ -171,23 +156,20 @@ public class ExplorerMuckracker extends Robot {
                 }
             }
         }
-        // int ECInfluence = Integer.MAX_VALUE;
-        // if() {
-        // if(rc.senseRobotAtLocation(home) == RobotInfo.ENLIGHTENMENT_CENTER) {
-        //     ECInfluence = home.
-        // }
-        // }
 
         if (powerful != null) {
             if (rc.canExpose(powerful.location)) {
                 rc.expose(powerful.location);
             }
         }
+
         RobotInfo bestSlanderer = null;
         bestInfluence = Integer.MIN_VALUE;
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
-        for (RobotInfo robot : rc.senseNearbyRobots(sensingRadius, enemy)) {
+
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
             if (robot.getType() == RobotType.SLANDERER) {
                 int curr = robot.getConviction();
                 if (curr > bestInfluence) {
@@ -195,13 +177,36 @@ public class ExplorerMuckracker extends Robot {
                     bestSlanderer = robot;
                 }
             }
+
             double temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
                 minRobot = robot;
             }
+            
+            // Attack call
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
+                MapLocation tempLoc = robot.getLocation();
+                if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
+                    muckraker_Found_EC = true;
+                } else {
+                    enemyLocation = tempLoc;
+                    distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
+                    if(!ICtoTurnMap.contains(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL.ordinal())) {
+                        Debug.println(Debug.info, "Found Enemy EC, Generating Attack call");
+                        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
+                        
+                        int dx = enemyLocation.x - currLoc.x;
+                        int dy = enemyLocation.y - currLoc.y;
+
+                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, dx + Util.dOffset, dy + Util.dOffset);
+                        setFlag(newFlag);
+                    }
+                }
+            }
             // if (robot.getType() == RobotType.POLITICIAN && (robot.getConviction() >= 100 || ))
         }
+        
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }

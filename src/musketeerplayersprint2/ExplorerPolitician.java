@@ -30,12 +30,15 @@ public class ExplorerPolitician extends Robot {
             main_direction = Util.randomDirection();
         }
         
+        RobotInfo robot;
         int min_attackable_conviction = (rc.getConviction()-10) / 3;
         int attackable_conviction = 0;
         MapLocation currLoc = rc.getLocation();
         int maxEnemyDistSquared = Integer.MIN_VALUE;
         MapLocation farthestEnemy = null;
-        for (RobotInfo robot : enemyAttackable) {
+
+        for(int i = enemyAttackable.length - 1; i >= 0; i--) {
+            robot = enemyAttackable[i];
             attackable_conviction += robot.getConviction();
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp > maxEnemyDistSquared) {
@@ -55,32 +58,33 @@ public class ExplorerPolitician extends Robot {
         int max_influence = (rc.getConviction()-10) / 3;
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
-        for (RobotInfo robot : enemySensable) {
+        
+        RobotInfo weakest = null;
+        int min_influence = 0;
+
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
             int currInfluence = robot.getConviction();
             if (robot.getType() == RobotType.MUCKRAKER && currInfluence > max_influence) {
                 powerful = robot;
                 max_influence = currInfluence;
             }
+            
             double temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
                 minRobot = robot;
+            }
+            
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && currInfluence < min_influence) {
+                weakest = robot;
+                min_influence = currInfluence;
             }
         }
         
         if (powerful != null) {
             Direction toMove = rc.getLocation().directionTo(powerful.getLocation());
             tryMoveDest(toMove);
-        }
-        
-        RobotInfo weakest = null;
-        int min_influence = 0;
-        for (RobotInfo robot : enemySensable) {
-            int currInfluence = robot.getInfluence();
-            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && currInfluence < min_influence) {
-                weakest = robot;
-                min_influence = currInfluence;
-            }
         }
         
         if (weakest != null) {

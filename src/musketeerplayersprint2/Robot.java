@@ -116,8 +116,12 @@ public class Robot {
     boolean broadcastECLocation() {
         boolean res = false;
 
+        RobotInfo robot;
+        // Moved beforehand, so we need to recalculate
         RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius);
-        for (RobotInfo robot : sensable) {
+
+        for(int i = sensable.length - 1; i >= 0; i--) {
+            robot = sensable[i];
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 if(robot.getTeam() == rc.getTeam()) {
                     if(!robot.getLocation().equals(home)) {
@@ -163,8 +167,13 @@ public class Robot {
             }
         }
 
+        // Moved beforehand, so we need to recalculate
+        RobotInfo robot;
+        RobotInfo[] friendlyNearby = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
         MapLocation currLoc = rc.getLocation();
-        for(RobotInfo robot : rc.senseNearbyRobots(sensorRadius, rc.getTeam())) { //have to use sense nearby robots since we move before calling this function
+
+        for(int i = friendlyNearby.length - 1; i >= 0; i--) {
+            robot = friendlyNearby[i];
             if(rc.canGetFlag(robot.getID())) {
                 int flag = rc.getFlag(robot.getID());
                 InformationCategory IC = Comms.getIC(flag);
@@ -230,10 +239,13 @@ public class Robot {
         int dy = 0;
         int turn = -1;
 
+        RobotInfo robot;
         MapLocation currLoc = rc.getLocation();
         MapLocation closestEnemyLoc = null;
         int minDistSquared = Integer.MAX_VALUE;
-        for (RobotInfo robot : enemySensable) {
+        
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
@@ -244,7 +256,8 @@ public class Robot {
 
         // Did not find its own sensable enemy, propagate other flags
         if(closestEnemyLoc == null) {
-            for(RobotInfo robot : rc.senseNearbyRobots(sensorRadius, rc.getTeam())) {
+            for(int i = friendlySensable.length - 1; i >= 0; i--) {
+                robot = friendlySensable[i];
                 if(rc.canGetFlag(robot.getID())) {
                     int flag = rc.getFlag(robot.getID());
                     switch(Comms.getIC(flag)) {
