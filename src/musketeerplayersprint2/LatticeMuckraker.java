@@ -31,25 +31,17 @@ public class LatticeMuckraker extends Robot {
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
+        
+        RobotInfo robot;
         RobotInfo powerful = null;
         int bestInfluence = Integer.MIN_VALUE;
-        for (RobotInfo robot : enemyAttackable) {
+
+        for(int i = enemyAttackable.length - 1; i >= 0; i--) {
+            robot = enemyAttackable[i];
             int curr = robot.getInfluence();
             if (curr > bestInfluence && robot.type.canBeExposed()) {
                 bestInfluence = curr;
                 powerful = robot;
-            }
-        }
-        
-        boolean muckraker_Found_EC = false;
-        for (RobotInfo robot : rc.senseNearbyRobots(sensingRadius, enemy)) {
-            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
-                MapLocation tempLoc = robot.getLocation();
-                if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
-                    muckraker_Found_EC = true;
-                } else {
-                    enemyLocation = tempLoc;
-                }
             }
         }
 
@@ -57,7 +49,9 @@ public class LatticeMuckraker extends Robot {
         int closest_muk_dist = Integer.MAX_VALUE;
         boolean spawnKillRunFromHome = false;
         RobotInfo disperseBot = null;
-        for (RobotInfo robot : friendlySensable) {
+
+        for(int i = friendlySensable.length - 1; i >= 0; i--) {
+            robot = friendlySensable[i];
             if(rc.canGetFlag(robot.getID())) {
                 int flag = rc.getFlag(robot.getID());
                 if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_RUSH)) {
@@ -65,12 +59,14 @@ public class LatticeMuckraker extends Robot {
                     disperseBot = robot;
                 }
             }
+
             MapLocation tempLoc = robot.getLocation();
             int dist = currLoc.distanceSquaredTo(tempLoc);
             if (robot.getType() == RobotType.MUCKRAKER && dist < closest_muk_dist) {
                 closest_muk = robot;
                 closest_muk_dist = dist;
             }
+
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && home.equals(robot.getLocation())) {
                     spawnKillRunFromHome = true;
@@ -84,23 +80,21 @@ public class LatticeMuckraker extends Robot {
                 }
             }
         }
-        // int ECInfluence = Integer.MAX_VALUE;
-        // if() {
-        // if(rc.senseRobotAtLocation(home) == RobotInfo.ENLIGHTENMENT_CENTER) {
-        //     ECInfluence = home.
-        // }
-        // }
 
         if (powerful != null) {
             if (rc.canExpose(powerful.location)) {
                 rc.expose(powerful.location);
             }
         }
+
+        boolean muckraker_Found_EC = false;
         RobotInfo bestSlanderer = null;
         bestInfluence = Integer.MIN_VALUE;
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
-        for (RobotInfo robot : rc.senseNearbyRobots(sensingRadius, enemy)) {
+        
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
             if (robot.getType() == RobotType.SLANDERER) {
                 int curr = robot.getConviction();
                 if (curr > bestInfluence) {
@@ -108,13 +102,23 @@ public class LatticeMuckraker extends Robot {
                     bestSlanderer = robot;
                 }
             }
+
             double temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
                 minRobot = robot;
             }
-            // if (robot.getType() == RobotType.POLITICIAN && (robot.getConviction() >= 100 || ))
+            
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
+                MapLocation tempLoc = robot.getLocation();
+                if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
+                    muckraker_Found_EC = true;
+                } else {
+                    enemyLocation = tempLoc;
+                }
+            }
         }
+
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }

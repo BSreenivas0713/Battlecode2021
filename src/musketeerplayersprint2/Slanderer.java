@@ -41,10 +41,11 @@ public class Slanderer extends Robot {
             main_direction = Util.randomDirection();
         }
 
-        RobotInfo[] neutralECs = rc.senseNearbyRobots(sensorRadius, Team.NEUTRAL);
+        RobotInfo robot;
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
-        for (RobotInfo robot : enemySensable) {
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
             double temp = curr.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
@@ -54,7 +55,8 @@ public class Slanderer extends Robot {
         
         RobotInfo minNeutralRobot = null;
         double minNeutralDistSquared = Integer.MAX_VALUE;
-        for (RobotInfo robot: neutralECs) {
+        for(int i = neutralSensable.length - 1; i >= 0; i--) {
+            robot = neutralSensable[i];
             double temp = curr.distanceSquaredTo(robot.getLocation());
             if (temp < minNeutralDistSquared) {
                 minNeutralDistSquared = temp;
@@ -67,18 +69,22 @@ public class Slanderer extends Robot {
         int closestSlandDist = Integer.MAX_VALUE;
         MapLocation spawnKillDude = null;
         Direction otherSlaFleeingDir = null;
-        for (RobotInfo robot: friendlySensable) {
+        for(int i = friendlySensable.length - 1; i >= 0; i--) {
+            robot = friendlySensable[i];
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 friendlyEC = robot;
             }
+
             int dist = robot.getLocation().distanceSquaredTo(curr);
             if (robot.getType() == RobotType.SLANDERER && dist < closestSlandDist) {
                 closestSlanderer = robot;
                 closestSlandDist = dist;
             }
+
             if (robot.getType() == RobotType.POLITICIAN && home.isAdjacentTo(robot.getLocation()) && rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold) {
                 spawnKillDude = robot.getLocation();
             }
+            
             if(rc.canGetFlag(robot.getID())) {
                 int flag = rc.getFlag(robot.getID());
                 if(Comms.getIC(flag) == Comms.InformationCategory.SLA_FLEEING) {
