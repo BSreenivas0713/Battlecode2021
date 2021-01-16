@@ -467,10 +467,7 @@ public class EC extends Robot {
                         }
                         rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag, Team.NEUTRAL);
                         ECflags.remove(rushFlag);
-                        tempMapLoc = new MapLocation(currDxDy[0], currDxDy[1]);
-                        if (enemyECsFound.contains(tempMapLoc)) {
-                            enemyECsFound.remove(tempMapLoc);
-                        }
+                        tempMapLoc = new MapLocation(rc.getLocation().x + currDxDy[0] - Util.dOffset, rc.getLocation().y + currDxDy[1] - Util.dOffset);
                         ECflags.add(rushFlag);
                         break;
                     case ENEMY_EC:
@@ -483,7 +480,7 @@ public class EC extends Robot {
                         }
                         rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag, rc.getTeam().opponent());
                         ECflags.remove(rushFlag);
-                        tempMapLoc = new MapLocation(currDxDy[0], currDxDy[1]);
+                        tempMapLoc = new MapLocation(rc.getLocation().x + currDxDy[0] - Util.dOffset, rc.getLocation().y + currDxDy[1] - Util.dOffset);
                         if (!enemyECsFound.contains(tempMapLoc)) {
                             enemyECsFound.add(tempMapLoc);
                         }
@@ -496,7 +493,7 @@ public class EC extends Robot {
                     case FRIENDLY_EC:
                         currDxDy = Comms.getDxDy(flag);
                         rushFlag = new RushFlag(0, currDxDy[0], currDxDy[1], 0, rc.getTeam());
-                        tempMapLoc = new MapLocation(currDxDy[0], currDxDy[1]);
+                        tempMapLoc = new MapLocation(rc.getLocation().x + currDxDy[0] - Util.dOffset, rc.getLocation().y + currDxDy[1] - Util.dOffset);
                         if (enemyECsFound.contains(tempMapLoc)) enemyECsFound.remove(tempMapLoc);
                         break;
                     case ENEMY_FOUND:
