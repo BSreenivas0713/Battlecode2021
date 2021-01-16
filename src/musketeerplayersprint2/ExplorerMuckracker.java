@@ -58,7 +58,6 @@ public class ExplorerMuckracker extends Robot {
 
         if(lastAttacked.locs.length != 0) {
             if(numRoundsSinceLastAttacked >= Util.MuckAttackCooldown) {
-                lastAttacked.clear();
                 numRoundsSinceLastAttacked = 0;
             }
             else {
