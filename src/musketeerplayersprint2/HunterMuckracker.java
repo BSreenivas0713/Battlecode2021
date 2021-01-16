@@ -12,6 +12,8 @@ public class HunterMuckracker extends Robot {
     static int distSquaredToBase;
     static FastIterableLocSet lastAttacked;
     static int numRoundsSinceLastAttacked;
+    static boolean seenEnemyLocation;
+    static RotationDirection spinDirection = Util.RotationDirection.COUNTERCLOCKWISE;
 
     public HunterMuckracker(RobotController r, MapLocation enemyLoc) {
         super(r);
@@ -27,7 +29,7 @@ public class HunterMuckracker extends Robot {
         }
         lastAttacked = new FastIterableLocSet();
         numRoundsSinceLastAttacked = 0;
-
+        seenEnemyLocation = false;
     }
 
     public HunterMuckracker(RobotController r) {
@@ -55,21 +57,21 @@ public class HunterMuckracker extends Robot {
 
 
 
-        if(lastAttacked.locs.length != 0) {
-            Debug.println(Debug.info, "last attacked: " + lastAttacked.locs);
-        }
-        else {
-            Debug.println(Debug.info, "last attacked list empty");
-        }
+        // if(lastAttacked.locs.length != 0) {
+        //     Debug.println(Debug.info, "last attacked: " + lastAttacked.locs);
+        // }
+        // else {
+        //     Debug.println(Debug.info, "last attacked list empty");
+        // }
 
-        if(lastAttacked.locs.length != 0) {
-            if(numRoundsSinceLastAttacked >= Util.MuckAttackCooldown) {
-                numRoundsSinceLastAttacked = 0;
-            }
-            else {
-                numRoundsSinceLastAttacked++;
-            }
-        }
+        // if(lastAttacked.locs.length != 0) {
+        //     if(numRoundsSinceLastAttacked >= Util.MuckAttackCooldown) {
+        //         numRoundsSinceLastAttacked = 0;
+        //     }
+        //     else {
+        //         numRoundsSinceLastAttacked++;
+        //     }
+        // }
 
         if(main_direction == null){
             main_direction = Util.randomDirection();
@@ -155,6 +157,9 @@ public class HunterMuckracker extends Robot {
             }
         }
 
+        RobotInfo closest_muk = null;
+        int closest_muk_dist = Integer.MAX_VALUE;
+
         boolean awayFromBase = false;
         RobotInfo friendlyBase = null;
         boolean setChillFlag = false;
@@ -174,23 +179,25 @@ public class HunterMuckracker extends Robot {
                     disperseBot = robot;
                 }
 
-                // Check for propagated flags
-                if(enemyLocation == null) {
-                    switch(Comms.getIC(flag)) {
-                    case ENEMY_EC_ATTACK_CALL:
+                // React to attack calls
+                switch(Comms.getIC(flag)) {
+                case ENEMY_EC_ATTACK_CALL:
+                    if(enemyLocation == null) {
                         Debug.println(Debug.info, "Found Propogated flag(Attack). Acting on it. ");
                         robotLoc = robot.getLocation();
                         DxDyFromRobot = Comms.getDxDy(flag);
                         enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
                         Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
-                        if(enemyLocation != null && !enemyLoc.equals(enemyLocation)) {
-                            baseCrowdedSemaphor = 5;
-                            Debug.println(Debug.info, "reset semaphor because of changed enemy location");
-                        }
+                        // if(enemyLocation != null && !enemyLoc.equals(enemyLocation)) {
+                        //     baseCrowdedSemaphor = 5;
+                        //     Debug.println(Debug.info, "reset semaphor because of changed enemy location");
+                        // }
                         enemyLocation = enemyLoc;
                         distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
-                        break;
-                    case ENEMY_EC_CHILL_CALL:
+                    }
+                    break;
+                case ENEMY_EC_CHILL_CALL:
+                    if(enemyLocation != null) {
                         Debug.println(Debug.info, "Found Propogated flag(Chill). Acting on it. ");
                         robotLoc = robot.getLocation();
                         DxDyFromRobot = Comms.getDxDy(flag);
@@ -201,13 +208,13 @@ public class HunterMuckracker extends Robot {
                             distSquaredToBase = -1;
                             Debug.println(Debug.info, "Reset enemy location as a result of the chill flag");
                         }
-                        break;
-                    default: 
-                        break;
                     }
+                    break;
+                default: 
+                    break;
                 }
                 
-                if(enemiesFound != 0) {
+                if(closestEnemy != null) {
                     if(flag == Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID())) {
                         numFollowingClosestEnemy++;
                     }
@@ -217,6 +224,10 @@ public class HunterMuckracker extends Robot {
             // Send chill flag
             MapLocation tempLoc = robot.getLocation();
             int dist = currLoc.distanceSquaredTo(tempLoc);
+            if (robot.getType() == RobotType.MUCKRAKER && dist < closest_muk_dist) {
+                closest_muk = robot;
+                closest_muk_dist = dist;
+            }
             int botFlag;
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 awayFromBase = true;
@@ -278,16 +289,43 @@ public class HunterMuckracker extends Robot {
                 tryMoveDest(main_direction);
                 Debug.println(Debug.info, "Dispersing to avoid rusher.");
             }
-            else if (enemyLocation != null && rc.isReady() && baseCrowdedSemaphor != 0) {
-                tryMoveDest(currLoc.directionTo(enemyLocation));
-                if(rc.getLocation().distanceSquaredTo(enemyLocation) < distSquaredToBase) {
-                    baseCrowdedSemaphor = 5;
-                    Debug.println(Debug.info, "got closer to enemy base, resetting semaphor");
+            else if (enemyLocation != null && rc.isReady() /*&& baseCrowdedSemaphor != 0*/) {
+                if(!seenEnemyLocation) {
+                    seenEnemyLocation = rc.canSenseLocation(enemyLocation);
                 }
-                else {
-                    baseCrowdedSemaphor--;
-                    Debug.println(Debug.info, "did not get closer to enemy base, semaphor getting lower: " + baseCrowdedSemaphor);
+
+                boolean rotating = false;
+                if(seenEnemyLocation) {
+                    if(closest_muk_dist <= actionRadius) {
+                        main_direction = rc.getLocation().directionTo(closest_muk.getLocation()).opposite();
+                        Debug.println(Debug.info, "I moving away from another muck");
+                    } else {
+                        rotating = true;
+                        main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc)); //Direction if we only want to rotate around the base
+                        Debug.println(Debug.info, "I am rotating around the base");
+                    }
+                } else {
+                    main_direction = rc.getLocation().directionTo(enemyLocation);
+                    Debug.println(Debug.info, "I am going straight to the base");
                 }
+
+                int tryMove = 0;
+                while (!tryMoveDest(main_direction) && rc.isReady() && tryMove <= 1 && rotating){
+                    Debug.println(Debug.info, "I am switching rotation direction");
+                    spinDirection = Util.switchSpinDirection(spinDirection);
+                    main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
+                    tryMove +=1;
+                }
+
+                // tryMoveDest(currLoc.directionTo(enemyLocation));
+                // if(rc.getLocation().distanceSquaredTo(enemyLocation) < distSquaredToBase) {
+                //     baseCrowdedSemaphor = 5;
+                //     Debug.println(Debug.info, "got closer to enemy base, resetting semaphor");
+                // }
+                // else {
+                //     baseCrowdedSemaphor--;
+                //     Debug.println(Debug.info, "did not get closer to enemy base, semaphor getting lower: " + baseCrowdedSemaphor);
+                // }
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
             }

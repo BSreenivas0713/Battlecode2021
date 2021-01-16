@@ -12,6 +12,8 @@ public class ExplorerMuckracker extends Robot {
     static int distSquaredToBase;
     static FastIterableLocSet lastAttacked;
     static int numRoundsSinceLastAttacked = 0;
+    static boolean seenEnemyLocation;
+    static RotationDirection spinDirection = Util.RotationDirection.COUNTERCLOCKWISE;
 
     public ExplorerMuckracker(RobotController r) {
         super(r);
@@ -21,8 +23,6 @@ public class ExplorerMuckracker extends Robot {
         baseCrowdedSemaphor = 4;
         distSquaredToBase = -1;
         lastAttacked = new FastIterableLocSet();
-
-
     }
 
     public ExplorerMuckracker(RobotController r, MapLocation h) {
@@ -37,33 +37,33 @@ public class ExplorerMuckracker extends Robot {
 
         Debug.println(Debug.info, "I am an explorer mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
-        if(enemyLocation != null) {
-            Debug.println(Debug.info, "enemy location: " + enemyLocation + ";semaphor value: " + baseCrowdedSemaphor);
-        }
-        else {
-            Debug.println(Debug.info, "no enemy location, resetting base crowded semaphor");
-            baseCrowdedSemaphor = 5;
-        }
+        // if(enemyLocation != null) {
+        //     Debug.println(Debug.info, "enemy location: " + enemyLocation + ";semaphor value: " + baseCrowdedSemaphor);
+        // }
+        // else {
+        //     Debug.println(Debug.info, "no enemy location, resetting base crowded semaphor");
+        //     baseCrowdedSemaphor = 5;
+        // }
 
-        if(lastAttacked.locs.length != 0) {
-            Debug.println(Debug.info, "last attacked: " + lastAttacked.locs);
-        }
-        else {
-            Debug.println(Debug.info, "last attacked list empty");
-        }
+        // if(lastAttacked.locs.length != 0) {
+        //     Debug.println(Debug.info, "last attacked: " + lastAttacked.locs);
+        // }
+        // else {
+        //     Debug.println(Debug.info, "last attacked list empty");
+        // }
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
 
 
-        if(lastAttacked.locs.length != 0) {
-            if(numRoundsSinceLastAttacked >= Util.MuckAttackCooldown) {
-                numRoundsSinceLastAttacked = 0;
-            }
-            else {
-                numRoundsSinceLastAttacked++;
-            }
-        }
+        // if(lastAttacked.locs.length != 0) {
+        //     if(numRoundsSinceLastAttacked >= Util.MuckAttackCooldown) {
+        //         numRoundsSinceLastAttacked = 0;
+        //     }
+        //     else {
+        //         numRoundsSinceLastAttacked++;
+        //     }
+        // }
 
 
         if(enemyLocation != null && rc.canSenseLocation(enemyLocation) ) {
@@ -114,9 +114,9 @@ public class ExplorerMuckracker extends Robot {
                 }
                 
                 // React to attack calls
-                if(enemyLocation == null) {
-                    switch(Comms.getIC(flag)) {
-                    case ENEMY_EC_ATTACK_CALL:
+                switch(Comms.getIC(flag)) {
+                case ENEMY_EC_ATTACK_CALL:
+                    if(enemyLocation == null) {
                         Debug.println(Debug.info, "Found Propogated flag(Attack). Acting on it. ");
                         robotLoc = robot.getLocation();
                         DxDyFromRobot = Comms.getDxDy(flag);
@@ -128,8 +128,10 @@ public class ExplorerMuckracker extends Robot {
                         }
                         enemyLocation = enemyLoc;
                         distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
-                        break;
-                    case ENEMY_EC_CHILL_CALL:
+                    }
+                    break;
+                case ENEMY_EC_CHILL_CALL:
+                    if(enemyLocation != null) {
                         Debug.println(Debug.info, "Found Propogated flag(Chill). Acting on it. ");
                         robotLoc = robot.getLocation();
                         DxDyFromRobot = Comms.getDxDy(flag);
@@ -140,10 +142,10 @@ public class ExplorerMuckracker extends Robot {
                             distSquaredToBase = -1;
                             Debug.println(Debug.info, "Reset enemy location as a result of the chill flag");
                         }
-                        break;
-                    default: 
-                        break;
                     }
+                    break;
+                default: 
+                    break;
                 }
             }
 
@@ -257,16 +259,43 @@ public class ExplorerMuckracker extends Robot {
                 Debug.println(Debug.info, "Moving away from home");
 
             }
-            else if (enemyLocation != null && rc.isReady() && baseCrowdedSemaphor != 0) {
-                tryMoveDest(currLoc.directionTo(enemyLocation));
-                if(rc.getLocation().distanceSquaredTo(enemyLocation) < distSquaredToBase) {
-                    baseCrowdedSemaphor = 5;
-                    Debug.println(Debug.info, "got closer to enemy base, resetting semaphor");
+            else if (enemyLocation != null && rc.isReady() /*&& baseCrowdedSemaphor != 0*/) {
+                if(!seenEnemyLocation) {
+                    seenEnemyLocation = rc.canSenseLocation(enemyLocation);
                 }
-                else {
-                    baseCrowdedSemaphor--;
-                    Debug.println(Debug.info, "did not get closer to enemy base, semaphor getting lower: " + baseCrowdedSemaphor);
+
+                boolean rotating = false;
+                if(seenEnemyLocation) {
+                    if(closest_muk_dist <= 4) {
+                        main_direction = rc.getLocation().directionTo(closest_muk.getLocation()).opposite();
+                        Debug.println(Debug.info, "I moving away from another muck");
+                    } else {
+                        rotating = true;
+                        main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc)); //Direction if we only want to rotate around the base
+                        Debug.println(Debug.info, "I am rotating around the base");
+                    }
+                } else {
+                    main_direction = rc.getLocation().directionTo(enemyLocation);
+                    Debug.println(Debug.info, "I am going straight to the base");
                 }
+
+                int tryMove = 0;
+                while (!tryMoveDest(main_direction) && rc.isReady() && tryMove <= 1 && rotating){
+                    Debug.println(Debug.info, "I am switching rotation direction");
+                    spinDirection = Util.switchSpinDirection(spinDirection);
+                    main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
+                    tryMove +=1;
+                }
+
+                // tryMoveDest(currLoc.directionTo(enemyLocation));
+                // if(rc.getLocation().distanceSquaredTo(enemyLocation) < distSquaredToBase) {
+                //     baseCrowdedSemaphor = 5;
+                //     Debug.println(Debug.info, "got closer to enemy base, resetting semaphor");
+                // }
+                // else {
+                //     baseCrowdedSemaphor--;
+                //     Debug.println(Debug.info, "did not get closer to enemy base, semaphor getting lower: " + baseCrowdedSemaphor);
+                // }
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
             }
