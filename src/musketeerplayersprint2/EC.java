@@ -462,9 +462,7 @@ public class EC extends Robot {
                         currDxDy = Comms.getDxDy(flag);
                         neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
                         currReqInf = (int)  neededInf * 4 + 10;
-                        if(currRoundNum <= 100) {
-                            currReqInf = (int) (((double) neededInf) * 1.4 + 10.0);
-                        } else if (currRoundNum <= 200) {
+                        if(currRoundNum <= 150) {
                             currReqInf = (int) neededInf * 2 + 10;
                         }
                         rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag, Team.NEUTRAL);
