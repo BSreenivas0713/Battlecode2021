@@ -186,7 +186,7 @@ public class HunterMuckracker extends Robot {
             }
             MapLocation tempLoc = robot.getLocation();
             int dist = currLoc.distanceSquaredTo(tempLoc);
-            int botFlag = rc.getFlag(robot.getID());
+            int botFlag;
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 awayFromBase = true;
                 friendlyBase = robot;
@@ -204,14 +204,19 @@ public class HunterMuckracker extends Robot {
                         enemyLocation = null;
                         distSquaredToBase = -1;
                 }
-                Comms.InformationCategory flagIC = Comms.getIC(botFlag);
-                if (flagIC == Comms.InformationCategory.ENEMY_EC) {
-                    int[] dxdy = Comms.getDxDy(botFlag);
-                    enemyLocation = new MapLocation(dxdy[0] + tempLoc.x - Util.dOffset, dxdy[1] + tempLoc.y - Util.dOffset);
-                    break;
+                if(rc.canGetFlag(robot.getID())) {
+                    botFlag = rc.getFlag(robot.getID());
+                    Comms.InformationCategory flagIC = Comms.getIC(botFlag);
+                    if (flagIC == Comms.InformationCategory.ENEMY_EC) {
+                        int[] dxdy = Comms.getDxDy(botFlag);
+                        enemyLocation = new MapLocation(dxdy[0] + tempLoc.x - Util.dOffset, dxdy[1] + tempLoc.y - Util.dOffset);
+                        break;
+                    }
                 }
             }
-            if(enemiesFound != 0) {
+
+            if(enemiesFound != 0 && rc.canGetFlag(robot.getID())) {
+                botFlag = rc.getFlag(robot.getID());
                 if(botFlag == Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID())) {
                     numFollowingClosestEnemy++;
                 }

@@ -175,9 +175,7 @@ public class EC extends Robot {
         if (currRoundNum > 500)
             tryStartCleanup();
 
-        if(haveSeenEnemy) {
-            toggleBuildProtectors();
-        }
+        toggleBuildProtectors();
         tryStartBuildingSpawnKill();
 
 
