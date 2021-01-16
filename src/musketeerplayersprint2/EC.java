@@ -89,6 +89,7 @@ public class EC extends Robot {
 
     static int lastRush;
     static int spawnKillLock;
+    static int lastSuccessfulBlockageRemoval;
 
     static boolean overBidThreshold;
 
@@ -112,6 +113,7 @@ public class EC extends Robot {
         canGoBackToBuildingProtectors = true;
         spawnKillLock = 10;
         overBidThreshold = false;
+        lastSuccessfulBlockageRemoval = -1;
     }
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
@@ -278,17 +280,19 @@ public class EC extends Robot {
                 boolean built_bot = false;
                 if (toBuild != null) built_bot = buildRobot(toBuild, influence);
 
-                if (!canGoBackToBuildingProtectors) {
-                    if (built_bot && toBuild == RobotType.SLANDERER) {
-                        canGoBackToBuildingProtectors = true;
-                        currentState = State.BUILDING_PROTECTORS;
-                        protectorsSpawnedInARow = 0;
+                if (!tryStartRemovingBlockage()) {
+                    if (!canGoBackToBuildingProtectors) {
+                        if (built_bot && toBuild == RobotType.SLANDERER) {
+                            canGoBackToBuildingProtectors = true;
+                            currentState = State.BUILDING_PROTECTORS;
+                            protectorsSpawnedInARow = 0;
+                        }
+                    }
+                    else {
+                        tryStartSavingForRush();
                     }
                 }
-                else {
-                    if (tryStartRemovingBlockage()) {} 
-                    else {tryStartSavingForRush();}
-                }
+
                 break;
             case BUILDING_PROTECTORS:
                 Debug.println(Debug.info, "building protectors state");
@@ -314,7 +318,7 @@ public class EC extends Robot {
                     }  
                 }
 
-                if (robotCounter % 3 != 0) {
+                if (robotCounter % 4 != 0) {
                     toBuild = RobotType.POLITICIAN;
                     influence = 18;
                     signalRobotType(SubRobotType.POL_PROTECTOR);
@@ -423,6 +427,7 @@ public class EC extends Robot {
                 influence = 30;
                 signalRobotType(Comms.SubRobotType.POL_DEFENDER);
                 if(buildRobot(toBuild, influence)) {
+                    lastSuccessfulBlockageRemoval = currRoundNum;
                     currentState = stateStack.pop();
                 }
                 break;
@@ -472,8 +477,10 @@ public class EC extends Robot {
             currentState = State.BUILDING_PROTECTORS;
             protectorsSpawnedInARow = 0;
         } else if (protectorIdSet.size > 35 && currentState == State.BUILDING_PROTECTORS) {
+            Debug.println(Debug.info, "we have > 35 protectors, switching to whatevers on the state stack");
             currentState = stateStack.pop();
         } else if (protectorsSpawnedInARow >= 10 && currentState == State.BUILDING_PROTECTORS) {
+            Debug.println(Debug.info, "just built 10 protectors in a row, going to building a slanderer");
             canGoBackToBuildingProtectors = false;
             currentState = State.BUILDING_SLANDERERS;
         }
@@ -511,36 +518,36 @@ public class EC extends Robot {
             if(rc.canGetFlag(id)) {
                 int flag = rc.getFlag(id);
                 Comms.InformationCategory flagIC = Comms.getIC(flag);
+                int[] currDxDy;
+                RushFlag rushFlag;
                 switch (flagIC) {
                     case NEUTRAL_EC:
                     case ENEMY_EC:
+                        // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
+                        currDxDy = Comms.getDxDy(flag);
+                        Team team = null;
+                        if(flagIC == Comms.InformationCategory.NEUTRAL_EC) {
+                            team = Team.NEUTRAL;
+                        }
+                        else {
+                            team = rc.getTeam().opponent();
+                        }
                         int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
                         int currReqInf = (int)  neededInf * 4 + 10;
                         if(currRoundNum <=150) {
                             currReqInf = (int) neededInf * 2 + 10;
                         }
-                        if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
-                            // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
-                            int[] currDxDy = Comms.getDxDy(flag);
-                            Team team = null;
-                            if(flagIC == Comms.InformationCategory.NEUTRAL_EC) {
-                                team = Team.NEUTRAL;
-                            }
-                            else {
-                                team = rc.getTeam().opponent();
-                            }
-                            RushFlag rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag, team);
-                            ECflags.remove(rushFlag);
-                            ECflags.add(rushFlag);
-                            cleanUpCount = -1;
-                            if (currentState == State.CLEANUP) {
-                                currentState = stateStack.pop();
-                            }
+                        rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag, team);
+                        ECflags.remove(rushFlag);
+                        ECflags.add(rushFlag);
+                        cleanUpCount = -1;
+                        if (currentState == State.CLEANUP) {
+                            currentState = stateStack.pop();
                         }
                         break;
                     case FRIENDLY_EC:
-                        int[] currDxDy = Comms.getDxDy(flag);
-                        RushFlag rushFlag = new RushFlag(0, currDxDy[0], currDxDy[1], 0, rc.getTeam());
+                        currDxDy = Comms.getDxDy(flag);
+                        rushFlag = new RushFlag(0, currDxDy[0], currDxDy[1], 0, rc.getTeam());
                         ECflags.remove(rushFlag);
                         break;
                     case ENEMY_FOUND:
@@ -589,7 +596,7 @@ public class EC extends Robot {
 
     public boolean tryStartCleanup() throws GameActionException {
         Debug.println(Debug.info, "Cleanup count: " + cleanUpCount);
-        if (cleanUpCount > Util.startCleanupThreshold && currentState != State.CLEANUP) {
+        if (ECflags.isEmpty() && cleanUpCount > Util.startCleanupThreshold && currentState != State.CLEANUP) {
             stateStack.push(currentState);
             currentState = State.CLEANUP;
             return true;
@@ -599,10 +606,18 @@ public class EC extends Robot {
 
     public boolean tryStartSavingForRush() throws GameActionException {
         if (!ECflags.isEmpty() && turnCount > lastRush + Util.minTimeBetweenRushes) {
-            stateStack.push(currentState);
-            currentState = State.SAVING_FOR_RUSH;
-            Debug.println(Debug.info, "tryStartSavingForRush is returning true");
-            return true;
+            int flag = ECflags.peek().flag;
+            int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
+            int currReqInf = (int)  neededInf * 4 + 10;
+            if(currRoundNum <=150) {
+                currReqInf = (int) neededInf * 2 + 10;
+            }
+            if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
+                stateStack.push(currentState);
+                currentState = State.SAVING_FOR_RUSH;
+                Debug.println(Debug.info, "tryStartSavingForRush is returning true");
+                return true;
+            }
         }
         return false;
     }
@@ -619,7 +634,8 @@ public class EC extends Robot {
             }
         }
         Debug.println(Debug.info, "num enemies surrounding: " + num_enemies_near);
-        if (num_enemies_near >= 7) {
+        if (num_enemies_near >= 7 && (lastSuccessfulBlockageRemoval == -1 || 
+        (lastSuccessfulBlockageRemoval >= 0 && currRoundNum - lastSuccessfulBlockageRemoval > 10))) {
             stateStack.push(currentState);
             currentState = State.REMOVING_BLOCKAGE;
             return true;
