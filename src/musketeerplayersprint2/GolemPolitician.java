@@ -6,16 +6,19 @@ import musketeerplayersprint2.Debug.*;
 
 public class GolemPolitician extends Robot {
     static Direction main_direction;
+    static int turnsWithoutRushCall;
     
     public GolemPolitician(RobotController r) {
         super(r);
         subRobotType = Comms.SubRobotType.POL_GOLEM;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
+        turnsWithoutRushCall = 0;
     }
     
     public GolemPolitician(RobotController r, MapLocation h) {
         this(r);
         home = h;
+        turnsWithoutRushCall = 0;
     }
 
     public void takeTurn() throws GameActionException {
@@ -53,29 +56,37 @@ public class GolemPolitician extends Robot {
 
         int ECInfluence = 0;
         MapLocation ECPosition = null;
+        // for(int i = friendlySensable.length - 1; i >= 0; i--) {
+        //     robot = friendlySensable[i];
+        //     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+        //         ECPosition = robot.getLocation();
+        //         ECInfluence = robot.getInfluence();
+        //         break;
+        //     }
+        // }
 
-        boolean boostBase = false;
+        // boolean boostBase = false;
 
-        if(ECInfluence !=0 && ECInfluence <= rc.getInfluence() ) {
-            if(distancetoECSemaphor == 0) {
-                boostBase = true;
-            }
-            else {
-                Direction toMove = rc.getLocation().directionTo(ECPosition);
-                int DistancetoECBefore = rc.getLocation().distanceSquaredTo(ECPosition);
-                boolean moveSuccesful = tryMoveDest(toMove);
-                int DistancetoECAfter = rc.getLocation().distanceSquaredTo(ECPosition);
-                if(moveSuccesful && (DistancetoECBefore > DistancetoECAfter)) {
-                    distancetoECSemaphor = 2;
-                }
-                else {
-                    distancetoECSemaphor--;
-                }
+        // if(ECInfluence != 0 && ECInfluence <= rc.getInfluence() ) {
+        //     if(distancetoECSemaphor == 0) {
+        //         boostBase = true;
+        //     }
+        //     else {
+        //         Direction toMove = rc.getLocation().directionTo(ECPosition);
+        //         int DistancetoECBefore = rc.getLocation().distanceSquaredTo(ECPosition);
+        //         boolean moveSuccesful = tryMoveDest(toMove);
+        //         int DistancetoECAfter = rc.getLocation().distanceSquaredTo(ECPosition);
+        //         if(moveSuccesful && (DistancetoECBefore > DistancetoECAfter)) {
+        //             distancetoECSemaphor = 2;
+        //         }
+        //         else {
+        //             distancetoECSemaphor--;
+        //         }
+        //     }
+        // }
 
-            }
-        }
-
-        if ((attackable_conviction >= min_attackable_conviction || boostBase) && rc.canEmpower(maxEnemyDistSquared)) {
+        if ((attackable_conviction >= min_attackable_conviction) && 
+            maxEnemyDistSquared >= 0 && rc.canEmpower(maxEnemyDistSquared)) {
             Debug.println(Debug.info, "Empowered with radius: " + maxEnemyDistSquared);
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestEnemy, 255, 150, 50);
             rc.empower(maxEnemyDistSquared);
@@ -93,13 +104,17 @@ public class GolemPolitician extends Robot {
         MapLocation closestGolemLoc = null; 
         int distToClosestGolem = 500;
 
+        RobotInfo secondRobot;
+        RobotInfo []friendlyAttackable = rc.senseNearbyRobots(actionRadius, rc.getTeam());
+
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
             robot = friendlySensable[i];
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 sensesEC = true;
                 boolean seenCenter = false;
                 
-                for(RobotInfo secondRobot: rc.senseNearbyRobots(actionRadius, rc.getTeam())) {
+                for(int j = friendlyAttackable.length - 1; j >= 0; j--) {
+                    secondRobot = friendlyAttackable[j];
                     if(secondRobot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                         seenCenter = true;
                         distToEC = rc.getLocation().distanceSquaredTo(robot.getLocation());
@@ -124,6 +139,9 @@ public class GolemPolitician extends Robot {
                         changeTo = new RushPolitician(rc, rushEnemyLoc, home);
                         return;
                     }
+                    else {
+                        turnsWithoutRushCall++;
+                    }
                 }
             }
             else if(rc.canGetFlag(robot.getID())) {
@@ -136,6 +154,13 @@ public class GolemPolitician extends Robot {
                     }
                 }
             }
+        }
+
+        //empower if not received a rush call in 10 turns
+        if (turnsWithoutRushCall >= 10 && ECLoc != null && rc.canEmpower(distToEC)) {
+            Debug.println(Debug.info, "Empowered because of no rush call: " + distToEC);
+            rc.empower(distToEC);
+            return;
         }
 
         RobotInfo enemyRobot = null;
@@ -152,6 +177,11 @@ public class GolemPolitician extends Robot {
 
         if (enemyRobot != null) {
             Direction toMove = rc.getLocation().directionTo(enemyRobot.getLocation());
+            tryMoveDest(toMove);
+        }
+        //try to move to EC position if no rush call in 10 turns
+        if (turnsWithoutRushCall >= 10 && ECPosition != null) {
+            Direction toMove = rc.getLocation().directionTo(ECPosition);
             tryMoveDest(toMove);
         }
         if(distToEC <= 2) {
