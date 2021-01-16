@@ -167,60 +167,42 @@ public class EC extends Robot {
         }
 
         processChildrenFlags();
-        if (readyToRush) {
-            if (currentState != State.SAVING_FOR_RUSH) {
-                stateStack.push(currentState);
-            }
-            if (currenState != State.BUILDING_SLANDERERS) {
-                canGoBackToBuildingProtectors = false;
-            }
-            currentState == State.RUSHING;
-            
-        } else if (tryStartSavingForRush()) {
-            stateStack.push(currentState);
-            currentState = State.SAVING_FOR_RUSH;
-        } else if (currRoundNum > 500) {
-            tryStartCleanup();
-        }
-        
-        toggleBuildProtectors();
+
+        // Override everything for a spawn kill. This is fine, as it only takes 1 turn
+        // and at most happens once every 10 turns.
         tryStartBuildingSpawnKill();
 
-        //bidding code
-        if(!overBidThreshold) {
-            if (rc.getTeamVotes() > 750) {
-                overBidThreshold = true;
-                Debug.println(Debug.info, "Not bidding. Already won, suckers!");
-            } else {
-                int biddingInfluence;
-                if (currRoundNum < 200) {
-                    biddingInfluence = Math.max(currInfluence / 100, 2);
-                } else {
-                    switch (currentState) {
-                        case CLEANUP:
-                        case BUILDING_SLANDERERS:
-                        case BUILDING_PROTECTORS:
-                            Debug.println(Debug.info, "Bidding high.");
-                            biddingInfluence = currInfluence / 10;
-                            break;
-                        case SAVING_FOR_RUSH:
-                        case BUILDING_SPAWNKILLS:
-                        case RUSHING:
-                            Debug.println(Debug.info, "Bidding low.");
-                            biddingInfluence = currInfluence / 50;
-                            break;
-                        default:
-                            Debug.println(Debug.info, "Bidding medium.");
-                            biddingInfluence = currInfluence / 20;
-                            break;
-                    }
-                    if (rc.canBid(biddingInfluence)) {
-                        rc.bid(biddingInfluence);
-                    }
+        if (currentState != State.BUILDING_SPAWNKILLS) {
+            // If we have enough to rush a tower, make that the #1 priority
+            if (readyToRush()) {
+                if (currentState != State.SAVING_FOR_RUSH) {
+                    stateStack.push(currentState);
                 }
-                Debug.println(Debug.info, "Amount bid: " + biddingInfluence);
+                if (currentState != State.BUILDING_SLANDERERS) {
+                    canGoBackToBuildingProtectors = false;
+                }
+                currentState = State.RUSHING;
+            } else {
+                // Otherwise try to start saving for the rush
+                if (tryStartSavingForRush()) {
+                    stateStack.push(currentState);
+                    currentState = State.SAVING_FOR_RUSH;
+                }
+                // If there's nothing to save for, clean up
+                else if (currRoundNum > 500) {
+                    tryStartCleanup();
+                }
+                // Override cleanup or saving (or nothing) to build protectors,
+                // which makes sense since survival is a high priority.
+                toggleBuildProtectors();
             }
         }
+
+        // At this point, state is either RUSHING, SAVING, BUILDING (spawn kill or protectors),or CLEANUP
+        // At most, two things have been pushed to the state stack, the previous state, and whatever protectors overrode.
+
+        //bidding code
+        makeBid();
 
         //updating currInfluence after a bid
         currInfluence = rc.getInfluence();
@@ -283,21 +265,6 @@ public class EC extends Robot {
                 break;
             case BUILDING_PROTECTORS:
                 Debug.println(Debug.info, "building protectors state");
-
-
-                RushFlag targetECFromProtectors = ECflags.peek();
-                if(targetECFromProtectors != null) {
-                    int requiredInfluence = targetECFromProtectors.requiredInfluence;
-
-                    MapLocation enemyLocation = home.translate(targetECFromProtectors.dx - Util.dOffset, targetECFromProtectors.dy - Util.dOffset);
-                    Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
-                    if(requiredInfluence < currInfluence) {
-                        stateStack.push(currentState);
-                        currentState = State.RUSHING;
-                        break;
-                    }  
-                }
-
                 if (robotCounter % 4 != 0) {
                     toBuild = RobotType.POLITICIAN;
                     influence = 18;
@@ -342,20 +309,11 @@ public class EC extends Robot {
                     currentState = stateStack.pop();
                     break;
                 }
-                int requiredInfluence = targetEC.requiredInfluence;
-
-                MapLocation enemyLocation = home.translate(targetEC.dx - Util.dOffset, targetEC.dy - Util.dOffset);
-                Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
-                if(requiredInfluence < currInfluence) {
-                    currentState = State.RUSHING;
-                    break;
-                }
-
                 int[] currDxDy = {targetEC.dx, targetEC.dy};
                 if (numMucks % 2 == 0) {
                     if(targetEC.team != Team.NEUTRAL) {
-                        nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.dx, targetEC.dy);
-                        Debug.println(Debug.info, "Making hunter mucker with destination " + targetEC.dx + ", " + targetEC.dy + ".");
+                        nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, currDxDy[0], currDxDy[1]);
+                        Debug.println(Debug.info, "Making hunter mucker with destination " + currDxDy[0] + ", " + currDxDy[1] + ".");
                     }
                     else {
                         nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK);
@@ -365,10 +323,7 @@ public class EC extends Robot {
                 
                 toBuild = RobotType.MUCKRAKER;
                 influence = 1;
-                Debug.println(Debug.info, "Required Influence: " + requiredInfluence + "; DxDy: " + (currDxDy[0] - Util.dOffset) +  ", " + (currDxDy[1] - Util.dOffset));
-                
                 buildRobot(toBuild, influence);
-                
                 tryStartRemovingBlockage();
                 break;
             case CLEANUP:
@@ -642,11 +597,48 @@ public class EC extends Robot {
         RushFlag targetEC = ECflags.peek();
         if(targetEC != null) {
             int requiredInfluence = targetEC.requiredInfluence;
-            MapLocation enemyLocation = home.translate(targetECFromSlanderers.dx - Util.dOffset, 
-                targetECFromSlanderers.dy - Util.dOffset);
+            MapLocation enemyLocation = home.translate(targetEC.dx - Util.dOffset, 
+                targetEC.dy - Util.dOffset);
             Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
             if(requiredInfluence < currInfluence) return true;
         }
         return false;
+    }
+
+    public void makeBid() throws GameActionException {
+        if(!overBidThreshold) {
+            if (rc.getTeamVotes() > 750) {
+                overBidThreshold = true;
+                Debug.println(Debug.info, "Not bidding. Already won, suckers!");
+            } else {
+                int biddingInfluence;
+                if (currRoundNum < 200) {
+                    biddingInfluence = Math.max(currInfluence / 100, 2);
+                } else {
+                    switch (currentState) {
+                        case CLEANUP:
+                        case BUILDING_SLANDERERS:
+                        case BUILDING_PROTECTORS:
+                            Debug.println(Debug.info, "Bidding high.");
+                            biddingInfluence = currInfluence / 10;
+                            break;
+                        case SAVING_FOR_RUSH:
+                        case BUILDING_SPAWNKILLS:
+                        case RUSHING:
+                            Debug.println(Debug.info, "Bidding low.");
+                            biddingInfluence = currInfluence / 50;
+                            break;
+                        default:
+                            Debug.println(Debug.info, "Bidding medium.");
+                            biddingInfluence = currInfluence / 20;
+                            break;
+                    }
+                    if (rc.canBid(biddingInfluence)) {
+                        rc.bid(biddingInfluence);
+                    }
+                }
+                Debug.println(Debug.info, "Amount bid: " + biddingInfluence);
+            }
+        }
     }
 }
