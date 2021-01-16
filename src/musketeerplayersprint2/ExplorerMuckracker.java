@@ -32,7 +32,7 @@ public class ExplorerMuckracker extends Robot {
         Debug.println(Debug.info, "I am an explorer mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
         if(enemyLocation != null) {
-            Debug.println(Debug.info, "enemy location: " + enemyLocation);
+            Debug.println(Debug.info, "enemy location: " + enemyLocation + ";semaphor value: " + baseCrowdedSemaphor);
         }
         else {
             Debug.println(Debug.info, "no enemy location, resetting base crowded semaphor");
@@ -77,6 +77,10 @@ public class ExplorerMuckracker extends Robot {
                     DxDyFromRobot = Comms.getDxDy(flag);
                     enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
                     Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                    if(enemyLocation != null && !enemyLoc.equals(enemyLocation)) {
+                        baseCrowdedSemaphor = 5;
+                        Debug.println(Debug.info, "reset semaphor because of changed enemy location");
+                    }
                     enemyLocation = enemyLoc;
                     distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
                     break;
