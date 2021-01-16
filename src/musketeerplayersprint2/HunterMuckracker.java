@@ -278,25 +278,28 @@ public class HunterMuckracker extends Robot {
         resetFlagOnNewTurn = true;
 
         if(!muckraker_Found_EC){
-            if (bestSlanderer != null && rc.isReady()) {
+            if (bestSlanderer != null) {
                 main_direction = currLoc.directionTo(bestSlanderer.getLocation());
                 tryMoveDest(main_direction);
                 Debug.println(Debug.info, "Prioritizing killing slandies.");
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), bestSlanderer.getLocation(), 255, 150, 50);
             }
-            else if (disperseBot != null && rc.isReady()) {
+            else if (disperseBot != null) {
                 main_direction = currLoc.directionTo(disperseBot.getLocation()).opposite();
                 tryMoveDest(main_direction);
                 Debug.println(Debug.info, "Dispersing to avoid rusher.");
             }
-            else if (enemyLocation != null && rc.isReady() /*&& baseCrowdedSemaphor != 0*/) {
+            else if (enemyLocation != null) {
                 if(!seenEnemyLocation) {
                     seenEnemyLocation = rc.canSenseLocation(enemyLocation);
                 }
 
                 boolean rotating = false;
                 if(seenEnemyLocation) {
-                    if(closest_muk_dist <= actionRadius) {
+                    if(rc.getLocation().distanceSquaredTo(enemyLocation) <= actionRadius) {
+                        main_direction = rc.getLocation().directionTo(enemyLocation).opposite();
+                        Debug.println(Debug.info, "I moving away from the enemy location");
+                    } else if(closest_muk_dist <= 4) {
                         main_direction = rc.getLocation().directionTo(closest_muk.getLocation()).opposite();
                         Debug.println(Debug.info, "I moving away from another muck");
                     } else {
