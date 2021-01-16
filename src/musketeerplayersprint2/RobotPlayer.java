@@ -58,9 +58,6 @@ public strictfp class RobotPlayer {
                                         break;
                                 }
                                 break;
-                            case AVG_ENEMY_DIR:
-                                bot = new LatticeProtector(rc);
-                                break;
                             default:
                                 break;
                         }
