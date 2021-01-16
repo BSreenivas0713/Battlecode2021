@@ -5,6 +5,7 @@ import musketeerplayersprint2.Comms.*;
 import musketeerplayersprint2.Util.*;
 import musketeerplayersprint2.Debug.*;
 import musketeerplayersprint2.fast.FastIterableIntSet;
+import musketeerplayersprint2.fast.FastIterableLocSet;
 
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
@@ -101,6 +102,7 @@ public class EC extends Robot {
     static int littleBid;
     static boolean wonLastBid;
     static int lastVoteCount;
+    static FastIterableLocSet enemyECsFound;
 
     public EC(RobotController r) {
         super(r);
@@ -127,6 +129,7 @@ public class EC extends Robot {
         bigBid = 1;
         wonLastBid = false;
         lastVoteCount = 0;
+        enemyECsFound = new FastIterableLocSet(20);
     }
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
@@ -443,6 +446,9 @@ public class EC extends Robot {
         int totalEnemyY = 0;
 
         int id;
+        MapLocation tempMapLoc;
+        int neededInf;
+        int currReqInf;
         for(int j = idSet.size - 1; j >= 0; j--) {
             id = ids[j];
             if(rc.canGetFlag(id)) {
@@ -452,23 +458,35 @@ public class EC extends Robot {
                 RushFlag rushFlag;
                 switch (flagIC) {
                     case NEUTRAL_EC:
-                    case ENEMY_EC:
                         // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                         currDxDy = Comms.getDxDy(flag);
-                        Team team = null;
-                        if(flagIC == Comms.InformationCategory.NEUTRAL_EC) {
-                            team = Team.NEUTRAL;
-                        }
-                        else {
-                            team = rc.getTeam().opponent();
-                        }
-                        int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
-                        int currReqInf = (int)  neededInf * 4 + 10;
+                        neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
+                        currReqInf = (int)  neededInf * 4 + 10;
                         if(currRoundNum <=150) {
                             currReqInf = (int) neededInf * 2 + 10;
                         }
-                        rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag, team);
+                        rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag, Team.NEUTRAL);
                         ECflags.remove(rushFlag);
+                        tempMapLoc = new MapLocation(currDxDy[0], currDxDy[1]);
+                        if (enemyECsFound.contains(tempMapLoc)) {
+                            enemyECsFound.remove(tempMapLoc);
+                        }
+                        ECflags.add(rushFlag);
+                        break;
+                    case ENEMY_EC:
+                        // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
+                        currDxDy = Comms.getDxDy(flag);
+                        neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
+                        currReqInf = (int)  neededInf * 4 + 10;
+                        if(currRoundNum <=150) {
+                            currReqInf = (int) neededInf * 2 + 10;
+                        }
+                        rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag, rc.getTeam().opponent());
+                        ECflags.remove(rushFlag);
+                        tempMapLoc = new MapLocation(currDxDy[0], currDxDy[1]);
+                        if (!enemyECsFound.contains(tempMapLoc)) {
+                            enemyECsFound.add(tempMapLoc);
+                        }
                         ECflags.add(rushFlag);
                         cleanUpCount = -1;
                         if (currentState == State.CLEANUP) {
@@ -478,7 +496,8 @@ public class EC extends Robot {
                     case FRIENDLY_EC:
                         currDxDy = Comms.getDxDy(flag);
                         rushFlag = new RushFlag(0, currDxDy[0], currDxDy[1], 0, rc.getTeam());
-                        ECflags.remove(rushFlag);
+                        tempMapLoc = new MapLocation(currDxDy[0], currDxDy[1]);
+                        if (enemyECsFound.contains(tempMapLoc)) enemyECsFound.remove(tempMapLoc);
                         break;
                     case ENEMY_FOUND:
                         haveSeenEnemy = true;
@@ -516,7 +535,7 @@ public class EC extends Robot {
 
     public boolean tryStartCleanup() throws GameActionException {
         Debug.println(Debug.info, "Cleanup count: " + cleanUpCount);
-        if (ECflags.isEmpty() && cleanUpCount > Util.startCleanupThreshold) {
+        if (enemyECsFound.size == 0 && cleanUpCount > Util.startCleanupThreshold) {
             return true;
         }
         return false;
