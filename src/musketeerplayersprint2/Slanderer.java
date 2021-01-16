@@ -123,7 +123,7 @@ public class Slanderer extends Robot {
 
         if(closestKnownEnemy != null && curr.isWithinDistanceSquared(closestKnownEnemy, Util.minDistFromEnemy)) {
             main_direction = curr.directionTo(closestKnownEnemy).opposite();
-            int flag = Comms.getFlag(Comms.InformationCategory.SLA_FLEEING, main_direction.ordinal());
+            flag = Comms.getFlag(Comms.InformationCategory.SLA_FLEEING, main_direction.ordinal());
             setFlag(flag);
             Debug.println(Debug.info, "Prioritizing moving away from enemies: " + main_direction);
         }

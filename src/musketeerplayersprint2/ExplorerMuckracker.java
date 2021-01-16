@@ -98,9 +98,6 @@ public class ExplorerMuckracker extends Robot {
         MapLocation robotLoc;
         int []DxDyFromRobot;
         MapLocation enemyLoc;
-        int dx;
-        int dy;
-        int newFlag;
 
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
             robot = friendlySensable[i];

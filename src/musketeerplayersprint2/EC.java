@@ -175,28 +175,38 @@ public class EC extends Robot {
         if (currentState != State.BUILDING_SPAWNKILLS) {
             // If we have enough to rush a tower, make that the #1 priority
             if (readyToRush()) {
-                if (currentState != State.SAVING_FOR_RUSH) {
-                    stateStack.push(currentState);
+                if (currentState != State.RUSHING) {
+                    if (currentState != State.SAVING_FOR_RUSH) {
+                        stateStack.push(currentState);
+                    }
+                    if (currentState != State.BUILDING_SLANDERERS) {
+                        canGoBackToBuildingProtectors = false;
+                    }
+                    currentState = State.RUSHING;
                 }
-                if (currentState != State.BUILDING_SLANDERERS) {
-                    canGoBackToBuildingProtectors = false;
-                }
-                currentState = State.RUSHING;
             } else {
-                // Otherwise try to start saving for the rush
-                if (tryStartSavingForRush()) {
-                    stateStack.push(currentState);
-                    currentState = State.SAVING_FOR_RUSH;
-                }
-                // If there's nothing to save for, clean up
-                else if (currRoundNum > 500 && tryStartCleanup()) {
-                    stateStack.push(currentState);
-                    currentState = State.CLEANUP;
-                }
-                // Override cleanup or saving (or nothing) to build protectors,
-                // which makes sense since survival is a high priority.
-                tryStartRemovingBlockage();
+                // Second priority is build protectors
                 toggleBuildProtectors();
+                // Third priority is removing blockage.
+                if (currentState != State.BUILDING_PROTECTORS) {
+                    tryStartRemovingBlockage();
+                    // Fourth priority is saving for rush
+                    if (currentState != State.REMOVING_BLOCKAGE) {
+                        if (tryStartSavingForRush()) {
+                            if (currentState != State.SAVING_FOR_RUSH) {
+                                stateStack.push(currentState);
+                                currentState = State.SAVING_FOR_RUSH;
+                            }
+                        }
+                        // If there's nothing to do, clean up
+                        else if (currRoundNum > 500 && tryStartCleanup()) {
+                            if (currentState != State.CLEANUP) {
+                                stateStack.push(currentState);
+                                currentState = State.CLEANUP;
+                            }
+                        }
+                    }                
+                }
             }
         }
 
@@ -489,7 +499,7 @@ public class EC extends Robot {
 
     public boolean tryStartCleanup() throws GameActionException {
         Debug.println(Debug.info, "Cleanup count: " + cleanUpCount);
-        if (ECflags.isEmpty() && cleanUpCount > Util.startCleanupThreshold && currentState != State.CLEANUP) {
+        if (ECflags.isEmpty() && cleanUpCount > Util.startCleanupThreshold) {
             return true;
         }
         return false;
@@ -512,6 +522,7 @@ public class EC extends Robot {
     }
 
     public void tryStartRemovingBlockage() throws GameActionException {
+        if (currentState == State.REMOVING_BLOCKAGE) return;
         int num_enemies_near = 0;
         for (Direction dir : Util.directions) {
             MapLocation surroundingLoc = home.add(dir);
