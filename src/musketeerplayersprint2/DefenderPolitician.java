@@ -26,20 +26,20 @@ public class DefenderPolitician extends Robot {
         Debug.println(Debug.info, "hasSeenEnemy: " + hasSeenEnemy);
         
         MapLocation currLoc = rc.getLocation();
-        int minEnemyDistSquared = Integer.MAX_VALUE;
-        MapLocation closestEnemy = null;
+        int maxEnemyDistSquared = Integer.MIN_VALUE;
+        MapLocation farthestEnemy = null;
         for (RobotInfo robot : enemyAttackable) {
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
-            if (temp < minEnemyDistSquared) {
-                minEnemyDistSquared = temp;
-                closestEnemy = robot.getLocation();
+            if (temp > maxEnemyDistSquared) {
+                maxEnemyDistSquared = temp;
+                farthestEnemy = robot.getLocation();
             }
         }
 
-        if (enemyAttackable.length != 0 && rc.canEmpower(minEnemyDistSquared)) {
-            Debug.println(Debug.info, "Empowered with radius: " + minEnemyDistSquared);
-            Debug.setIndicatorLine(Debug.info, rc.getLocation(), closestEnemy, 255, 150, 50);
-            rc.empower(minEnemyDistSquared);
+        if (enemyAttackable.length != 0 && rc.canEmpower(maxEnemyDistSquared)) {
+            Debug.println(Debug.info, "Empowered with radius: " + maxEnemyDistSquared);
+            Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestEnemy, 255, 150, 50);
+            rc.empower(maxEnemyDistSquared);
             return;
         }
 

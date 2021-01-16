@@ -40,7 +40,7 @@ public class HunterMuckracker extends Robot {
         Debug.println(Debug.info, "I am a hunter Mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
         if(enemyLocation != null) {
-            Debug.println(Debug.info, "enemy location: " + enemyLocation);
+            Debug.println(Debug.info, "enemy location: " + enemyLocation + ";semaphor value: " + baseCrowdedSemaphor);
         }
         else {
             Debug.println(Debug.info, "no enemy location, reseting baseCrowdedSemaphor");
@@ -54,6 +54,7 @@ public class HunterMuckracker extends Robot {
         if(enemyLocation != null && rc.canSenseLocation(enemyLocation) ) {
             RobotInfo supposedToBeAnEC = rc.senseRobotAtLocation(enemyLocation);
             if(supposedToBeAnEC == null || supposedToBeAnEC.getType() != RobotType.ENLIGHTENMENT_CENTER) {
+                Debug.println(Debug.info, "reset the EC flag as it was at a wrong location");
                 enemyLocation = null;
                 baseCrowdedSemaphor = 5;
             }
@@ -86,6 +87,10 @@ public class HunterMuckracker extends Robot {
                     DxDyFromRobot = Comms.getDxDy(flag);
                     enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
                     Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                    if(enemyLocation != null && !enemyLoc.equals(enemyLocation)) {
+                        baseCrowdedSemaphor = 5;
+                        Debug.println(Debug.info, "reset semaphor because of changed enemy location");
+                    }
                     enemyLocation = enemyLoc;
                     distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
                     break;
