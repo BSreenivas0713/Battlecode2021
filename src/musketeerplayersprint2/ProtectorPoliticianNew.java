@@ -66,15 +66,19 @@ public class ProtectorPoliticianNew extends Robot {
 
         int distanceToEC = rc.getLocation().distanceSquaredTo(currMinEC);
         
+        RobotInfo robot;
         int maxEnemyAttackableDistSquared = Integer.MIN_VALUE;
         MapLocation farthestEnemyAttackable = null;
         int maxPoliticianSize = 0;
-        for (RobotInfo robot : enemyAttackable) {
+
+        for(int i = enemyAttackable.length - 1; i >= 0; i--) {
+            robot = enemyAttackable[i];
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp > maxEnemyAttackableDistSquared) {
                 maxEnemyAttackableDistSquared = temp;
                 farthestEnemyAttackable = robot.getLocation();
             }
+
             if (robot.getType() == RobotType.POLITICIAN && robot.getConviction() > maxPoliticianSize) {
                 maxPoliticianSize = robot.getConviction();
             }
@@ -85,18 +89,21 @@ public class ProtectorPoliticianNew extends Robot {
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
 
-        for (RobotInfo robot : enemySensable) {
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
             MapLocation tempLoc = robot.getLocation();
             int currDistance = tempLoc.distanceSquaredTo(currMinEC);
             if (robot.getType() == RobotType.MUCKRAKER && currDistance < minMuckrakerDistance) {
                 closestMuckrakerSensable = robot;
                 minMuckrakerDistance = currDistance;
             }
+
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
                 minRobot = robot;
             }
+            
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && seenECs.contains(tempLoc)) {
                 seenECs.remove(tempLoc);
             }
@@ -108,7 +115,8 @@ public class ProtectorPoliticianNew extends Robot {
         int nearestSlandyDist = Integer.MAX_VALUE;
         boolean ECNearby = false;
         int numFollowingClosestMuckraker = 0;
-        for (RobotInfo robot : friendlySensable) {
+        for(int i = friendlySensable.length - 1; i >= 0; i--) {
+            robot = friendlySensable[i];
             if ((robot.getType() == RobotType.ENLIGHTENMENT_CENTER)){
                 slandererOrECNearby = true;
                 ECNearby = true;

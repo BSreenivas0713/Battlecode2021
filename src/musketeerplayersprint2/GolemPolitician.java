@@ -23,6 +23,7 @@ public class GolemPolitician extends Robot {
 
         Debug.println(Debug.info, "I am a golem politician; current influence: " + rc.getInfluence());
         
+        RobotInfo robot;
         int min_attackable_conviction = (rc.getConviction()-10) / 3;
         int attackable_conviction = 0;
         int distancetoECSemaphor = 2;
@@ -31,7 +32,9 @@ public class GolemPolitician extends Robot {
         MapLocation farthestEnemy = null;
         boolean enemyECinRadius = false;
         MapLocation enemyLoc = null;
-        for (RobotInfo robot : enemyAttackable) {
+
+        for(int i = enemyAttackable.length - 1; i >= 0; i--) {
+            robot = enemyAttackable[i];
             attackable_conviction += robot.getConviction();
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp > maxEnemyDistSquared) {
@@ -39,7 +42,9 @@ public class GolemPolitician extends Robot {
                 farthestEnemy = robot.getLocation();
             }
         }
-        for (RobotInfo robot: enemySensable) {
+
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 enemyECinRadius = true;
                 enemyLoc = robot.getLocation();
@@ -48,24 +53,9 @@ public class GolemPolitician extends Robot {
 
         int ECInfluence = 0;
         MapLocation ECPosition = null;
-        for (RobotInfo robot: friendlySensable) {
-            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
-                ECInfluence = robot.getInfluence();
-                ECPosition = robot.getLocation();
-                if(rc.canGetFlag(robot.getID())) {
-                    int flag = rc.getFlag(robot.getID());
-                    if(Comms.getIC(flag) == Comms.InformationCategory.RUSH_EC_GOLEM) {
-                        int[] dxdy = Comms.getDxDy(flag);
-                        MapLocation spawningLoc = rc.getLocation();
-                        MapLocation rushEnemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
-                        changeTo = new RushPolitician(rc, rushEnemyLoc, home);
-                        return;
-                    }
-                }
-            }
-        }
 
         boolean boostBase = false;
+
         if(ECInfluence !=0 && ECInfluence <= rc.getInfluence() ) {
             if(distancetoECSemaphor == 0) {
                 boostBase = true;
@@ -91,19 +81,24 @@ public class GolemPolitician extends Robot {
             rc.empower(maxEnemyDistSquared);
             return;
         }
+
         if (enemyECinRadius) {
             changeTo = new RushPolitician(rc, enemyLoc, home);
             return;
         }
+
         int distToEC = 500;
         boolean sensesEC = false;
         MapLocation ECLoc = null;
         MapLocation closestGolemLoc = null; 
         int distToClosestGolem = 500;
-        for (RobotInfo robot: friendlySensable) {
+
+        for(int i = friendlySensable.length - 1; i >= 0; i--) {
+            robot = friendlySensable[i];
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 sensesEC = true;
                 boolean seenCenter = false;
+                
                 for(RobotInfo secondRobot: rc.senseNearbyRobots(actionRadius, rc.getTeam())) {
                     if(secondRobot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                         seenCenter = true;
@@ -111,9 +106,24 @@ public class GolemPolitician extends Robot {
                         ECLoc = robot.getLocation();
                     }
                 }
+
                 if(!seenCenter) {
                     Direction toMove = rc.getLocation().directionTo(robot.getLocation());
                     tryMoveDest(toMove);
+                }
+
+                // Golem -> Rush
+                ECInfluence = robot.getInfluence();
+                ECPosition = robot.getLocation();
+                if(rc.canGetFlag(robot.getID())) {
+                    int flag = rc.getFlag(robot.getID());
+                    if(Comms.getIC(flag) == Comms.InformationCategory.RUSH_EC_GOLEM) {
+                        int[] dxdy = Comms.getDxDy(flag);
+                        MapLocation spawningLoc = rc.getLocation();
+                        MapLocation rushEnemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
+                        changeTo = new RushPolitician(rc, rushEnemyLoc, home);
+                        return;
+                    }
                 }
             }
             else if(rc.canGetFlag(robot.getID())) {
@@ -127,9 +137,12 @@ public class GolemPolitician extends Robot {
                 }
             }
         }
+
         RobotInfo enemyRobot = null;
         int maxEnemyConviction = min_attackable_conviction - 1;
-        for (RobotInfo robot : enemySensable) {
+
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
             int enemyConviction = robot.getConviction();
             if(enemyConviction > maxEnemyConviction) {
                 enemyRobot = robot;
@@ -137,7 +150,6 @@ public class GolemPolitician extends Robot {
             }
         }
 
-        
         if (enemyRobot != null) {
             Direction toMove = rc.getLocation().directionTo(enemyRobot.getLocation());
             tryMoveDest(toMove);

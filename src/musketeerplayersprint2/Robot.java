@@ -116,8 +116,12 @@ public class Robot {
     boolean broadcastECLocation() {
         boolean res = false;
 
+        RobotInfo robot;
+        // Moved beforehand, so we need to recalculate
         RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius);
-        for (RobotInfo robot : sensable) {
+
+        for(int i = sensable.length - 1; i >= 0; i--) {
+            robot = sensable[i];
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 if(robot.getTeam() == rc.getTeam()) {
                     if(!robot.getLocation().equals(home)) {
@@ -163,21 +167,30 @@ public class Robot {
             }
         }
 
+        // Moved beforehand, so we need to recalculate
+        RobotInfo robot;
+        RobotInfo[] friendlyNearby = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
         MapLocation currLoc = rc.getLocation();
-        for(RobotInfo robot : rc.senseNearbyRobots(sensorRadius, rc.getTeam())) { //have to use sense nearby robots since we move before calling this function
+
+        int flag;
+        InformationCategory IC;
+        
+        // Only propgatable flags
+        MapLocation robotLoc;
+        int []DxDyFromRobot;
+        MapLocation enemyLoc;
+        int dx;
+        int dy;
+        int newFlag;
+
+        for(int i = friendlyNearby.length - 1; i >= 0; i--) {
+            robot = friendlyNearby[i];
             if(rc.canGetFlag(robot.getID())) {
-                int flag = rc.getFlag(robot.getID());
-                InformationCategory IC = Comms.getIC(flag);
+                flag = rc.getFlag(robot.getID());
+                IC = Comms.getIC(flag);
 
                 // Do not propagate if we have propagated recently
                 if(!ICtoTurnMap.contains(IC.ordinal())) {
-                    // Only propgatable flags
-                    MapLocation robotLoc;
-                    int []DxDyFromRobot;
-                    MapLocation enemyLoc;
-                    int dx;
-                    int dy;
-                    int newFlag;
                     switch(IC) {
                         case ENEMY_EC_ATTACK_CALL:
                             Debug.println(Debug.info, "Propagating Attack Flag");
@@ -215,6 +228,8 @@ public class Robot {
                             setFlag(newFlag);
     
                             ICtoTurnMap.add(IC.ordinal(), rc.getRoundNum());
+    
+                            return true;
                         default:
                             break;
                     }
@@ -230,10 +245,13 @@ public class Robot {
         int dy = 0;
         int turn = -1;
 
+        RobotInfo robot;
         MapLocation currLoc = rc.getLocation();
         MapLocation closestEnemyLoc = null;
         int minDistSquared = Integer.MAX_VALUE;
-        for (RobotInfo robot : enemySensable) {
+        
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
@@ -242,11 +260,14 @@ public class Robot {
             }
         }
 
+        int flag;
+
         // Did not find its own sensable enemy, propagate other flags
         if(closestEnemyLoc == null) {
-            for(RobotInfo robot : rc.senseNearbyRobots(sensorRadius, rc.getTeam())) {
+            for(int i = friendlySensable.length - 1; i >= 0; i--) {
+                robot = friendlySensable[i];
                 if(rc.canGetFlag(robot.getID())) {
-                    int flag = rc.getFlag(robot.getID());
+                    flag = rc.getFlag(robot.getID());
                     switch(Comms.getIC(flag)) {
                         case CLOSEST_ENEMY:
                         case SLA_CLOSEST_ENEMY:

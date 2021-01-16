@@ -25,10 +25,12 @@ public class SpawnKillPolitician extends Robot {
         Debug.println(Debug.info, "I am a spawn kill politician; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
+        RobotInfo robot;
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
         MapLocation currLoc = rc.getLocation();
-        for (RobotInfo robot : enemySensable) {
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
             double temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
