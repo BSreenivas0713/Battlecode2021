@@ -152,8 +152,6 @@ public class EC extends Robot {
                 } else {
                     System.out.println("CRITICAL: EC didn't find the robot it just built");
                 }
-
-                resetFlagOnNewTurn = true;
                 robotCounter += 1;
                 return true;
             }
@@ -235,7 +233,6 @@ public class EC extends Robot {
         Debug.println(Debug.info, "State stack size: " + stateStack.size() + ", state: " + currentState);
         Debug.println(Debug.info, "avg direction of enemies: " + avgDirectionOfEnemies);
         Debug.println(Debug.info, "protectors built in a row: " + protectorsSpawnedInARow);
-        Debug.println(Debug.info, "can reset flag on next turn: " + resetFlagOnNewTurn);
 
         switch(currentState) {
             case BUILDING_SLANDERERS:
@@ -248,14 +245,7 @@ public class EC extends Robot {
 
                     MapLocation enemyLocation = home.translate(targetECFromSlanderers.dx - Util.dOffset, targetECFromSlanderers.dy - Util.dOffset);
                     Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
-                    if(requiredInfluence < totalGolemConviction) {
-                        resetFlagOnNewTurn = false;
-                        nextFlag = Comms.getFlag(Comms.InformationCategory.RUSH_EC_GOLEM, targetECFromSlanderers.dx, targetECFromSlanderers.dy);
-                        break;
-                    }
                     if(requiredInfluence < currInfluence) {
-                        resetFlagOnNewTurn = false;
-                        nextFlag = targetECFromSlanderers.flag;
                         stateStack.push(currentState);
                         currentState = State.RUSHING;
                         break;
@@ -316,14 +306,7 @@ public class EC extends Robot {
 
                     MapLocation enemyLocation = home.translate(targetECFromProtectors.dx - Util.dOffset, targetECFromProtectors.dy - Util.dOffset);
                     Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
-                    if(requiredInfluence < totalGolemConviction) {
-                        resetFlagOnNewTurn = false;
-                        nextFlag = Comms.getFlag(Comms.InformationCategory.RUSH_EC_GOLEM, targetECFromProtectors.dx, targetECFromProtectors.dy);
-                        break;
-                    }
                     if(requiredInfluence < currInfluence) {
-                        resetFlagOnNewTurn = false;
-                        nextFlag = targetECFromProtectors.flag;
                         stateStack.push(currentState);
                         currentState = State.RUSHING;
                         break;
@@ -378,15 +361,7 @@ public class EC extends Robot {
 
                 MapLocation enemyLocation = home.translate(targetEC.dx - Util.dOffset, targetEC.dy - Util.dOffset);
                 Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
-                if(requiredInfluence < totalGolemConviction) {
-                    resetFlagOnNewTurn = false;
-                    nextFlag = Comms.getFlag(Comms.InformationCategory.RUSH_EC_GOLEM, targetEC.dx, targetEC.dy);
-                    currentState = stateStack.pop();
-                    break;
-                }
                 if(requiredInfluence < currInfluence) {
-                    resetFlagOnNewTurn = false;
-                    nextFlag = targetEC.flag;
                     currentState = State.RUSHING;
                     break;
                 }
@@ -494,7 +469,7 @@ public class EC extends Robot {
         // Debug.println(Debug.info, "current state from toggle building protectors: " + currentState);
         // Debug.println(Debug.info, "robot counter from toggle protectors: " + robotCounter);
 
-        if (protectorIdSet.size <= 25 && currentState != State.BUILDING_PROTECTORS && resetFlagOnNewTurn && 
+        if (protectorIdSet.size <= 25 && currentState != State.BUILDING_PROTECTORS && 
             robotCounter > 40 && canGoBackToBuildingProtectors && noAdjacentEC) {
             Debug.println(Debug.info, "switching to building protectors");
             stateStack.push(currentState);
@@ -515,7 +490,6 @@ public class EC extends Robot {
         if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && spawnKillLock >= 10) {
             Debug.println(Debug.info, "Switching to building spawn kills");
             stateStack.push(currentState);
-            resetFlagOnNewTurn = true;
             currentState = State.BUILDING_SPAWNKILLS;
         }
     }
@@ -523,8 +497,7 @@ public class EC extends Robot {
     public void tryStartSignalingAvgEnemyDir() throws GameActionException {
         // Broadcast the average enemy direction every 5 turns.
         // so long as we're not using the nextFlag already
-        if(resetFlagOnNewTurn && 
-            turnsSinceLastEnemyLocBroadcast >= Util.turnsBetweenEnemyBroadcast &&
+        if(turnsSinceLastEnemyLocBroadcast >= Util.turnsBetweenEnemyBroadcast &&
             avgDirectionOfEnemies != null) {
             stateStack.push(currentState);
             currentState = State.SIGNALING_AVG_ENEMY_DIR;
@@ -567,6 +540,11 @@ public class EC extends Robot {
                         }
                         else {
                             team = rc.getTeam().opponent();
+                        }
+                        int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
+                        int currReqInf = (int)  neededInf * 4 + 10;
+                        if(currRoundNum <=150) {
+                            currReqInf = (int) neededInf * 2 + 10;
                         }
                         rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag, team);
                         ECflags.remove(rushFlag);
@@ -693,7 +671,6 @@ public class EC extends Robot {
         toBuild = RobotType.POLITICIAN;
         RushFlag rushFlag = ECflags.peek();
         if (rushFlag == null) {
-            resetFlagOnNewTurn = true;
             currentState = stateStack.pop();
             return false;
         }
@@ -709,7 +686,7 @@ public class EC extends Robot {
         
         if(buildRobot(toBuild, influence)) {
             ECflags.remove();
-            resetFlagOnNewTurn = true;
+            nextFlag = rushFlag.flag;
             currentState = stateStack.pop();
             lastRush = turnCount;
         }
@@ -718,9 +695,6 @@ public class EC extends Robot {
     }
 
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {
-        if (resetFlagOnNewTurn) {
-            nextFlag = Comms.getFlag(Comms.InformationCategory.TARGET_ROBOT, type);
-            resetFlagOnNewTurn = false;
-        }
+        nextFlag = Comms.getFlag(Comms.InformationCategory.TARGET_ROBOT, type);
     }
 }
