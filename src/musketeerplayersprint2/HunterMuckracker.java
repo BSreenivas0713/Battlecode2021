@@ -40,7 +40,7 @@ public class HunterMuckracker extends Robot {
         Debug.println(Debug.info, "I am a hunter Mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
         if(enemyLocation != null) {
-            Debug.println(Debug.info, "enemy location: " + enemyLocation);
+            Debug.println(Debug.info, "enemy location: " + enemyLocation + ";semaphor value: " + baseCrowdedSemaphor);
         }
         else {
             Debug.println(Debug.info, "no enemy location, reseting baseCrowdedSemaphor");
@@ -54,6 +54,7 @@ public class HunterMuckracker extends Robot {
         if(enemyLocation != null && rc.canSenseLocation(enemyLocation) ) {
             RobotInfo supposedToBeAnEC = rc.senseRobotAtLocation(enemyLocation);
             if(supposedToBeAnEC == null || supposedToBeAnEC.getType() != RobotType.ENLIGHTENMENT_CENTER) {
+                Debug.println(Debug.info, "reset the EC flag as it was at a wrong location");
                 enemyLocation = null;
                 baseCrowdedSemaphor = 5;
             }
@@ -86,6 +87,10 @@ public class HunterMuckracker extends Robot {
                     DxDyFromRobot = Comms.getDxDy(flag);
                     enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
                     Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                    if(enemyLocation != null && !enemyLoc.equals(enemyLocation)) {
+                        baseCrowdedSemaphor = 5;
+                        Debug.println(Debug.info, "reset semaphor because of changed enemy location");
+                    }
                     enemyLocation = enemyLoc;
                     distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
                     break;
@@ -181,7 +186,7 @@ public class HunterMuckracker extends Robot {
             }
             MapLocation tempLoc = robot.getLocation();
             int dist = currLoc.distanceSquaredTo(tempLoc);
-            int botFlag = rc.getFlag(robot.getID());
+            int botFlag;
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 awayFromBase = true;
                 friendlyBase = robot;
@@ -199,14 +204,19 @@ public class HunterMuckracker extends Robot {
                         enemyLocation = null;
                         distSquaredToBase = -1;
                 }
-                Comms.InformationCategory flagIC = Comms.getIC(botFlag);
-                if (flagIC == Comms.InformationCategory.ENEMY_EC) {
-                    int[] dxdy = Comms.getDxDy(botFlag);
-                    enemyLocation = new MapLocation(dxdy[0] + tempLoc.x - Util.dOffset, dxdy[1] + tempLoc.y - Util.dOffset);
-                    break;
+                if(rc.canGetFlag(robot.getID())) {
+                    botFlag = rc.getFlag(robot.getID());
+                    Comms.InformationCategory flagIC = Comms.getIC(botFlag);
+                    if (flagIC == Comms.InformationCategory.ENEMY_EC) {
+                        int[] dxdy = Comms.getDxDy(botFlag);
+                        enemyLocation = new MapLocation(dxdy[0] + tempLoc.x - Util.dOffset, dxdy[1] + tempLoc.y - Util.dOffset);
+                        break;
+                    }
                 }
             }
-            if(enemiesFound != 0) {
+
+            if(enemiesFound != 0 && rc.canGetFlag(robot.getID())) {
+                botFlag = rc.getFlag(robot.getID());
                 if(botFlag == Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID())) {
                     numFollowingClosestEnemy++;
                 }

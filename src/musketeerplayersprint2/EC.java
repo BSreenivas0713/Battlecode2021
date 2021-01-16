@@ -28,7 +28,6 @@ public class EC extends Robot {
         SAVING_FOR_RUSH,
         CLEANUP,
         REMOVING_BLOCKAGE,
-        SIGNALING_AVG_ENEMY_DIR,
     };
 
     static class RushFlag implements Comparable<RushFlag> {
@@ -73,8 +72,6 @@ public class EC extends Robot {
     static boolean noAdjacentEC;
 
     static boolean muckrackerNear;
-    static Direction avgDirectionOfEnemies;
-    static int turnsSinceLastEnemyLocBroadcast;
     
     static FastIterableIntSet idSet;
     static FastIterableIntSet protectorIdSet;
@@ -86,6 +83,7 @@ public class EC extends Robot {
     static int numProtectors;
     static int protectorsSpawnedInARow;
     static boolean canGoBackToBuildingProtectors;
+    static boolean haveSeenEnemy;
 
     static State currentState;
 
@@ -108,9 +106,6 @@ public class EC extends Robot {
         currentState = State.BUILDING_SLANDERERS;
 
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
-
-        avgDirectionOfEnemies = null;
-        turnsSinceLastEnemyLocBroadcast = Util.turnsBetweenEnemyBroadcast;
 
         cleanUpCount = 0;
         numProtectors = 0;
@@ -144,8 +139,7 @@ public class EC extends Robot {
 
                     Comms.InformationCategory IC = Comms.getIC(nextFlag);
                     if ((IC == Comms.InformationCategory.TARGET_ROBOT && 
-                        Comms.getSubRobotType(nextFlag) == SubRobotType.POL_PROTECTOR) ||
-                        (IC == Comms.InformationCategory.AVG_ENEMY_DIR)) {
+                        Comms.getSubRobotType(nextFlag) == SubRobotType.POL_PROTECTOR)) {
                         protectorIdSet.add(robot.getID());
                     }
                 } else {
@@ -163,9 +157,6 @@ public class EC extends Robot {
 
         if (spawnKillLock < 10) {
             spawnKillLock++;
-        }
-        if(turnsSinceLastEnemyLocBroadcast < Util.turnsBetweenEnemyBroadcast) {
-            turnsSinceLastEnemyLocBroadcast++;
         }
 
         for (RobotInfo robot : enemySensable) {
@@ -193,7 +184,6 @@ public class EC extends Robot {
         }
         
         toggleBuildProtectors();
-        tryStartSignalingAvgEnemyDir();
         tryStartBuildingSpawnKill();
 
         //bidding code
@@ -242,7 +232,6 @@ public class EC extends Robot {
         Debug.println(Debug.info, "num ids found: " + idSet.size);
         Debug.println(Debug.info, "num protectors currently: " + protectorIdSet.size);
         Debug.println(Debug.info, "State stack size: " + stateStack.size() + ", state: " + currentState);
-        Debug.println(Debug.info, "avg direction of enemies: " + avgDirectionOfEnemies);
         Debug.println(Debug.info, "protectors built in a row: " + protectorsSpawnedInARow);
 
         switch(currentState) {
@@ -428,18 +417,6 @@ public class EC extends Robot {
                     currentState = stateStack.pop();
                 }
                 break;
-            case SIGNALING_AVG_ENEMY_DIR:
-                Debug.println(Debug.info, "Broadcasting average enemy direction: " + avgDirectionOfEnemies);
-                nextFlag = Comms.getFlag(Comms.InformationCategory.AVG_ENEMY_DIR, rc.getRoundNum(), avgDirectionOfEnemies);
-                turnsSinceLastEnemyLocBroadcast = 0;
-                currentState = stateStack.pop();
-
-                toBuild = RobotType.POLITICIAN;
-                influence = 18;
-                if(buildRobot(toBuild, influence)) {
-                    Debug.println(Debug.info, "Built a protector politician too");
-                }
-                break;
             default:
                 System.out.println("CRITICAL: Maxwell screwed up stateStack");
                 break;
@@ -488,16 +465,6 @@ public class EC extends Robot {
             currentState = State.BUILDING_SPAWNKILLS;
         }
     }
-
-    public void tryStartSignalingAvgEnemyDir() throws GameActionException {
-        // Broadcast the average enemy direction every 5 turns.
-        // so long as we're not using the nextFlag already
-        if(turnsSinceLastEnemyLocBroadcast >= Util.turnsBetweenEnemyBroadcast &&
-            avgDirectionOfEnemies != null) {
-            stateStack.push(currentState);
-            currentState = State.SIGNALING_AVG_ENEMY_DIR;
-        }
-    }
     
     public boolean checkIfMuckrakerNear() throws GameActionException {
         for(RobotInfo robot: rc.senseNearbyRobots(RobotType.MUCKRAKER.actionRadiusSquared, enemy)) {
@@ -514,7 +481,6 @@ public class EC extends Robot {
 
         int totalEnemyX = 0;
         int totalEnemyY = 0;
-        int numChildrenFoundEnemies = 0;
 
         int id;
         for(int j = idSet.size - 1; j >= 0; j--) {
@@ -555,6 +521,7 @@ public class EC extends Robot {
                         ECflags.remove(rushFlag);
                         break;
                     case ENEMY_FOUND:
+                        haveSeenEnemy = true;
                         int[] enemyDxDy = Comms.getDxDy(flag);
                         int enemyLocX = enemyDxDy[0] + home.x - Util.dOffset;
                         int enemyLocY = enemyDxDy[1] + home.y - Util.dOffset;
@@ -568,16 +535,11 @@ public class EC extends Robot {
                             currentState = State.BUILDING_PROTECTORS;
                             protectorsSpawnedInARow = 0;
                         }
-
-                        numChildrenFoundEnemies++;
-                        
                         break;
                 }
             } else {
                 idSet.remove(id);
             }
-
-
         }
         
         //remove protector ids if dead
@@ -587,14 +549,6 @@ public class EC extends Robot {
             if (!rc.canGetFlag(protectorID)) {
                 protectorIdSet.remove(protectorID);
             }
-        }
-
-        //for calculation of average direction to enemy
-        if (numChildrenFoundEnemies != 0) {
-            MapLocation enemyTotalDirection = new MapLocation(totalEnemyX / numChildrenFoundEnemies, totalEnemyY / numChildrenFoundEnemies);
-            avgDirectionOfEnemies = home.directionTo(enemyTotalDirection);
-        } else {
-            avgDirectionOfEnemies = null;
         }
 
         cleanUpCount++;

@@ -3,7 +3,7 @@ package naivemucks;
 import battlecode.common.*;
 
 public class Debug {
-    static final boolean verbose = true;
+    static final boolean verbose = false;
     public static final boolean info = true;
     public static final boolean pathfinding = true;
     private static final boolean indicators = true;

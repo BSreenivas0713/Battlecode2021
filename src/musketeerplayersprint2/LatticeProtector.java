@@ -109,22 +109,7 @@ public class LatticeProtector extends Robot {
             }
         }
         
-        int closestProtectorDist = Integer.MAX_VALUE;
-        MapLocation closestProtectorLoc = null;
-        boolean ProtectorNearby = false;
-        for(RobotInfo robot: rc.senseNearbyRobots(actionRadius, rc.getTeam())) {
-            if(rc.canGetFlag(robot.getID())) {
-                int robotFlag = rc.getFlag(robot.getID());
-                if(Comms.isSubRobotType(robotFlag, Comms.SubRobotType.POL_PROTECTOR)) {
-                    ProtectorNearby = true;
-                    int currDistToProtector = robot.getLocation().distanceSquaredTo(rc.getLocation());
-                    if (currDistToProtector < closestProtectorDist) {
-                        closestProtectorDist = currDistToProtector;
-                        closestProtectorLoc = robot.getLocation();
-                    }
-                }
-            }
-        }
+        
 
         boolean slandererOrECNearby = false;
         boolean slandererNearby = false;
@@ -144,8 +129,7 @@ public class LatticeProtector extends Robot {
                 int tempDist = currLoc.distanceSquaredTo(tempLoc);
                 if(rc.canGetFlag(robot.getID())) {
                     int flag = rc.getFlag(robot.getID());
-                    // Only slanderers and EC's broadcast AVG_ENEMY_DIR so this is valid to check for slanderers
-                    if(Comms.isSubRobotType(flag, Comms.SubRobotType.SLANDERER) || Comms.getIC(flag) == Comms.InformationCategory.AVG_ENEMY_DIR) {
+                    if(Comms.isSubRobotType(flag, Comms.SubRobotType.SLANDERER)) {
                         slandererOrECNearby = true;
                         slandererNearby = true;
                         if (tempDist < nearestSlandyDist && tempLoc.distanceSquaredTo(currMinEC) > currLoc.distanceSquaredTo(currMinEC)) {
@@ -162,6 +146,28 @@ public class LatticeProtector extends Robot {
                 }
             }
         }
+
+        int closestProtectorDist = Integer.MAX_VALUE;
+        MapLocation closestProtectorLoc = null;
+        boolean ProtectorNearby = false;
+        int radius = actionRadius;
+        if (!slandererNearby) {
+            radius = sensorRadius;
+        }
+        for(RobotInfo robot: rc.senseNearbyRobots(radius, rc.getTeam())) {
+            if(rc.canGetFlag(robot.getID())) {
+                int robotFlag = rc.getFlag(robot.getID());
+                if(Comms.isSubRobotType(robotFlag, Comms.SubRobotType.POL_PROTECTOR)) {
+                    ProtectorNearby = true;
+                    int currDistToProtector = robot.getLocation().distanceSquaredTo(rc.getLocation());
+                    if (currDistToProtector < closestProtectorDist) {
+                        closestProtectorDist = currDistToProtector;
+                        closestProtectorLoc = robot.getLocation();
+                    }
+                }
+            }
+        }
+        
         if (seenECs.size != 0) {
             Debug.println(Debug.info, "seensECs.locs: " + seenECs.locs + "; currLoc: " + currLoc);
             currMinEC = seenECmin(currLoc);
