@@ -88,6 +88,8 @@ public class Util {
 
     static final int minDistFromEnemy = 100;
     
+    static final int MuckAttackCooldown = 25;
+    
     /**
      * Returns a random Direction.
      *
