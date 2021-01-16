@@ -109,22 +109,7 @@ public class LatticeProtector extends Robot {
             }
         }
         
-        int closestProtectorDist = Integer.MAX_VALUE;
-        MapLocation closestProtectorLoc = null;
-        boolean ProtectorNearby = false;
-        for(RobotInfo robot: rc.senseNearbyRobots(actionRadius, rc.getTeam())) {
-            if(rc.canGetFlag(robot.getID())) {
-                int robotFlag = rc.getFlag(robot.getID());
-                if(Comms.isSubRobotType(robotFlag, Comms.SubRobotType.POL_PROTECTOR)) {
-                    ProtectorNearby = true;
-                    int currDistToProtector = robot.getLocation().distanceSquaredTo(rc.getLocation());
-                    if (currDistToProtector < closestProtectorDist) {
-                        closestProtectorDist = currDistToProtector;
-                        closestProtectorLoc = robot.getLocation();
-                    }
-                }
-            }
-        }
+        
 
         boolean slandererOrECNearby = false;
         boolean slandererNearby = false;
@@ -161,6 +146,28 @@ public class LatticeProtector extends Robot {
                 }
             }
         }
+
+        int closestProtectorDist = Integer.MAX_VALUE;
+        MapLocation closestProtectorLoc = null;
+        boolean ProtectorNearby = false;
+        int radius = actionRadius;
+        if (!slandererNearby) {
+            radius = sensorRadius;
+        }
+        for(RobotInfo robot: rc.senseNearbyRobots(radius, rc.getTeam())) {
+            if(rc.canGetFlag(robot.getID())) {
+                int robotFlag = rc.getFlag(robot.getID());
+                if(Comms.isSubRobotType(robotFlag, Comms.SubRobotType.POL_PROTECTOR)) {
+                    ProtectorNearby = true;
+                    int currDistToProtector = robot.getLocation().distanceSquaredTo(rc.getLocation());
+                    if (currDistToProtector < closestProtectorDist) {
+                        closestProtectorDist = currDistToProtector;
+                        closestProtectorLoc = robot.getLocation();
+                    }
+                }
+            }
+        }
+        
         if (seenECs.size != 0) {
             Debug.println(Debug.info, "seensECs.locs: " + seenECs.locs + "; currLoc: " + currLoc);
             currMinEC = seenECmin(currLoc);

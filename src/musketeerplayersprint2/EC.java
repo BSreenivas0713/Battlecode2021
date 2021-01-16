@@ -84,6 +84,7 @@ public class EC extends Robot {
     static int numProtectors;
     static int protectorsSpawnedInARow;
     static boolean canGoBackToBuildingProtectors;
+    static boolean haveSeenEnemy;
 
     static State currentState;
 
@@ -174,7 +175,9 @@ public class EC extends Robot {
         if (currRoundNum > 500)
             tryStartCleanup();
 
-        toggleBuildProtectors();
+        if(haveSeenEnemy) {
+            toggleBuildProtectors();
+        }
         tryStartBuildingSpawnKill();
 
 
@@ -551,6 +554,7 @@ public class EC extends Robot {
                         ECflags.remove(rushFlag);
                         break;
                     case ENEMY_FOUND:
+                        haveSeenEnemy = true;
                         int[] enemyDxDy = Comms.getDxDy(flag);
                         int enemyLocX = enemyDxDy[0] + home.x - Util.dOffset;
                         int enemyLocY = enemyDxDy[1] + home.y - Util.dOffset;
