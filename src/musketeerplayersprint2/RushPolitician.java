@@ -32,11 +32,13 @@ public class RushPolitician extends Robot {
         Debug.println(Debug.info, "target map location: x:" + enemyLocation.x + ", y:" + enemyLocation.y);
         Debug.println(Debug.info, "Semaphore: " + moveSemaphore);
         
+        RobotInfo robot;
         MapLocation currLoc = rc.getLocation();
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         int minEnemyDistSquared = Integer.MAX_VALUE;
         MapLocation closestEnemy = null;
-        for(RobotInfo robot : enemyAttackable) {
+        for(int i = enemyAttackable.length - 1; i >= 0; i--) {
+            robot = enemyAttackable[i];
             MapLocation loc = robot.getLocation();
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
                 enemyLocation.isWithinDistanceSquared(loc, 8)) {
@@ -48,7 +50,8 @@ public class RushPolitician extends Robot {
             }
         }
         
-        for(RobotInfo robot : neutrals) {
+        for(int i = neutrals.length - 1; i >= 0; i--) {
+            robot = neutrals[i];
             MapLocation loc = robot.getLocation();
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
                 enemyLocation.isWithinDistanceSquared(loc, 8)) {
@@ -61,7 +64,8 @@ public class RushPolitician extends Robot {
         }
 
         if (minEnemyDistSquared == Integer.MAX_VALUE) {
-            for (RobotInfo robot : friendlySensable) {
+            for(int i = friendlySensable.length - 1; i >= 0; i--) {
+                robot = friendlySensable[i];
                 MapLocation loc = robot.getLocation();
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 8)) {
                     int dist = currLoc.distanceSquaredTo(loc);

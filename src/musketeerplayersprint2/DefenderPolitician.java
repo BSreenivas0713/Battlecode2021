@@ -25,10 +25,13 @@ public class DefenderPolitician extends Robot {
         Debug.println(Debug.info, "I am a defender politician; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "hasSeenEnemy: " + hasSeenEnemy);
         
+        RobotInfo robot;
         MapLocation currLoc = rc.getLocation();
         int maxEnemyDistSquared = Integer.MIN_VALUE;
         MapLocation farthestEnemy = null;
-        for (RobotInfo robot : enemyAttackable) {
+
+        for(int i = enemyAttackable.length - 1; i >= 0; i--) {
+            robot = enemyAttackable[i];
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp > maxEnemyDistSquared) {
                 maxEnemyDistSquared = temp;
@@ -45,7 +48,8 @@ public class DefenderPolitician extends Robot {
 
         RobotInfo enemyRobot = null;
         int minDistance = Integer.MAX_VALUE;
-        for (RobotInfo robot : enemySensable) {
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
             int dist = rc.getLocation().distanceSquaredTo(robot.location);
             if(dist < minDistance) {
                 enemyRobot = robot;
@@ -68,7 +72,9 @@ public class DefenderPolitician extends Robot {
         MapLocation closestDefenderLoc = null;
         int distToEC = 500;
         MapLocation ECLoc = null;
-        for (RobotInfo robot: friendlySensable) {
+
+        for(int i = friendlySensable.length - 1; i >= 0; i--) {
+            robot = friendlySensable[i];
             if(rc.canGetFlag(robot.getID())) {
                 int flag = rc.getFlag(robot.getID());
                 if(Comms.isSubRobotType(flag, subRobotType)) {
@@ -79,6 +85,7 @@ public class DefenderPolitician extends Robot {
                     }
                 }
             }
+
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 boolean seenCenter = false;
                 for(RobotInfo secondRobot: rc.senseNearbyRobots(actionRadius, rc.getTeam())) {
@@ -94,6 +101,7 @@ public class DefenderPolitician extends Robot {
                 }
             }
         }
+        
         if(distToEC <= 2) {
             Direction toMove = rc.getLocation().directionTo(ECLoc).opposite();
             tryMoveDest(toMove);

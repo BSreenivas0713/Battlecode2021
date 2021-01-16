@@ -29,10 +29,13 @@ public class CleanupPolitician extends Robot {
             main_direction = Util.randomDirection();
         }
         
+        RobotInfo robot;
         MapLocation currLoc = rc.getLocation();
         int minEnemyDistSquared = Integer.MAX_VALUE;
         MapLocation closestEnemy = null;
-        for (RobotInfo robot : enemyAttackable) {
+
+        for(int i = enemyAttackable.length - 1; i >= 0; i--) {
+            robot = enemyAttackable[i];
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minEnemyDistSquared) {
                 minEnemyDistSquared = temp;
@@ -51,12 +54,15 @@ public class CleanupPolitician extends Robot {
         int max_influence = (rc.getConviction()-10) / 3;
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
-        for (RobotInfo robot : enemySensable) {
+
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
             int currInfluence = robot.getConviction();
             if (currInfluence > max_influence) {
                 powerful = robot;
                 max_influence = currInfluence;
             }
+            
             double temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
@@ -66,7 +72,6 @@ public class CleanupPolitician extends Robot {
         
         if (powerful != null) {
             Direction toMove = rc.getLocation().directionTo(powerful.getLocation());
-            tryMoveDest(toMove);
         }
 
         while (!tryMove(main_direction) && rc.isReady()){

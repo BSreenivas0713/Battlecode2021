@@ -41,15 +41,18 @@ public class ProtectorPolitician extends Robot {
 
         int distanceToEC = rc.getLocation().distanceSquaredTo(home);
         
+        RobotInfo robot;
         int maxEnemyAttackableDistSquared = Integer.MIN_VALUE;
         MapLocation farthestEnemyAttackable = null;
         int maxPoliticianSize = 0;
-        for (RobotInfo robot : enemyAttackable) {
+        for(int i = enemyAttackable.length - 1; i >= 0; i--) {
+            robot = enemyAttackable[i];
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp > maxEnemyAttackableDistSquared) {
                 maxEnemyAttackableDistSquared = temp;
                 farthestEnemyAttackable = robot.getLocation();
             }
+            
             if (robot.getType() == RobotType.POLITICIAN && robot.getConviction() > maxPoliticianSize) {
                 maxPoliticianSize = robot.getConviction();
             }
@@ -60,12 +63,14 @@ public class ProtectorPolitician extends Robot {
         RobotInfo minRobot = null;
         double minDistSquared = Integer.MAX_VALUE;
 
-        for (RobotInfo robot : enemySensable) {
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
             int currDistance = robot.getLocation().distanceSquaredTo(home);
             if (robot.getType() == RobotType.MUCKRAKER && currDistance < minMuckrakerDistance) {
                 closestMuckrakerSensable = robot;
                 minMuckrakerDistance = currDistance;
             }
+
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
@@ -77,7 +82,8 @@ public class ProtectorPolitician extends Robot {
         boolean slandererNearby = false;
         boolean ECNearby = false;
         int numFollowingClosestMuckraker = 0;
-        for (RobotInfo robot : friendlySensable) {
+        for(int i = friendlySensable.length - 1; i >= 0; i--) {
+            robot = friendlySensable[i];
             if ((robot.getType() == RobotType.ENLIGHTENMENT_CENTER)){
                 slandererOrECNearby = true;
                 ECNearby = true;
