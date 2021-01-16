@@ -185,13 +185,13 @@ public class EC extends Robot {
                     currentState = State.RUSHING;
                 }
             } else {
-                // Second priority is build protectors
-                toggleBuildProtectors();
-                // Third priority is removing blockage.
-                if (currentState != State.BUILDING_PROTECTORS) {
-                    tryStartRemovingBlockage();
+                // Second priority is removing blockage
+                tryStartRemovingBlockage();
+                // Third priority is building protectors.
+                if (currentState != State.REMOVING_BLOCKAGE) {
+                    toggleBuildProtectors();
                     // Fourth priority is saving for rush
-                    if (currentState != State.REMOVING_BLOCKAGE) {
+                    if (currentState != State.BUILDING_PROTECTORS) {
                         if (tryStartSavingForRush()) {
                             if (currentState != State.SAVING_FOR_RUSH) {
                                 stateStack.push(currentState);
