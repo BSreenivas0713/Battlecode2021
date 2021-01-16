@@ -84,8 +84,7 @@ public class ProtectorPolitician extends Robot {
             } else {
                 if(rc.canGetFlag(robot.getID())) {
                     int flag = rc.getFlag(robot.getID());
-                    // Only slanderers and EC's broadcast AVG_ENEMY_DIR so this is valid to check for slanderers
-                    if(Comms.isSubRobotType(flag, Comms.SubRobotType.SLANDERER) || Comms.getIC(flag) == Comms.InformationCategory.AVG_ENEMY_DIR) {
+                    if(Comms.isSubRobotType(flag, Comms.SubRobotType.SLANDERER)) {
                         slandererOrECNearby = true;
                         slandererNearby = true;
                     }
