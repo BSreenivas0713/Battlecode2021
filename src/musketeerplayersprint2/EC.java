@@ -10,6 +10,7 @@ import java.util.ArrayDeque;
 import java.util.PriorityQueue;
 /* 
 TODO: 
+No 1 priority: within first 100 rounds, currReqInf is 1.4*neutral EC influence (if EC is neutral)
 have tower to tower communication(slanderers tell protectors about enemies)
 muckraker to muckraker communication(what base to attack, what base has been converted to ours)
 have some protectors go in the direction of the slanderers DO NOT FORGET ABOUT THIS
@@ -46,7 +47,11 @@ public class EC extends Robot {
         }
 
         public int compareTo(RushFlag other) {
-            return Integer.compare(requiredInfluence, other.requiredInfluence);
+            if (Math.abs(requiredInfluence - other.requiredInfluence) < 20) {
+                return Integer.compare(dx*dx+dy*dy, other.dx*other.dx+other.dy*other.dy);
+            } else {
+                return Integer.compare(requiredInfluence, other.requiredInfluence);
+            }
         }
 
         public boolean equals(Object o) { 
@@ -91,7 +96,11 @@ public class EC extends Robot {
     static int spawnKillLock;
     static int lastSuccessfulBlockageRemoval;
 
-    static boolean overBidThreshold;
+    static int bigBid;
+    static int prevBid;
+    static int littleBid;
+    static boolean wonLastBid;
+    static int lastVoteCount;
 
     public EC(RobotController r) {
         super(r);
@@ -112,8 +121,12 @@ public class EC extends Robot {
         lastRush = 0;
         canGoBackToBuildingProtectors = true;
         spawnKillLock = 10;
-        overBidThreshold = false;
         lastSuccessfulBlockageRemoval = -1;
+        littleBid = 0;
+        prevBid = 0;
+        bigBid = 1;
+        wonLastBid = false;
+        lastVoteCount = 0;
     }
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
@@ -214,7 +227,11 @@ public class EC extends Robot {
         // At most, two things have been pushed to the state stack, the previous state, and whatever protectors overrode.
 
         //bidding code
-        makeBid();
+        int biddingInfluence = bidBS();
+        if (rc.canBid(biddingInfluence)) {
+            rc.bid(biddingInfluence);
+        }
+        Debug.println(Debug.info, "Amount bid: " + biddingInfluence);
 
         //updating currInfluence after a bid
         currInfluence = rc.getInfluence();
@@ -590,7 +607,7 @@ public class EC extends Robot {
         return false;
     }
 
-    public void makeBid() throws GameActionException {
+    /* public void makeBid() throws GameActionException {
         if(!overBidThreshold) {
             if (rc.getTeamVotes() > 750) {
                 overBidThreshold = true;
@@ -625,5 +642,33 @@ public class EC extends Robot {
                 Debug.println(Debug.info, "Amount bid: " + biddingInfluence);
             }
         }
+    } */
+    public int bidBS() throws GameActionException {
+        int currVotes = rc.getTeamVotes();
+        int res;
+        if (currVotes > 750) {
+            return 0;
+        } else if (currVotes > lastVoteCount) {
+            wonLastBid = true;
+            bigBid = prevBid;
+            Debug.println(Debug.info, "Won last bid.");
+            lastVoteCount++;
+        } else {
+            wonLastBid = false;
+            littleBid = prevBid;
+            Debug.println(Debug.info, "Lost last bid.");
+        }
+        Debug.println(Debug.info, "L: " + littleBid + ", P: " + prevBid + ", B: " + bigBid);
+        if (wonLastBid) {
+            res = Integer.max((prevBid + littleBid) / 2, 2);
+            bigBid = prevBid;
+            prevBid = res;
+        } else {
+            if (bigBid < currInfluence / 10) bigBid *= 2;
+            res = Integer.min((prevBid + bigBid) / 2, currInfluence / 25);
+            littleBid = prevBid;
+            prevBid = res;
+        }
+        return res;
     }
 }
