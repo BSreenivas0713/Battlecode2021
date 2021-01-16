@@ -189,11 +189,13 @@ public class EC extends Robot {
                     currentState = State.SAVING_FOR_RUSH;
                 }
                 // If there's nothing to save for, clean up
-                else if (currRoundNum > 500) {
-                    tryStartCleanup();
+                else if (currRoundNum > 500 && tryStartCleanup()) {
+                    stateStack.push(currentState);
+                    currentState = State.CLEANUP;
                 }
                 // Override cleanup or saving (or nothing) to build protectors,
                 // which makes sense since survival is a high priority.
+                tryStartRemovingBlockage();
                 toggleBuildProtectors();
             }
         }
@@ -242,26 +244,14 @@ public class EC extends Robot {
                     //we will build 130 slanderers at minimum
                     toBuild = RobotType.SLANDERER;
                     influence = 107;
-                    stateStack.push(currentState);
-                    currentState = State.BUILDING_PROTECTORS;
                 }
 
                 boolean built_bot = false;
                 if (toBuild != null) built_bot = buildRobot(toBuild, influence);
-
-                if (!tryStartRemovingBlockage()) {
-                    if (!canGoBackToBuildingProtectors) {
-                        if (built_bot && toBuild == RobotType.SLANDERER) {
-                            canGoBackToBuildingProtectors = true;
-                            currentState = State.BUILDING_PROTECTORS;
-                            protectorsSpawnedInARow = 0;
-                        }
-                    }
-                    else {
-                        tryStartSavingForRush();
-                    }
+                if (built_bot && toBuild == RobotType.SLANDERER && !canGoBackToBuildingProtectors) {
+                    canGoBackToBuildingProtectors = true;
+                    protectorsSpawnedInARow = 0;
                 }
-
                 break;
             case BUILDING_PROTECTORS:
                 Debug.println(Debug.info, "building protectors state");
@@ -291,14 +281,6 @@ public class EC extends Robot {
                 }
 
                 if (built_robot && toBuild == RobotType.POLITICIAN) protectorsSpawnedInARow++;
-
-                if (robotCounter == 2 && built_robot && toBuild == RobotType.POLITICIAN) {
-                    Debug.println(Debug.info, "built a protector and on first round");
-                    currentState = stateStack.pop();
-                    Debug.println(Debug.info, "switching back to state: " + currentState);
-                }
-
-                tryStartRemovingBlockage();
                 break;
             case RUSHING:
                 trySendARush();
@@ -324,22 +306,19 @@ public class EC extends Robot {
                 toBuild = RobotType.MUCKRAKER;
                 influence = 1;
                 buildRobot(toBuild, influence);
-                tryStartRemovingBlockage();
                 break;
             case CLEANUP:
                 if(Util.getBestSlandererInfluence(currInfluence) >= 100 && robotCounter % 3 == 1 && !muckrackerNear) {
                     toBuild = RobotType.SLANDERER;
-                    influence = Util.getBestSlandererInfluence(currInfluence / 2);
+                    influence = Util.getBestSlandererInfluence(currInfluence / 4);
                 }
                 else if(currInfluence >= 100 && robotCounter % 3 == 0) {
                     toBuild = RobotType.POLITICIAN;
                     influence = Util.cleanupPoliticianInfluence;
                     signalRobotType(Comms.SubRobotType.POL_CLEANUP);
                 } else {
-                    if(numMucks % 2 == 0) {
-                            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK);
-                            Debug.println(Debug.info, "Making hunter mucker with no destination.");
-                    }
+                    nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK);
+                    Debug.println(Debug.info, "Making hunter mucker with no destination.");
                     toBuild = RobotType.MUCKRAKER;
                     influence = 1;
                 }
@@ -347,7 +326,6 @@ public class EC extends Robot {
                 if(toBuild != null) {
                     buildRobot(toBuild, influence);
                 }
-                
                 break;
             case REMOVING_BLOCKAGE:
                 toBuild = RobotType.POLITICIAN;
@@ -364,7 +342,7 @@ public class EC extends Robot {
                     break;
                 }
                 Debug.println(Debug.info, "Building spawn kill politician");
-                influence = 6*rc.getInfluence()/8;
+                influence = 3*currInfluence/4;
                 toBuild = RobotType.POLITICIAN;
                 signalRobotType(Comms.SubRobotType.POL_SPAWNKILL);
                 if(buildRobot(toBuild, influence)) {
@@ -512,8 +490,6 @@ public class EC extends Robot {
     public boolean tryStartCleanup() throws GameActionException {
         Debug.println(Debug.info, "Cleanup count: " + cleanUpCount);
         if (ECflags.isEmpty() && cleanUpCount > Util.startCleanupThreshold && currentState != State.CLEANUP) {
-            stateStack.push(currentState);
-            currentState = State.CLEANUP;
             return true;
         }
         return false;
@@ -535,7 +511,7 @@ public class EC extends Robot {
         return false;
     }
 
-    public boolean tryStartRemovingBlockage() throws GameActionException {
+    public void tryStartRemovingBlockage() throws GameActionException {
         int num_enemies_near = 0;
         for (Direction dir : Util.directions) {
             MapLocation surroundingLoc = home.add(dir);
@@ -547,13 +523,11 @@ public class EC extends Robot {
             }
         }
         Debug.println(Debug.info, "num enemies surrounding: " + num_enemies_near);
-        if (num_enemies_near >= 7 && (lastSuccessfulBlockageRemoval == -1 || 
+        if (num_enemies_near >= 6 && (lastSuccessfulBlockageRemoval == -1 || 
         (lastSuccessfulBlockageRemoval >= 0 && currRoundNum - lastSuccessfulBlockageRemoval > 10))) {
             stateStack.push(currentState);
             currentState = State.REMOVING_BLOCKAGE;
-            return true;
         }
-        return false;
     }
 
     public boolean trySendARush() throws GameActionException {
