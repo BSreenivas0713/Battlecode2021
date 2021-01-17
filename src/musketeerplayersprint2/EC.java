@@ -658,6 +658,8 @@ public class EC extends Robot {
         int res;
         if (currVotes > 750) {
             return 0;
+        } else if (currRoundNum > 1300) {
+            return currInfluence / 25;
         } else if (currVotes > lastVoteCount) {
             wonLastBid = true;
             bigBid = prevBid;
@@ -675,10 +677,11 @@ public class EC extends Robot {
             prevBid = res;
         } else {
             if (bigBid < currInfluence / 10) bigBid *= 2;
-            res = Integer.min((prevBid + bigBid) / 2, currInfluence / 25);
+            res = Integer.min(Integer.max((prevBid + bigBid) / 2, 2), currInfluence / 25);
             littleBid = prevBid;
             prevBid = res;
         }
+        if (bigBid == 0) bigBid++;
         return res;
     }
 }
