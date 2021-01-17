@@ -143,7 +143,7 @@ public strictfp class RobotPlayer {
         switch (rc.getType()) {
             case ENLIGHTENMENT_CENTER:
                 bot = new EC(rc);
-                EC.currentState = EC.State.BUILDING_SLANDERERS;
+                EC.currentState = EC.State.CHILLING;
                 EC.ECflags.clear();
                 break;
             case POLITICIAN: 
