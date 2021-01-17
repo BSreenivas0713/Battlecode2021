@@ -368,7 +368,7 @@ public class EC extends Robot {
                 buildRobot(toBuild, influence);
                 break;
             case CLEANUP:
-                if(Util.getBestSlandererInfluence(currInfluence) >= 100 && robotCounter % 3 == 1 && !muckrackerNear) {
+                if(Util.getBestSlandererInfluence(currInfluence) >= 100 && robotCounter % 3 == 1 && !muckrackerNear && currInfluence < Util.buildSlandererThreshold) {
                     toBuild = RobotType.SLANDERER;
                     influence = Util.getBestSlandererInfluence(currInfluence / 4);
                 }

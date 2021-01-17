@@ -31,22 +31,22 @@ public class CleanupPolitician extends Robot {
         
         RobotInfo robot;
         MapLocation currLoc = rc.getLocation();
-        int minEnemyDistSquared = Integer.MAX_VALUE;
-        MapLocation closestEnemy = null;
+        int maxEnemyAttackableDistSquared = Integer.MAX_VALUE;
+        MapLocation maxEnemyAtackableLoc = null;
 
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
-            if (temp < minEnemyDistSquared) {
-                minEnemyDistSquared = temp;
-                closestEnemy = robot.getLocation();
+            if (temp > maxEnemyAttackableDistSquared) {
+                maxEnemyAttackableDistSquared = temp;
+                maxEnemyAtackableLoc = robot.getLocation();
             }
         }
 
-        if (enemyAttackable.length != 0 && rc.canEmpower(minEnemyDistSquared)) {
-            Debug.println(Debug.info, "Empowered with radius: " + minEnemyDistSquared);
-            Debug.setIndicatorLine(Debug.info, rc.getLocation(), closestEnemy, 255, 150, 50);
-            rc.empower(minEnemyDistSquared);
+        if (enemyAttackable.length != 0 && rc.canEmpower(maxEnemyAttackableDistSquared)) {
+            Debug.println(Debug.info, "Empowered with radius: " + maxEnemyAttackableDistSquared);
+            Debug.setIndicatorLine(Debug.info, rc.getLocation(), maxEnemyAtackableLoc, 255, 150, 50);
+            rc.empower(maxEnemyAttackableDistSquared);
             return;
         }
 
