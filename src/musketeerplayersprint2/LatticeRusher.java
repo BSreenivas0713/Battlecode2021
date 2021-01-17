@@ -38,6 +38,10 @@ public class LatticeRusher extends Robot {
         int minEnemyDistSquared = Integer.MAX_VALUE;
         MapLocation closestEnemy = null;
         boolean baseConverted = false;
+        boolean tooSmall = false;
+        boolean needToChill = false;
+        MapLocation possibleNewHome = null;
+
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
             MapLocation loc = robot.getLocation();
@@ -47,6 +51,20 @@ public class LatticeRusher extends Robot {
                 if(dist < minEnemyDistSquared) {
                     minEnemyDistSquared = dist;
                     closestEnemy = loc;
+                    if ((int) (robot.getInfluence() / 75) > (rc.getInfluence() - 10)) {
+                        tooSmall = true;
+                        Debug.println(Debug.info, "Base seems to be too big to overtake, telling other troops to chill");
+                        int dx = enemyLocation.x - currLoc.x;
+                        int dy = enemyLocation.y - currLoc.y;
+                        int encodedInf = Comms.encodeInf(robot.getInfluence());
+
+                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_CHILL_CALL, encodedInf, dx + Util.dOffset, dy + Util.dOffset);
+                        setFlag(newFlag);
+                        needToChill = true;
+                        closestEnemy = loc;
+                        minEnemyDistSquared = dist;
+                        possibleNewHome = loc;
+                    }
                 }
             }
         }
@@ -66,8 +84,6 @@ public class LatticeRusher extends Robot {
             }
         }
 
-        boolean needToChill = false;
-        MapLocation possibleNewHome = null;
 
         if (minEnemyDistSquared == Integer.MAX_VALUE) {
             for(int i = friendlySensable.length - 1; i >= 0; i--) {
@@ -76,7 +92,7 @@ public class LatticeRusher extends Robot {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 8)) {
                     int dist = currLoc.distanceSquaredTo(loc);
                     if(closestEnemy == null && dist < minEnemyDistSquared) {
-                        Debug.println(Debug.info, "Base seems to be connverted to our side, baseConverted set to true, telling other troops to chill");
+                        Debug.println(Debug.info, "Base seems to be converted to our side, baseConverted set to true, telling other troops to chill");
                         int dx = enemyLocation.x - currLoc.x;
                         int dy = enemyLocation.y - currLoc.y;
 
@@ -92,8 +108,11 @@ public class LatticeRusher extends Robot {
                 if(rc.canGetFlag(robot.getID())) {
                     int flag = rc.getFlag(robot.getID());
                     if (Comms.getIC(flag) == Comms.InformationCategory.ENEMY_EC_CHILL_CALL) {
-                        needToChill = true;
-                        Debug.println(Debug.info, "Recieved chill call, needToChill is getting set to true.");
+                        int possibleBaseInfluence = Comms.getInf(flag);
+                        if((rc.getInfluence() - 10) < (int) (possibleBaseInfluence / 20)) {
+                            needToChill = true;
+                            Debug.println(Debug.info, "Recieved chill call, needToChill is getting set to true.");
+                        }
                     }
                 }
             }
@@ -101,7 +120,7 @@ public class LatticeRusher extends Robot {
 
 
         
-        if (rc.canEmpower(minEnemyDistSquared) && (moveSemaphore <= 0 || minEnemyDistSquared <= 1)) {
+        if (rc.canEmpower(minEnemyDistSquared) && !tooSmall && (moveSemaphore <= 0 || minEnemyDistSquared <= 1)) {
             int radius = Math.min(actionRadius, minEnemyDistSquared);
             Debug.println(Debug.info, "Empowered with radius: " + radius);
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), closestEnemy, 255, 150, 50);
@@ -114,8 +133,8 @@ public class LatticeRusher extends Robot {
             changeTo = new LatticeProtector(rc, possibleNewHome);
             return;
         }
-        if(needToChill) {
-            Debug.println(Debug.info, "New base overtaken, becoming protector for old base");
+        if(needToChill || tooSmall) {
+            Debug.println(Debug.info, "New base overtaken/too big to attack, becoming protector for old base");
             changeTo = new LatticeProtector(rc, home);
             return;
         }

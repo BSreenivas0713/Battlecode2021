@@ -127,6 +127,7 @@ public class LatticeProtector extends Robot {
         int radius = actionRadius;
         MapLocation enemyLoc = null;
         boolean turnIntoRusher = false;
+        int maxInfSeen = -1;
 
         if (!slandererNearby) {
             radius = sensorRadius;
@@ -143,10 +144,15 @@ public class LatticeProtector extends Robot {
                     int []DxDyFromRobot = Comms.getDxDy(robotFlag);
                     enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
                     int neededInf = Comms.getInf(robotFlag);
-                    Debug.println(Debug.info, "Current Influence: " + rc.getInfluence() + "Required Influence for tower: " + neededInf);
-                    if((rc.getInfluence() - 10) >= (int) ((neededInf) / 10)) {
+                    Debug.println(Debug.info, "Current Influence: " + rc.getInfluence() + "; Required Influence for tower: " + neededInf);
+                    if((rc.getInfluence() - 10) >= (int) ((neededInf) / 10) && neededInf > maxInfSeen) {
                         Debug.println(Debug.info, "TurnIntoRusher is getting set to True");
                         turnIntoRusher = true;
+                        maxInfSeen = neededInf;
+                    }
+                    else {
+                        Debug.println(Debug.info, "TurnIntoRusher is getting set to False");
+                        turnIntoRusher = false;
                     }
                     Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
 
