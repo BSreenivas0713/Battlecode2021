@@ -22,13 +22,11 @@ public class Comms {
         ENEMY_EC,
         ENEMY_EC_MUK,
         FRIENDLY_EC,
-        RUSH_EC_GOLEM,
         NEW_ROBOT,
         TARGET_ROBOT,
         ROBOT_TYPE,
         ENEMY_FOUND,
         FOLLOWING,
-        ROBOT_TYPE_AND_CLOSEST_ENEMY, // UNUSED?
         SLA_CLOSEST_ENEMY,
         CLOSEST_ENEMY,
         ENEMY_EC_ATTACK_CALL,
@@ -147,6 +145,7 @@ public class Comms {
         return SubRobotType.values()[(flag & ~BIT_MASK_IC) >> BIT_INF_OFFSET];
     }
 
+
     public static Direction getDirection(int flag) {
         return Direction.values()[(flag & BIT_MASK_DIR)];
     }
@@ -155,8 +154,6 @@ public class Comms {
         switch(Comms.getIC(flag)) {
             case ROBOT_TYPE:
                 return Comms.getSubRobotType(flag) == type;
-            case ROBOT_TYPE_AND_CLOSEST_ENEMY:
-                return Comms.getSubRobotTypeClosestEnemy(flag) == type;
             case SLA_CLOSEST_ENEMY:
             case SLA_FLEEING:
                 return SubRobotType.SLANDERER == type;
