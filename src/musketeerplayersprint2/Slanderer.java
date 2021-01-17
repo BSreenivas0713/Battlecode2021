@@ -42,7 +42,7 @@ public class Slanderer extends Robot {
         }
 
         RobotInfo robot;
-        RobotInfo minRobot = null;
+        RobotInfo closestEnemy = null;
         double minDistSquared = Integer.MAX_VALUE;
         double temp;
 
@@ -51,7 +51,7 @@ public class Slanderer extends Robot {
             temp = curr.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
-                minRobot = robot;
+                closestEnemy = robot;
             }
         }
         
@@ -92,8 +92,34 @@ public class Slanderer extends Robot {
                     closestSlandDist = dist;
                 }
 
-                if(Comms.getIC(flag) == Comms.InformationCategory.SLA_FLEEING) {
+                // if(Comms.getIC(flag) == Comms.InformationCategory.SLA_FLEEING) {
+                //     otherSlaFleeingDir = Comms.getDirection(flag);
+                // }
+                if(Comms.getIC(flag) == Comms.InformationCategory.CLOSEST_ENEMY_OR_FLEEING && 
+                    Comms.getSubCEOF(flag) == Comms.ClosestEnemyOrFleeing.FLEEING) {
                     otherSlaFleeingDir = Comms.getDirection(flag);
+                }
+
+                if(closestEnemy == null) {
+                    switch(Comms.getIC(flag)) {
+                        case CLOSEST_ENEMY_OR_FLEEING:
+                            if(Comms.getSubCEOF(flag) != Comms.ClosestEnemyOrFleeing.FLEEING) {
+                                MapLocation robotLoc = robot.getLocation();
+                                int[] enemyDxDyFromRobot = Comms.getDxDy(flag);
+    
+                                MapLocation enemyLoc = new MapLocation(enemyDxDyFromRobot[0] + robotLoc.x - Util.dOffset, 
+                                                                        enemyDxDyFromRobot[1] + robotLoc.y - Util.dOffset);
+    
+                                temp = rc.getLocation().distanceSquaredTo(enemyLoc);
+                                if (temp < minDistSquared) {
+                                    minDistSquared = temp;
+                                    closestEnemy = robot;
+                                }
+                            }
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
         }
@@ -121,9 +147,12 @@ public class Slanderer extends Robot {
         }
         main_direction = maxDir;
 
-        if(closestKnownEnemy != null && curr.isWithinDistanceSquared(closestKnownEnemy, Util.minDistFromEnemy)) {
-            main_direction = curr.directionTo(closestKnownEnemy).opposite();
-            flag = Comms.getFlag(Comms.InformationCategory.SLA_FLEEING, main_direction.ordinal());
+        if(closestEnemy != null && curr.isWithinDistanceSquared(closestEnemy.getLocation(), Util.minDistFromEnemy)) {
+            main_direction = curr.directionTo(closestEnemy.getLocation()).opposite();
+            // flag = Comms.getFlag(Comms.InformationCategory.SLA_FLEEING, main_direction.ordinal());
+            flag = Comms.getFlag(Comms.InformationCategory.CLOSEST_ENEMY_OR_FLEEING, 
+                                Comms.ClosestEnemyOrFleeing.FLEEING, 
+                                0, main_direction.ordinal());
             setFlag(flag);
             Debug.println(Debug.info, "Prioritizing moving away from enemies: " + main_direction);
         }
@@ -166,6 +195,6 @@ public class Slanderer extends Robot {
         // }
 
         if(broadcastECLocation());
-        else if(broadcastEnemyLocalOrGlobal());
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

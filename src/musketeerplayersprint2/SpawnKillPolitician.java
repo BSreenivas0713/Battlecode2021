@@ -26,7 +26,7 @@ public class SpawnKillPolitician extends Robot {
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         RobotInfo robot;
-        RobotInfo minRobot = null;
+        RobotInfo closestEnemy = null;
         double minDistSquared = Integer.MAX_VALUE;
         MapLocation currLoc = rc.getLocation();
         for(int i = enemySensable.length - 1; i >= 0; i--) {
@@ -34,7 +34,7 @@ public class SpawnKillPolitician extends Robot {
             double temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
-                minRobot = robot;
+                closestEnemy = robot;
             }
         }
 
@@ -51,6 +51,6 @@ public class SpawnKillPolitician extends Robot {
         
         if(propagateFlags());
         else if(broadcastECLocation());
-        else if(broadcastEnemyLocalOrGlobal());
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }
