@@ -5,8 +5,8 @@ import battlecode.common.*;
 public class Comms {
     public static final double INF_LOG_BASE = 1.35;
     public static final double INF_SCALAR = 1;
-    static final int BIT_IC_OFFSET = 19;
-    static final int BIT_MASK_IC = 0x1F << BIT_IC_OFFSET;
+    static final int BIT_IC_OFFSET = 20;
+    static final int BIT_MASK_IC = 0xF << BIT_IC_OFFSET;
     static final int BIT_DX_OFFSET = 7;
     static final int BIT_MASK_COORD = 0x7F;
     static final int BIT_MASK_COORDS = 0x3FFF;
@@ -15,6 +15,8 @@ public class Comms {
     static final int BIT_SMALL_DX_OFFSET = 4;
     static final int BIT_MASK_SMALL_COORD = 0xF;
     static final int BIT_MASK_DIR = 0xF;
+    //Old flag setup: CCCCCIIIIIXXXXXXXYYYYYYY
+    //New flag setup: CCCCIIIIIIXXXXXXXYYYYYYY
 
     public enum InformationCategory {
         EMPTY,                      // UNUSED BUT BREAKS IF REMOVED? TODO: LOOK INTO
@@ -104,35 +106,35 @@ public class Comms {
     }
 
     public static InformationCategory getIC(int flag) {
-        return InformationCategory.values()[(flag >> BIT_IC_OFFSET)];
+        return InformationCategory.values()[(flag >>> BIT_IC_OFFSET)];
     }
 
     public static int[] getDxDy(int flag) {
         int[] res = new int[2];
-        res[0] = (flag >> BIT_DX_OFFSET) & BIT_MASK_COORD;
+        res[0] = (flag >>> BIT_DX_OFFSET) & BIT_MASK_COORD;
         res[1] = flag & BIT_MASK_COORD;
         return res;
     }
 
     public static int[] getSmallDxDy(int flag) {
         int[] res = new int[2];
-        res[0] = (flag >> BIT_SMALL_DX_OFFSET) & BIT_MASK_SMALL_COORD;
+        res[0] = (flag >>> BIT_SMALL_DX_OFFSET) & BIT_MASK_SMALL_COORD;
         res[1] = flag & BIT_MASK_SMALL_COORD;
         return res;
     }
 
     public static int getInf(int flag) {
-        int encodedInf = (flag & ~BIT_MASK_IC) >> BIT_INF_OFFSET;
+        int encodedInf = (flag & ~BIT_MASK_IC) >>> BIT_INF_OFFSET;
         int influence = (int) (Math.exp(encodedInf * Math.log(Comms.INF_LOG_BASE)) * INF_SCALAR);
         return influence;
     }
 
     public static int getTurnCount(int flag) {
-        return (flag & ~BIT_MASK_IC) >> BIT_TURNCOUNT_OFFSET;
+        return (flag & ~BIT_MASK_IC) >>> BIT_TURNCOUNT_OFFSET;
     }
 
     public static int encodeInf(int inf) {
-        return (int) Math.min(31, Math.floor(Math.log(inf / INF_SCALAR) / Math.log(Comms.INF_LOG_BASE)));
+        return (int) Math.min(63, Math.floor(Math.log(inf / INF_SCALAR) / Math.log(Comms.INF_LOG_BASE)));
     }
 
     // DO NOT USE WITH ROBOT_TYPE_AND_CLOSEST_ENEMY
@@ -142,7 +144,7 @@ public class Comms {
 
     // USE ONLY WITH ROBOT_TYPE_AND_CLOSEST_ENEMY
     public static SubRobotType getSubRobotTypeClosestEnemy(int flag) {
-        return SubRobotType.values()[(flag & ~BIT_MASK_IC) >> BIT_INF_OFFSET];
+        return SubRobotType.values()[(flag & ~BIT_MASK_IC) >>> BIT_INF_OFFSET];
     }
 
 
