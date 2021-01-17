@@ -142,7 +142,7 @@ public class LatticeProtector extends Robot {
                     MapLocation robotLoc = robot.getLocation();
                     int []DxDyFromRobot = Comms.getDxDy(robotFlag);
                     enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
-                    int neededInf =  (int) Math.exp(Comms.getInf(robotFlag) * Math.log(Comms.INF_LOG_BASE));
+                    int neededInf = Comms.getInf(robotFlag);
                     Debug.println(Debug.info, "Current Influence: " + rc.getInfluence() + "Required Influence for tower: " + neededInf);
                     if((rc.getInfluence() - 10) >= (int) ((neededInf) / 10)) {
                         Debug.println(Debug.info, "TurnIntoRusher is getting set to True");

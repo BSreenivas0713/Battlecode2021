@@ -132,9 +132,9 @@ public class Robot {
                         int ecDX = ecLoc.x - home.x + Util.dOffset;
                         int ecDY = ecLoc.y - home.y + Util.dOffset;
     
-                        int inf = (int) Math.min(31, Math.ceil(Math.log(robot.getInfluence()) / Math.log(Comms.INF_LOG_BASE)));
+                        int encodedInf = Comms.encodeInf(robot.getInfluence());
 
-                        nextFlag = Comms.getFlag(InformationCategory.FRIENDLY_EC, inf, ecDX, ecDY);
+                        nextFlag = Comms.getFlag(InformationCategory.FRIENDLY_EC, encodedInf, ecDX, ecDY);
                     }
                 } else {
                     Debug.println(Debug.info, "Broadcasting enemy EC location");
@@ -145,11 +145,11 @@ public class Robot {
                     int ecDX = ecLoc.x - home.x + Util.dOffset;
                     int ecDY = ecLoc.y - home.y + Util.dOffset;
     
-                    int inf = (int) Math.min(31, Math.ceil(Math.log(robot.getInfluence()) / Math.log(Comms.INF_LOG_BASE)));
+                    int encodedInf = Comms.encodeInf(robot.getInfluence());
                     if(robot.getTeam() == enemy) {
-                        nextFlag = Comms.getFlag(InformationCategory.ENEMY_EC, inf, ecDX, ecDY);
+                        nextFlag = Comms.getFlag(InformationCategory.ENEMY_EC, encodedInf, ecDX, ecDY);
                     } else {
-                        nextFlag = Comms.getFlag(InformationCategory.NEUTRAL_EC, inf, ecDX, ecDY);
+                        nextFlag = Comms.getFlag(InformationCategory.NEUTRAL_EC, encodedInf, ecDX, ecDY);
                     }
                 }
             }
@@ -182,7 +182,7 @@ public class Robot {
         MapLocation enemyLoc;
         int dx;
         int dy;
-        int inf;
+        int encodedInf;
         int newFlag;
 
         for(int i = friendlyNearby.length - 1; i >= 0; i--) {
@@ -206,9 +206,9 @@ public class Robot {
     
                             dx = enemyLoc.x - currLoc.x;
                             dy = enemyLoc.y - currLoc.y;
-                            inf = (int) Math.min(31, Math.ceil(Math.log(robot.getInfluence()) / Math.log(Comms.INF_LOG_BASE)));
+                            encodedInf = Comms.encodeInf(robot.getInfluence());
 
-                            newFlag = Comms.getFlag(IC, inf, dx + Util.dOffset, dy + Util.dOffset);
+                            newFlag = Comms.getFlag(IC, encodedInf, dx + Util.dOffset, dy + Util.dOffset);
                             setFlag(newFlag);
     
                             ICtoTurnMap.add(IC.ordinal(), rc.getRoundNum());
@@ -226,9 +226,9 @@ public class Robot {
     
                             dx = enemyLoc.x - currLoc.x;
                             dy = enemyLoc.y - currLoc.y;
-                            inf = (int) Math.min(31, Math.ceil(Math.log(robot.getInfluence()) / Math.log(Comms.INF_LOG_BASE)));
+                            encodedInf = Comms.encodeInf(robot.getInfluence());
 
-                            newFlag = Comms.getFlag(IC, inf, dx + Util.dOffset, dy + Util.dOffset);
+                            newFlag = Comms.getFlag(IC, encodedInf, dx + Util.dOffset, dy + Util.dOffset);
                             setFlag(newFlag);
     
                             ICtoTurnMap.add(IC.ordinal(), rc.getRoundNum());

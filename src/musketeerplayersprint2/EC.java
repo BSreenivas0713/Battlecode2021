@@ -457,7 +457,7 @@ public class EC extends Robot {
                     case NEUTRAL_EC:
                         // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                         currDxDy = Comms.getDxDy(flag);
-                        neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
+                        neededInf = Comms.getInf(flag);
                         currReqInf = (int)  neededInf * 4 + 10;
                         if(currRoundNum <= 150) {
                             currReqInf = (int) neededInf * 2 + 10;
@@ -470,7 +470,7 @@ public class EC extends Robot {
                     case ENEMY_EC:
                         // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                         currDxDy = Comms.getDxDy(flag);
-                        neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
+                        neededInf =  Comms.getInf(flag);
                         currReqInf = (int)  neededInf * 4 + 10;
                         if(currRoundNum <=150) {
                             currReqInf = (int) neededInf * 2 + 10;
@@ -535,7 +535,7 @@ public class EC extends Robot {
     public boolean tryStartSavingForRush() throws GameActionException {
         if (!ECflags.isEmpty() && turnCount > lastRush + Util.minTimeBetweenRushes) {
             int flag = ECflags.peek().flag;
-            int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
+            int neededInf =  Comms.getInf(flag);
             int currReqInf = (int)  neededInf * 4 + 10;
             if(currRoundNum <=150) {
                 currReqInf = (int) neededInf * 2 + 10;
