@@ -268,17 +268,17 @@ public class LatticeProtector extends Robot {
         //Tries to lattice
         else if(ProtectorNearby) {
             MapLocation averageProtector = new MapLocation(totalProtectorX / numProtectors, totalProtectorY / numProtectors);
-            main_direction = currLoc.directionTo(averageProtector).opposite();
-            // main_direction = currLoc.directionTo(closestProtectorLoc).opposite();
+            // main_direction = currLoc.directionTo(averageProtector).opposite();
+            main_direction = currLoc.directionTo(closestProtectorLoc).opposite();
             Debug.println(Debug.info, "Latticing away from other protectors");
         }
         //If cannot lattice, go towards nearest slanderer
-        // else if(lastSeenSlanderer != null) {
-        //     Debug.setIndicatorDot(Debug.pathfinding, lastSeenSlanderer, 200, 0, 255);
-        //     Debug.setIndicatorLine(Debug.pathfinding, currLoc, lastSeenSlanderer, 200, 0, 255);
-        //     main_direction = currLoc.directionTo(lastSeenSlanderer);
-        //     Debug.println(Debug.info, "going towards slanderers");
-        // }
+        else if(lastSeenSlanderer != null) {
+            Debug.setIndicatorDot(Debug.pathfinding, lastSeenSlanderer, 200, 0, 255);
+            Debug.setIndicatorLine(Debug.pathfinding, currLoc, lastSeenSlanderer, 200, 0, 255);
+            main_direction = currLoc.directionTo(lastSeenSlanderer);
+            Debug.println(Debug.info, "going towards slanderers");
+        }
         // else rotate towards ec
         else {
             Debug.println(Debug.info, "I see no slanderers, and cannot lattice. Rotating towards ec");
