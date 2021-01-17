@@ -287,7 +287,7 @@ public class EC extends Robot {
                 Debug.println(Debug.info, "building protectors state");
                 if (robotCounter % 4 != 0) {
                     toBuild = RobotType.POLITICIAN;
-                    influence = 18;
+                    influence = Math.max(18, currInfluence / 50);
                     signalRobotType(SubRobotType.POL_PROTECTOR);
                 }
                 else {
@@ -602,6 +602,10 @@ public class EC extends Robot {
 
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {
         nextFlag = Comms.getFlag(Comms.InformationCategory.TARGET_ROBOT, type);
+    }
+
+    void signalScoutMuckraker(Comms.SubRobotType type, Direction dir) throws GameActionException {
+        nextFlag = Comms.getFlagScout(Comms.InformationCategory.TARGET_ROBOT, type, dir);
     }
     
     //rush if we can
