@@ -405,7 +405,7 @@ public class EC extends Robot {
         // Debug.println(Debug.info, "robot counter from toggle protectors: " + robotCounter);
 
         if (protectorIdSet.size <= 25 && currentState != State.BUILDING_PROTECTORS && 
-            robotCounter > 40 && canGoBackToBuildingProtectors && noAdjacentEC) {
+            robotCounter > 10 && canGoBackToBuildingProtectors && noAdjacentEC) {
             Debug.println(Debug.info, "switching to building protectors");
             stateStack.push(currentState);
             currentState = State.BUILDING_PROTECTORS;
@@ -668,7 +668,7 @@ public class EC extends Robot {
             littleBid = prevBid;
             Debug.println(Debug.info, "Lost last bid.");
         }
-        Debug.println(Debug.info, "L: " + littleBid + ", P: " + prevBid + ", B: " + bigBid);
+        Debug.println(Debug.info, "L: " + littleBid + ", B: " + bigBid);
         if (wonLastBid) {
             res = Integer.min(Integer.max((prevBid + littleBid) / 2, 2), currInfluence / 25);
             bigBid = prevBid;
