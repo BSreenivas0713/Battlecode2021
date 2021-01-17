@@ -49,8 +49,9 @@ public class EC extends Robot {
         }
 
         public int compareTo(RushFlag other) {
-            if (Math.abs(requiredInfluence - other.requiredInfluence) < 20) {
-                return Integer.compare(dx*dx+dy*dy, other.dx*other.dx+other.dy*other.dy);
+            double infDiff = Math.abs(requiredInfluence - other.requiredInfluence);
+            if (infDiff < 50 || infDiff / Math.min(requiredInfluence, other.requiredInfluence) < 0.1) {
+                return Integer.compare(dx*dx + dy*dy, other.dx*other.dx + other.dy*other.dy);
             } else {
                 return Integer.compare(requiredInfluence, other.requiredInfluence);
             }
@@ -66,6 +67,10 @@ public class EC extends Robot {
             }
             RushFlag other = (RushFlag) o;
             return dx == other.dx && dy == other.dy;
+        }
+
+        public String toString() {
+            return "Inf: " + requiredInfluence + ", dx: " + dx + ", dy: " + dy;
         }
     }
 
@@ -144,6 +149,7 @@ public class EC extends Robot {
         goToAcceleratedSlanderersState = true;
         lastBuiltInAccelerated = RobotType.SLANDERER;
         noAdjacentEC = true;
+
         for (RobotInfo robot : rc.senseNearbyRobots(sensorRadius, enemy)) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 noAdjacentEC = false;
@@ -157,9 +163,9 @@ public class EC extends Robot {
                 int actualDX = rc.getLocation().x - EnemyECLoc.x;
                 int actualDY = rc.getLocation().y - EnemyECLoc.y;
                 int encodedInf = Comms.encodeInf(robot.getInfluence());
-                int flag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC, encodedInf ,actualDX + Util.dOffset,actualDY + Util.dOffset);
+                int flag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC, encodedInf, actualDX + Util.dOffset, actualDY + Util.dOffset);
                 Debug.println(Debug.info, "ADJACENT INFO:: neededInf: " + neededInf + "; actualDX: " + actualDX + "; actualDY: " + actualDY);
-                rushFlag = new RushFlag(currReqInf, actualDX ,actualDY, flag, rc.getTeam().opponent());
+                rushFlag = new RushFlag(currReqInf, actualDX, actualDY, flag, rc.getTeam().opponent());
                 ECflags.remove(rushFlag);
                 if (!enemyECsFound.contains(EnemyECLoc)) {
                     enemyECsFound.add(EnemyECLoc);
@@ -438,7 +444,7 @@ public class EC extends Robot {
                 int[] currDxDy = {targetEC.dx, targetEC.dy};
                 if (numMucks % 2 == 0) {
                     if(targetEC.team != Team.NEUTRAL) {
-                        nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, currDxDy[0], currDxDy[1]);
+                        nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, currDxDy[0] + Util.dOffset, currDxDy[1] + Util.dOffset);
                         Debug.println(Debug.info, "Making hunter mucker with destination " + currDxDy[0] + ", " + currDxDy[1] + ".");
                     }
                     else {
@@ -575,9 +581,9 @@ public class EC extends Robot {
                         if(currRoundNum <= 150) {
                             currReqInf = (int) neededInf * 2 + 10;
                         }
-                        rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag, Team.NEUTRAL);
+                        rushFlag = new RushFlag(currReqInf, currDxDy[0] - Util.dOffset, currDxDy[1] - Util.dOffset, flag, Team.NEUTRAL);
                         ECflags.remove(rushFlag);
-                        tempMapLoc = new MapLocation(rc.getLocation().x + currDxDy[0] - Util.dOffset, rc.getLocation().y + currDxDy[1] - Util.dOffset);
+                        tempMapLoc = new MapLocation(rc.getLocation().x + rushFlag.dx, rc.getLocation().y + rushFlag.dy);
                         ECflags.add(rushFlag);
                         break;
                     case ENEMY_EC:
@@ -588,9 +594,9 @@ public class EC extends Robot {
                         if(currRoundNum <=150) {
                             currReqInf = (int) neededInf * 2 + 10;
                         }
-                        rushFlag = new RushFlag(currReqInf, currDxDy[0], currDxDy[1], flag, rc.getTeam().opponent());
+                        rushFlag = new RushFlag(currReqInf, currDxDy[0] - Util.dOffset, currDxDy[1] - Util.dOffset, flag, rc.getTeam().opponent());
                         ECflags.remove(rushFlag);
-                        tempMapLoc = new MapLocation(rc.getLocation().x + currDxDy[0] - Util.dOffset, rc.getLocation().y + currDxDy[1] - Util.dOffset);
+                        tempMapLoc = new MapLocation(rc.getLocation().x + rushFlag.dx, rc.getLocation().y + rushFlag.dy);
                         if (!enemyECsFound.contains(tempMapLoc)) {
                             enemyECsFound.add(tempMapLoc);
                         }
@@ -602,8 +608,8 @@ public class EC extends Robot {
                         break;
                     case FRIENDLY_EC:
                         currDxDy = Comms.getDxDy(flag);
-                        rushFlag = new RushFlag(0, currDxDy[0], currDxDy[1], 0, rc.getTeam());
-                        tempMapLoc = new MapLocation(rc.getLocation().x + currDxDy[0] - Util.dOffset, rc.getLocation().y + currDxDy[1] - Util.dOffset);
+                        rushFlag = new RushFlag(0, currDxDy[0] - Util.dOffset, currDxDy[1] - Util.dOffset, 0, rc.getTeam());
+                        tempMapLoc = new MapLocation(rc.getLocation().x + rushFlag.dx, rc.getLocation().y + rushFlag.dy);
                         if (enemyECsFound.contains(tempMapLoc)) enemyECsFound.remove(tempMapLoc);
                         break;
                     case ENEMY_FOUND:
@@ -691,7 +697,7 @@ public class EC extends Robot {
         }
         influence = rushFlag.requiredInfluence;
 
-        MapLocation enemyLocation = home.translate(rushFlag.dx - Util.dOffset, rushFlag.dy - Util.dOffset);
+        MapLocation enemyLocation = home.translate(rushFlag.dx, rushFlag.dy);
         Debug.setIndicatorLine(Debug.info, home, enemyLocation, 255, 150, 50);
 
         if (influence >= currInfluence) {
@@ -711,12 +717,13 @@ public class EC extends Robot {
         }
         return false;   
     }
+
     public void makeMuckraker() throws GameActionException {
         RushFlag targetEC = ECflags.peek();
         if (numMucks % 2 == 0) {           
             if (targetEC != null && targetEC.team != Team.NEUTRAL) {
                 int[] currDxDy = {targetEC.dx, targetEC.dy};
-                nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.dx, targetEC.dy);
+                nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.dx + Util.dOffset, targetEC.dy + Util.dOffset);
                 Debug.println(Debug.info, "Making hunter mucker with destination " + targetEC.dx + ", " + targetEC.dy + ".");
             } else {
                 nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK);
@@ -725,6 +732,7 @@ public class EC extends Robot {
         }
         return;
     }
+
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {
         nextFlag = Comms.getFlag(Comms.InformationCategory.TARGET_ROBOT, type);
     }
@@ -738,19 +746,18 @@ public class EC extends Robot {
         RushFlag targetEC = ECflags.peek();
         if(targetEC != null) {
             int requiredInfluence = targetEC.requiredInfluence;
-            MapLocation enemyLocation = home.translate(targetEC.dx - Util.dOffset, 
-                targetEC.dy - Util.dOffset);
+            MapLocation enemyLocation = home.translate(targetEC.dx, targetEC.dy);
             Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
             if(requiredInfluence < currInfluence) return true;
         }
         return false;
     }
+
     public boolean almostReadyToRush() {
         RushFlag targetEC = ECflags.peek();
         if(targetEC != null) {
             int requiredInfluence = targetEC.requiredInfluence;
-            MapLocation enemyLocation = home.translate(targetEC.dx - Util.dOffset, 
-                targetEC.dy - Util.dOffset);
+            MapLocation enemyLocation = home.translate(targetEC.dx, targetEC.dy);
             Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
             if(3 * requiredInfluence / 4 < currInfluence) return true;
         }
