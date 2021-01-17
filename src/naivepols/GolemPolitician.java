@@ -1,8 +1,8 @@
-package musketeerplayersprint2;
+package naivepols;
 import battlecode.common.*;
 
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Debug.*;
+import naivepols.Util.*;
+import naivepols.Debug.*;
 
 public class GolemPolitician extends Robot {
     static Direction main_direction;
