@@ -128,7 +128,7 @@ public class EC extends Robot {
 
         cleanUpCount = 0;
         numProtectors = 0;
-        lastRush = 0;
+        lastRush = Integer.MIN_VALUE;
         canGoBackToBuildingProtectors = true;
         spawnKillLock = 10;
         lastSuccessfulBlockageRemoval = -1;
@@ -143,10 +143,28 @@ public class EC extends Robot {
         readyForSlanderer = false;
         goToAcceleratedSlanderersState = true;
         lastBuiltInAccelerated = RobotType.SLANDERER;
-        
+        noAdjacentEC = true;
         for (RobotInfo robot : rc.senseNearbyRobots(sensorRadius, enemy)) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 noAdjacentEC = false;
+                RushFlag rushFlag;
+                MapLocation EnemyECLoc = robot.getLocation();
+                int neededInf =  robot.getInfluence();
+                int currReqInf = (int)  neededInf * 4 + 10;
+                if(currRoundNum <=150) {
+                    currReqInf = (int) neededInf * 2 + 10;
+                }
+                int actualDX = rc.getLocation().x - EnemyECLoc.x;
+                int actualDY = rc.getLocation().y - EnemyECLoc.y;
+                int encodedInf = Comms.encodeInf(robot.getInfluence());
+                int flag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC, encodedInf ,actualDX + Util.dOffset,actualDY + Util.dOffset);
+                Debug.println(Debug.info, "ADJACENT INFO:: neededInf: " + neededInf + "; actualDX: " + actualDX + "; actualDY: " + actualDY);
+                rushFlag = new RushFlag(currReqInf, actualDX ,actualDY, flag, rc.getTeam().opponent());
+                ECflags.remove(rushFlag);
+                if (!enemyECsFound.contains(EnemyECLoc)) {
+                    enemyECsFound.add(EnemyECLoc);
+                }
+                ECflags.add(rushFlag);
             }
         }
     }
@@ -161,7 +179,10 @@ public class EC extends Robot {
         Direction[] orderedDirs = Util.getOrderedDirections(pref);
 
         for(Direction dir : orderedDirs) {
-            boolean isScout = Comms.getSubRobotType(nextFlag) == Comms.SubRobotType.MUC_SCOUT;
+            boolean isScout = Comms.getIC(nextFlag) == Comms.InformationCategory.ROBOT_TYPE  ;
+            if (isScout) {
+                isScout = Comms.getSubRobotType(nextFlag) == Comms.SubRobotType.MUC_SCOUT;
+            }
             boolean scoutCheck = true;
             Direction scoutDirection = Comms.getScoutDirection(nextFlag);
             if(isScout && dir != scoutDirection && rc.onTheMap(rc.getLocation().add(scoutDirection))) { //Try and spawn in the direction that the scout wants to go
@@ -266,10 +287,19 @@ public class EC extends Robot {
         currInfluence = rc.getInfluence();
         muckrackerNear = checkIfMuckrakerNear();
         if(currentState == State.INIT) { //Specific checks in the INIT state
-            if(robotCounter >= 30 || muckrackerNear || rc.getInfluence() > Util.buildSlandererThreshold) {
+            Debug.println(Debug.info, "Inside INIT checker");
+            if(robotCounter >= 30 || muckrackerNear || rc.getInfluence() > Util.buildSlandererThreshold) { //Dont initialize if a muckraker is near or we have a lot of money from buff
+                    Debug.println(Debug.info, "set state from INIT to CHILLING");
                     currentState = State.CHILLING;
             }
-            if(almostReadyToRush()) {
+            if(!noAdjacentEC) {
+                Debug.println(Debug.info, "Adjacent EC found");
+                if (tryStartSavingForRush()) {
+                        stateStack.push(State.CHILLING);
+                        currentState = State.SAVING_FOR_RUSH;
+                    }
+                }
+            else if(almostReadyToRush()) {
                 stateStack.push(State.CHILLING);
                 currentState = State.SAVING_FOR_RUSH;
             }
@@ -335,7 +365,7 @@ public class EC extends Robot {
                             influence = Math.max(18, currInfluence / 50);
                             signalRobotType(SubRobotType.POL_PROTECTOR);
                             if(buildRobot(toBuild, influence)) {
-                                Debug.println(Debug.info, "case 1 of the else case of INIT");
+                                Debug.println(Debug.info, "case 1 of the else case of CHILLING");
                                 chillingCount ++;
                             }
                             break;
@@ -343,7 +373,7 @@ public class EC extends Robot {
                             toBuild = RobotType.MUCKRAKER;
                             influence = 1;
                             if(buildRobot(toBuild, influence)) {
-                                Debug.println(Debug.info, "case 2 of the else case of INIT");
+                                Debug.println(Debug.info, "case 2 of the else case of CHILLING");
                                 chillingCount ++;
                             }
                             break;
@@ -353,7 +383,7 @@ public class EC extends Robot {
                             influence = 1;
                             makeMuckraker();
                             if(buildRobot(toBuild, influence)) {
-                                Debug.println(Debug.info, "case 3 of the else case of INIT");
+                                Debug.println(Debug.info, "case 3 of the else case of CHILLING");
                                 chillingCount = 0;
                                 if(currBestSlandererInfluence > 100) {
                                     readyForSlanderer = true;
@@ -479,14 +509,13 @@ public class EC extends Robot {
         influence = 0;
         currRoundNum = rc.getRoundNum();
         currInfluence = rc.getInfluence();
-        noAdjacentEC = true;
     }
 
     /*public void toggleBuildProtectors() throws GameActionException {
         // Debug.println(Debug.info, "can go back to building protectors: " + canGoBackToBuildingProtectors);
         // Debug.println(Debug.info, "protector id set size: " + protectorIdSet.size);
         // Debug.println(Debug.info, "current state from toggle building protectors: " + currentState);
-        // Debug.println(Debug.info, "robot counter from toggle protectors: " + robotCounter);
+        // Debug.println (Debug.info, "robot counter from toggle protectors: " + robotCounter);
 
         if (protectorIdSet.size <= 25 && currentState != State.BUILDING_PROTECTORS && 
             robotCounter > 10 && canGoBackToBuildingProtectors && noAdjacentEC) {
@@ -615,13 +644,15 @@ public class EC extends Robot {
 
     public boolean tryStartSavingForRush() throws GameActionException {
         if (!ECflags.isEmpty() && turnCount > lastRush + Util.minTimeBetweenRushes) {
-            int flag = ECflags.peek().flag;
+            RushFlag rushFlag = ECflags.peek();
+            int flag = rushFlag.flag;
+            int distanceSquared = rushFlag.dx * rushFlag.dx + rushFlag.dy * rushFlag.dy;
             int neededInf =  Comms.getInf(flag);
             int currReqInf = (int)  neededInf * 4 + 10;
             if(currRoundNum <=150) {
                 currReqInf = (int) neededInf * 2 + 10;
             }
-            if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4)) {
+            if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4) || (distanceSquared < sensorRadius)) {
                 Debug.println(Debug.info, "tryStartSavingForRush is returning true");
                 return true;
             }

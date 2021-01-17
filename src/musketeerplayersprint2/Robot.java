@@ -160,7 +160,7 @@ public class Robot {
 
     // Returns true if a flag was propagated
     boolean propagateFlags() throws GameActionException {
-        // Remove keys that we don't need
+        // Remove keys that we don't needf
         int[] keys = ICtoTurnMap.getKeys();
         for(int key : keys) {
             if(rc.getRoundNum() > ICtoTurnMap.getVal(key) + Util.flagCooldown) {
