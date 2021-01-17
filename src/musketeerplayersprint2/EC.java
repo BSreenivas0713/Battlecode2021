@@ -678,7 +678,7 @@ public class EC extends Robot {
         }
         Debug.println(Debug.info, "L: " + littleBid + ", P: " + prevBid + ", B: " + bigBid);
         if (wonLastBid) {
-            res = Integer.max((prevBid + littleBid) / 2, 2);
+            res = Integer.min(Integer.max((prevBid + littleBid) / 2, 2), currInfluence / 25);
             bigBid = prevBid;
             prevBid = res;
         } else {
