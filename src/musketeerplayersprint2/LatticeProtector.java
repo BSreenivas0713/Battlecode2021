@@ -281,9 +281,9 @@ public class LatticeProtector extends Robot {
         // }
         // else rotate towards ec
         else {
-            // Debug.println(Debug.info, "I see no slanderers, and cannot lattice. Rotating towards ec");
-            // main_direction = Util.rotateOppositeSpinDirection(spinDirection, currLoc.directionTo(currMinEC));
-            Debug.println(Debug.info, "I see nobody, chilling out");
+            Debug.println(Debug.info, "I see no slanderers, and cannot lattice. Rotating towards ec");
+            main_direction = Util.rotateOppositeSpinDirection(spinDirection, currLoc.directionTo(currMinEC));
+            // Debug.println(Debug.info, "I see nobody, chilling out");
         }
 
         MapLocation target = currLoc.add(main_direction);
