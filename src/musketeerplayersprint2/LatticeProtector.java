@@ -146,7 +146,7 @@ public class LatticeProtector extends Robot {
                     Debug.println(Debug.info, "Current Influence: " + rc.getInfluence() + "Required Influence for tower: " + neededInf);
                     if((rc.getInfluence() - 10) >= (int) ((neededInf) / 10)) {
                         Debug.println(Debug.info, "TurnIntoRusher is getting set to True");
-                        //turnIntoRusher = true;
+                        turnIntoRusher = true;
                     }
                     Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
 
