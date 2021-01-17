@@ -46,7 +46,7 @@ public class SpawnKillPolitician extends Robot {
                 rc.empower(radius);
             }
         } else {
-            changeTo = new GolemPolitician(rc, home);
+            changeTo = new LatticeProtector(rc, home);
         }
         
         if(propagateFlags());
