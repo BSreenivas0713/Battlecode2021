@@ -1,10 +1,10 @@
-package musketeerplayersprint2;
+package naivepols;
 import battlecode.common.*;
 
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Comms.*;
-import musketeerplayersprint2.Debug.*;
-import musketeerplayersprint2.fast.FastIntIntMap;
+import naivepols.Util.*;
+import naivepols.Comms.*;
+import naivepols.Debug.*;
+import naivepols.fast.FastIntIntMap;
 
 public class Robot {
     static RobotController rc;
@@ -132,12 +132,11 @@ public class Robot {
                         int ecDX = ecLoc.x - home.x + Util.dOffset;
                         int ecDY = ecLoc.y - home.y + Util.dOffset;
     
-                        int encodedInf = Comms.encodeInf(robot.getInfluence());
+                        int inf = (int) Math.min(31, Math.ceil(Math.log(robot.getInfluence()) / Math.log(Comms.INF_LOG_BASE)));
 
-                        nextFlag = Comms.getFlag(InformationCategory.FRIENDLY_EC, encodedInf, ecDX, ecDY);
+                        nextFlag = Comms.getFlag(InformationCategory.FRIENDLY_EC, inf, ecDX, ecDY);
                     }
                 } else {
-                    Debug.println(Debug.info, "Broadcasting enemy EC location");
                     res = true;
     
                     MapLocation ecLoc = robot.getLocation();
@@ -145,11 +144,11 @@ public class Robot {
                     int ecDX = ecLoc.x - home.x + Util.dOffset;
                     int ecDY = ecLoc.y - home.y + Util.dOffset;
     
-                    int encodedInf = Comms.encodeInf(robot.getInfluence());
+                    int inf = (int) Math.min(31, Math.ceil(Math.log(robot.getInfluence()) / Math.log(Comms.INF_LOG_BASE)));
                     if(robot.getTeam() == enemy) {
-                        nextFlag = Comms.getFlag(InformationCategory.ENEMY_EC, encodedInf, ecDX, ecDY);
+                        nextFlag = Comms.getFlag(InformationCategory.ENEMY_EC, inf, ecDX, ecDY);
                     } else {
-                        nextFlag = Comms.getFlag(InformationCategory.NEUTRAL_EC, encodedInf, ecDX, ecDY);
+                        nextFlag = Comms.getFlag(InformationCategory.NEUTRAL_EC, inf, ecDX, ecDY);
                     }
                 }
             }
@@ -182,7 +181,6 @@ public class Robot {
         MapLocation enemyLoc;
         int dx;
         int dy;
-        int encodedInf;
         int newFlag;
 
         for(int i = friendlyNearby.length - 1; i >= 0; i--) {
@@ -206,9 +204,8 @@ public class Robot {
     
                             dx = enemyLoc.x - currLoc.x;
                             dy = enemyLoc.y - currLoc.y;
-                            encodedInf = Comms.encodeInf(robot.getInfluence());
-
-                            newFlag = Comms.getFlag(IC, encodedInf, dx + Util.dOffset, dy + Util.dOffset);
+    
+                            newFlag = Comms.getFlag(IC, dx + Util.dOffset, dy + Util.dOffset);
                             setFlag(newFlag);
     
                             ICtoTurnMap.add(IC.ordinal(), rc.getRoundNum());
@@ -226,9 +223,8 @@ public class Robot {
     
                             dx = enemyLoc.x - currLoc.x;
                             dy = enemyLoc.y - currLoc.y;
-                            encodedInf = Comms.encodeInf(robot.getInfluence());
-
-                            newFlag = Comms.getFlag(IC, encodedInf, dx + Util.dOffset, dy + Util.dOffset);
+    
+                            newFlag = Comms.getFlag(IC, dx + Util.dOffset, dy + Util.dOffset);
                             setFlag(newFlag);
     
                             ICtoTurnMap.add(IC.ordinal(), rc.getRoundNum());

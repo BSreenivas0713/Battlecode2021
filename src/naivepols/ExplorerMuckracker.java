@@ -1,13 +1,17 @@
-package musketeerplayersprint2;
+package naivepols;
 import battlecode.common.*;
 
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Debug.*;
-import musketeerplayersprint2.fast.FastIterableLocSet;
+import naivepols.Util.*;
+import naivepols.Debug.*;
+import naivepols.fast.FastIterableLocSet;
 
 public class ExplorerMuckracker extends Robot {
     static Direction main_direction;
     static MapLocation enemyLocation;
+    static int baseCrowdedSemaphor;
+    static int distSquaredToBase;
+    static FastIterableLocSet lastAttacked;
+    static int numRoundsSinceLastAttacked = 0;
     static boolean seenEnemyLocation;
     static RotationDirection spinDirection = Util.RotationDirection.COUNTERCLOCKWISE;
 
@@ -16,6 +20,9 @@ public class ExplorerMuckracker extends Robot {
         subRobotType = Comms.SubRobotType.MUC_EXPLORER;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         enemyLocation = null;
+        baseCrowdedSemaphor = 4;
+        distSquaredToBase = -1;
+        lastAttacked = new FastIterableLocSet();
     }
 
     public ExplorerMuckracker(RobotController r, MapLocation h) {
@@ -30,29 +37,41 @@ public class ExplorerMuckracker extends Robot {
 
         Debug.println(Debug.info, "I am an explorer mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
-        if(enemyLocation != null) {
-            Debug.println(Debug.info, "enemy location: " + enemyLocation);
-        }
+        // if(enemyLocation != null) {
+        //     Debug.println(Debug.info, "enemy location: " + enemyLocation + ";semaphor value: " + baseCrowdedSemaphor);
+        // }
+        // else {
+        //     Debug.println(Debug.info, "no enemy location, resetting base crowded semaphor");
+        //     baseCrowdedSemaphor = 5;
+        // }
+
+        // if(lastAttacked.locs.length != 0) {
+        //     Debug.println(Debug.info, "last attacked: " + lastAttacked.locs);
+        // }
+        // else {
+        //     Debug.println(Debug.info, "last attacked list empty");
+        // }
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
 
-        boolean setChillFlag = false;
-        boolean setAttackFlag = false;
+
+        // if(lastAttacked.locs.length != 0) {
+        //     if(numRoundsSinceLastAttacked >= Util.MuckAttackCooldown) {
+        //         numRoundsSinceLastAttacked = 0;
+        //     }
+        //     else {
+        //         numRoundsSinceLastAttacked++;
+        //     }
+        // }
+
 
         if(enemyLocation != null && rc.canSenseLocation(enemyLocation) ) {
             RobotInfo supposedToBeAnEC = rc.senseRobotAtLocation(enemyLocation);
             if(supposedToBeAnEC == null || supposedToBeAnEC.getType() != RobotType.ENLIGHTENMENT_CENTER) {
-                Debug.println(Debug.info, "Enemy EC not found, setting chill flag, reseting enemyLocation");
-                Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
-                
-                int dx = enemyLocation.x - currLoc.x;
-                int dy = enemyLocation.y - currLoc.y;
-
-                int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_CHILL_CALL, dx + Util.dOffset, dy + Util.dOffset);
-                setFlag(newFlag);
-                setChillFlag = true;
+                lastAttacked.add(enemyLocation);
                 enemyLocation = null;
+                baseCrowdedSemaphor = 5;
             }
         }
 
@@ -67,12 +86,17 @@ public class ExplorerMuckracker extends Robot {
                 powerful = robot;
             }
         }
+
+        for(int i = friendlySensable.length - 1; i >= 0; i--) {
+            robot = friendlySensable[i];
+        }
         
         boolean muckraker_Found_EC = false;
 
         RobotInfo closest_muk = null;
         int closest_muk_dist = Integer.MAX_VALUE;
         boolean spawnKillRunFromHome = false;
+        boolean setChillFlag = false;
         RobotInfo disperseBot = null;
 
         MapLocation robotLoc;
@@ -98,7 +122,12 @@ public class ExplorerMuckracker extends Robot {
                         DxDyFromRobot = Comms.getDxDy(flag);
                         enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
                         Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                        if(enemyLocation != null && !enemyLoc.equals(enemyLocation)) {
+                            baseCrowdedSemaphor = 5;
+                            Debug.println(Debug.info, "reset semaphor because of changed enemy location");
+                        }
                         enemyLocation = enemyLoc;
+                        distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
                     }
                     break;
                 case ENEMY_EC_CHILL_CALL:
@@ -110,6 +139,7 @@ public class ExplorerMuckracker extends Robot {
                         Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
                         if(enemyLoc.equals(enemyLocation)) {
                             enemyLocation = null;
+                            distSquaredToBase = -1;
                             Debug.println(Debug.info, "Reset enemy location as a result of the chill flag");
                         }
                     }
@@ -140,7 +170,9 @@ public class ExplorerMuckracker extends Robot {
                         int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_CHILL_CALL, dx + Util.dOffset, dy + Util.dOffset);
                         setFlag(newFlag);
                         setChillFlag = true;
+                        lastAttacked.add(enemyLocation);
                         enemyLocation = null;
+                        distSquaredToBase = -1;
                 }
                 int botFlag = rc.getFlag(robot.getID());
                 Comms.InformationCategory flagIC = Comms.getIC(botFlag);
@@ -148,6 +180,7 @@ public class ExplorerMuckracker extends Robot {
                     int[] dxdy = Comms.getDxDy(botFlag);
                     MapLocation ecLoc = robot.getLocation();
                     enemyLocation = new MapLocation(dxdy[0] + ecLoc.x - Util.dOffset, dxdy[1] + ecLoc.y - Util.dOffset);
+                    distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
                 }
             }
         }
@@ -185,22 +218,23 @@ public class ExplorerMuckracker extends Robot {
                 if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
                     muckraker_Found_EC = true;
                 } else {
-                    enemyLocation = tempLoc;
-                    if(!ICtoTurnMap.contains(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL.ordinal())) {
-                        Debug.println(Debug.info, "Found Enemy EC, Generating Attack call");
-                        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
-                        
-                        int dx = enemyLocation.x - currLoc.x;
-                        int dy = enemyLocation.y - currLoc.y;
+                    if(!lastAttacked.contains(tempLoc)) {
+                        enemyLocation = tempLoc;
+                        distSquaredToBase = rc.getLocation().distanceSquaredTo(enemyLocation);
+                        if(!ICtoTurnMap.contains(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL.ordinal())) {
+                            Debug.println(Debug.info, "Found Enemy EC, Generating Attack call");
+                            Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
+                            
+                            int dx = enemyLocation.x - currLoc.x;
+                            int dy = enemyLocation.y - currLoc.y;
 
-                        int encodedInf = Comms.encodeInf(robot.getInfluence());
-
-                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, encodedInf, dx + Util.dOffset, dy + Util.dOffset);
-                        setFlag(newFlag);
-                        setAttackFlag = true;
+                            int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, dx + Util.dOffset, dy + Util.dOffset);
+                            setFlag(newFlag);
+                        }
                     }
                 }
             }
+            // if (robot.getType() == RobotType.POLITICIAN && (robot.getConviction() >= 100 || ))
         }
         
         if (bestSlanderer != null) {
@@ -255,7 +289,16 @@ public class ExplorerMuckracker extends Robot {
                     main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
                     tryMove +=1;
                 }
-                
+
+                // tryMoveDest(currLoc.directionTo(enemyLocation));
+                // if(rc.getLocation().distanceSquaredTo(enemyLocation) < distSquaredToBase) {
+                //     baseCrowdedSemaphor = 5;
+                //     Debug.println(Debug.info, "got closer to enemy base, resetting semaphor");
+                // }
+                // else {
+                //     baseCrowdedSemaphor--;
+                //     Debug.println(Debug.info, "did not get closer to enemy base, semaphor getting lower: " + baseCrowdedSemaphor);
+                // }
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
             }
@@ -266,16 +309,18 @@ public class ExplorerMuckracker extends Robot {
                 }
                 Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);
             }
+            if(baseCrowdedSemaphor == 0) {
+                lastAttacked.add(enemyLocation);
+                enemyLocation = null;
+            }
         }
 
         // if(turnCount > Util.explorerMuckrakerLifetime) {
         //     changeTo = new LatticeMuckraker(rc, home);
         // }
-        
-        if(!setChillFlag && !setAttackFlag) {
-            if(propagateFlags());
-            else if(broadcastECLocation());
-            else if(broadcastEnemyLocalOrGlobal());
-        }
+         
+        if(propagateFlags());
+        else if(broadcastECLocation());
+        else if(broadcastEnemyLocalOrGlobal());
     }
 }

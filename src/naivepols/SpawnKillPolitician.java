@@ -1,9 +1,9 @@
-package musketeerplayersprint2;
+package naivepols;
 
 import battlecode.common.*;
 
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Debug.*;
+import naivepols.Util.*;
+import naivepols.Debug.*;
 
 public class SpawnKillPolitician extends Robot {
     static Direction main_direction;
@@ -46,7 +46,7 @@ public class SpawnKillPolitician extends Robot {
                 rc.empower(radius);
             }
         } else {
-            changeTo = new LatticeProtector(rc, home);
+            changeTo = new GolemPolitician(rc, home);
         }
         
         if(propagateFlags());

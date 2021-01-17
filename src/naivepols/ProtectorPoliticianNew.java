@@ -1,9 +1,9 @@
-package musketeerplayersprint2;
+package naivepols;
 import battlecode.common.*;
 
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Debug.*;
-import musketeerplayersprint2.fast.FastIterableLocSet;
+import naivepols.Util.*;
+import naivepols.Debug.*;
+import naivepols.fast.FastIterableLocSet;
 /*1. blow up if around a muckraker if we also sense base/a slanderer
 2. blow up if around 2 or 3 muckrakers 
 3. push enemy muckrakers away from base/where slanderers are if we are within 2 sensor radiuses of base or we see a slanderer
@@ -11,7 +11,7 @@ import musketeerplayersprint2.fast.FastIterableLocSet;
 5. if in sensor radius of base make a move that keeps you most closely within sensor radius of base(in one direction)
 6. if too far away from base move back towards base
 EXTRA CREDIT: move towards muckrakers near slanderers if when slanderers signal that they are in trouble */
-public class LatticeProtector extends Robot {
+public class ProtectorPoliticianNew extends Robot {
     static RotationDirection spinDirection = Util.RotationDirection.COUNTERCLOCKWISE;
     static Direction main_direction;
     static final int slandererFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
@@ -19,9 +19,8 @@ public class LatticeProtector extends Robot {
     static int turnLastSeenSlanderer;
     static FastIterableLocSet seenECs;
     static MapLocation currMinEC;
-
     
-    public LatticeProtector(RobotController r) {
+    public ProtectorPoliticianNew(RobotController r) {
         super(r);
         subRobotType = Comms.SubRobotType.POL_PROTECTOR;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
@@ -32,7 +31,7 @@ public class LatticeProtector extends Robot {
         currMinEC = home;
     }
     
-    public LatticeProtector(RobotController r, MapLocation h) {
+    public ProtectorPoliticianNew(RobotController r, MapLocation h) {
         this(r);
         home = h;
     }
@@ -56,9 +55,10 @@ public class LatticeProtector extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        Debug.println(Debug.info, "I am a lattice protector politician; current influence: " + rc.getInfluence());
+        Debug.println(Debug.info, "I am a protector politician; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
+        RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         MapLocation currLoc = rc.getLocation();
 
         main_direction = Util.rightOrLeftTurn(spinDirection, currMinEC.directionTo(currLoc)); //Direction if we only want to rotate around the base
@@ -70,7 +70,7 @@ public class LatticeProtector extends Robot {
         int maxEnemyAttackableDistSquared = Integer.MIN_VALUE;
         MapLocation farthestEnemyAttackable = null;
         int maxPoliticianSize = 0;
-        
+
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
@@ -78,6 +78,7 @@ public class LatticeProtector extends Robot {
                 maxEnemyAttackableDistSquared = temp;
                 farthestEnemyAttackable = robot.getLocation();
             }
+
             if (robot.getType() == RobotType.POLITICIAN && robot.getConviction() > maxPoliticianSize) {
                 maxPoliticianSize = robot.getConviction();
             }
@@ -102,71 +103,21 @@ public class LatticeProtector extends Robot {
                 minDistSquared = temp;
                 minRobot = robot;
             }
-
-            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
-                if (seenECs.contains(tempLoc)) {
-                    seenECs.remove(tempLoc);
-                }
-                int distToEmpower = currLoc.distanceSquaredTo(robot.getLocation());
-                if (distToEmpower <= 2 && rc.canEmpower(distToEmpower)) {
-                    rc.empower(distToEmpower);
-                }
+            
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && seenECs.contains(tempLoc)) {
+                seenECs.remove(tempLoc);
             }
         }
-
+        
         boolean slandererOrECNearby = false;
         boolean slandererNearby = false;
         MapLocation nearestSlandy = null;
         int nearestSlandyDist = Integer.MAX_VALUE;
         boolean ECNearby = false;
         int numFollowingClosestMuckraker = 0;
-
-        int closestProtectorDist = Integer.MAX_VALUE;
-        MapLocation closestProtectorLoc = null;
-        boolean ProtectorNearby = false;
-        int radius = actionRadius;
-        MapLocation enemyLoc = null;
-        boolean turnIntoRusher = false;
-
-        if (!slandererNearby) {
-            radius = sensorRadius;
-        }
-
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
             robot = friendlySensable[i];
-            if(rc.canGetFlag(robot.getID())) {
-                int robotFlag = rc.getFlag(robot.getID());
-                switch(Comms.getIC(robotFlag)) {
-                case ENEMY_EC_ATTACK_CALL:
-                    Debug.println(Debug.info, "Found Propogated flag(Attack). Acting on it. ");
-                    MapLocation robotLoc = robot.getLocation();
-                    int []DxDyFromRobot = Comms.getDxDy(robotFlag);
-                    enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
-                    int neededInf = Comms.getInf(robotFlag);
-                    Debug.println(Debug.info, "Current Influence: " + rc.getInfluence() + "Required Influence for tower: " + neededInf);
-                    if((rc.getInfluence() - 10) >= (int) ((neededInf) / 10)) {
-                        Debug.println(Debug.info, "TurnIntoRusher is getting set to True");
-                        turnIntoRusher = true;
-                    }
-                    Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
-
-                    break;
-                default: 
-                    break;
-                }
-
-
-                if(Comms.isSubRobotType(robotFlag, Comms.SubRobotType.POL_PROTECTOR)) {
-                    ProtectorNearby = true;
-                    int currDistToProtector = robot.getLocation().distanceSquaredTo(rc.getLocation());
-                    if (currDistToProtector < closestProtectorDist) {
-                        closestProtectorDist = currDistToProtector;
-                        closestProtectorLoc = robot.getLocation();
-                    }
-                }
-            }
-            
-            if ((robot.getType() == RobotType.ENLIGHTENMENT_CENTER)) {
+            if ((robot.getType() == RobotType.ENLIGHTENMENT_CENTER)){
                 slandererOrECNearby = true;
                 ECNearby = true;
                 if (!seenECs.contains(robot.getLocation())) {
@@ -194,7 +145,6 @@ public class LatticeProtector extends Robot {
                 }
             }
         }
-        
         if (seenECs.size != 0) {
             Debug.println(Debug.info, "seensECs.locs: " + seenECs.locs + "; currLoc: " + currLoc);
             currMinEC = seenECmin(currLoc);
@@ -222,12 +172,6 @@ public class LatticeProtector extends Robot {
             rc.empower(maxEnemyAttackableDistSquared);
             return;
         }
-        //Turns into a rusher if the enemy tower has less than 10 times the amount that the politician will use when empowering
-        if(turnIntoRusher) {
-            Debug.println(Debug.info, "Changing into a Lattice Rusher");
-            changeTo = new LatticeRusher(rc, enemyLoc, home);
-            return;
-        }
 
         //tries to block a muckraker in its path(if the muckraker is within 2 sensing radiuses of the EC)
         if (closestMuckrakerSensable != null && 
@@ -242,7 +186,6 @@ public class LatticeProtector extends Robot {
             MapLocation squareToBlock = closestMuckrakerSensableLoc.add(muckrakerPathtoBase);
             Direction toMove = rc.getLocation().directionTo(squareToBlock);
             tryMoveDest(toMove);
-            return;
         } else {
             resetFlagOnNewTurn = true;
         }
@@ -251,23 +194,36 @@ public class LatticeProtector extends Robot {
         if (ECNearby) {
             Debug.println(Debug.info, "I am moving away from the base");
             main_direction = Util.rotateInSpinDirection(spinDirection, currLoc.directionTo(currMinEC).opposite());
-            Debug.setIndicatorLine(Debug.pathfinding, currLoc, lastSeenSlanderer, 200, 0, 255);
+            Debug.setIndicatorLine(Debug.pathfinding, currLoc, currMinEC, 200, 0, 255);
         }
-        //Tries to lattice
-        else if(ProtectorNearby) {
-            main_direction = currLoc.directionTo(closestProtectorLoc).opposite();
-            Debug.println(Debug.info, "Latticing away from other protectors");
-        }
-        //If cannot lattice, go towards nearest slanderer
         else if(lastSeenSlanderer != null) {
             Debug.setIndicatorDot(Debug.pathfinding, lastSeenSlanderer, 200, 0, 255);
             Debug.setIndicatorLine(Debug.pathfinding, currLoc, lastSeenSlanderer, 200, 0, 255);
-            main_direction = currLoc.directionTo(lastSeenSlanderer);
-            Debug.println(Debug.info, "going towards slanderers");
+
+            int distToSlandy = currLoc.distanceSquaredTo(lastSeenSlanderer);
+            int distSlandyToEC = lastSeenSlanderer.distanceSquaredTo(currMinEC); // TODO: Make this distSlandyToNearestEC
+            int distToEC = currLoc.distanceSquaredTo(currMinEC);                 // TODO: Make this distToNearestEC
+            if(distSlandyToEC >= distToEC + 2) {
+                Debug.println(Debug.info, "I am moving to the outside of the slanderer");
+                main_direction = currLoc.directionTo(lastSeenSlanderer);
+            } else {
+                Debug.println(Debug.info, "I am rotating around last seen slanderer");
+                if(distToSlandy > Util.maxRotationRadius) {
+                    main_direction = Util.rotateOppositeSpinDirection(spinDirection, currLoc.directionTo(lastSeenSlanderer));
+                    Debug.println(Debug.info, "Rotating TOWARDS");
+                } else if(distToSlandy < Util.minRotationRadius) {
+                    main_direction = Util.rotateInSpinDirection(spinDirection, currLoc.directionTo(lastSeenSlanderer).opposite());
+                    Debug.println(Debug.info, "Rotating AWAY");
+                } else {
+                    main_direction = Util.rightOrLeftTurn(spinDirection, lastSeenSlanderer.directionTo(currLoc));
+                    Debug.println(Debug.info, "Rotating EXACTLY");
+                }
+            }
+
         }
         // else rotate towards ec
         else {
-            Debug.println(Debug.info, "I see no slanderers, and cannot lattice. Rotating towards ec");
+            Debug.println(Debug.info, "I see no slanderers. Rotating towards ec");
             main_direction = Util.rotateOppositeSpinDirection(spinDirection, currLoc.directionTo(currMinEC));
         }
 

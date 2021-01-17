@@ -1,11 +1,11 @@
-package musketeerplayersprint2;
+package naivepols;
 import battlecode.common.*;
 
-import musketeerplayersprint2.Comms.*;
-import musketeerplayersprint2.Util.*;
-import musketeerplayersprint2.Debug.*;
-import musketeerplayersprint2.fast.FastIterableIntSet;
-import musketeerplayersprint2.fast.FastIterableLocSet;
+import naivepols.Comms.*;
+import naivepols.Util.*;
+import naivepols.Debug.*;
+import naivepols.fast.FastIterableIntSet;
+import naivepols.fast.FastIterableLocSet;
 
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
@@ -442,6 +442,9 @@ public class EC extends Robot {
         idSet.updateIterable();
         protectorIdSet.updateIterable();
 
+        int totalEnemyX = 0;
+        int totalEnemyY = 0;
+
         int id;
         MapLocation tempMapLoc;
         int neededInf;
@@ -457,7 +460,7 @@ public class EC extends Robot {
                     case NEUTRAL_EC:
                         // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                         currDxDy = Comms.getDxDy(flag);
-                        neededInf = Comms.getInf(flag);
+                        neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
                         currReqInf = (int)  neededInf * 4 + 10;
                         if(currRoundNum <= 150) {
                             currReqInf = (int) neededInf * 2 + 10;
@@ -470,7 +473,7 @@ public class EC extends Robot {
                     case ENEMY_EC:
                         // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                         currDxDy = Comms.getDxDy(flag);
-                        neededInf =  Comms.getInf(flag);
+                        neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
                         currReqInf = (int)  neededInf * 4 + 10;
                         if(currRoundNum <=150) {
                             currReqInf = (int) neededInf * 2 + 10;
@@ -494,9 +497,12 @@ public class EC extends Robot {
                         if (enemyECsFound.contains(tempMapLoc)) enemyECsFound.remove(tempMapLoc);
                         break;
                     case ENEMY_FOUND:
+                        haveSeenEnemy = true;
                         int[] enemyDxDy = Comms.getDxDy(flag);
                         int enemyLocX = enemyDxDy[0] + home.x - Util.dOffset;
                         int enemyLocY = enemyDxDy[1] + home.y - Util.dOffset;
+                        totalEnemyX += enemyLocX;
+                        totalEnemyY += enemyLocY;
 
                         MapLocation enemyLoc = new MapLocation(enemyLocX, enemyLocY);
                         if (rc.getLocation().isWithinDistanceSquared(enemyLoc, rc.getType().sensorRadiusSquared * 4) &&
@@ -535,7 +541,7 @@ public class EC extends Robot {
     public boolean tryStartSavingForRush() throws GameActionException {
         if (!ECflags.isEmpty() && turnCount > lastRush + Util.minTimeBetweenRushes) {
             int flag = ECflags.peek().flag;
-            int neededInf =  Comms.getInf(flag);
+            int neededInf =  (int) Math.exp(Comms.getInf(flag) * Math.log(Comms.INF_LOG_BASE));
             int currReqInf = (int)  neededInf * 4 + 10;
             if(currRoundNum <=150) {
                 currReqInf = (int) neededInf * 2 + 10;
@@ -670,7 +676,7 @@ public class EC extends Robot {
         }
         Debug.println(Debug.info, "L: " + littleBid + ", P: " + prevBid + ", B: " + bigBid);
         if (wonLastBid) {
-            res = Integer.min(Integer.max((prevBid + littleBid) / 2, 2), currInfluence / 25);
+            res = Integer.max((prevBid + littleBid) / 2, 2);
             bigBid = prevBid;
             prevBid = res;
         } else {
