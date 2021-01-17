@@ -258,6 +258,7 @@ public class LatticeProtector extends Robot {
             resetFlagOnNewTurn = true;
         }
 
+        main_direction = Direction.CENTER;
         //moves out of sensor radius of Enlightenment Center
         if (ECNearby) {
             Debug.println(Debug.info, "I am moving away from the base");
@@ -296,7 +297,7 @@ public class LatticeProtector extends Robot {
 
         //Rotates around slanderers and then ec
         int tryMove = 0;
-        while (!tryMoveDest(main_direction) && rc.isReady() && tryMove <= 1){
+        while (main_direction != Direction.CENTER && !tryMoveDest(main_direction) && rc.isReady() && tryMove <= 1){
             Debug.println(Debug.info, "Try move failed: I am switching rotation direction");
             spinDirection = Util.switchSpinDirection(spinDirection);
             if (nearestSlandy != null) {
