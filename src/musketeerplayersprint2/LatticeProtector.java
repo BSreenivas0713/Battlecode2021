@@ -124,14 +124,9 @@ public class LatticeProtector extends Robot {
         int closestProtectorDist = Integer.MAX_VALUE;
         MapLocation closestProtectorLoc = null;
         boolean ProtectorNearby = false;
-        int radius = actionRadius;
         MapLocation enemyLoc = null;
         boolean turnIntoRusher = false;
         int maxInfSeen = -1;
-
-        if (!slandererNearby) {
-            radius = sensorRadius;
-        }
 
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
             robot = friendlySensable[i];
