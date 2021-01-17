@@ -81,17 +81,31 @@ public strictfp class RobotPlayer {
                     int botFlag = rc.getFlag(robot.getID());
                     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
                     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
-                        if (flagIC == Comms.InformationCategory.ENEMY_EC_MUK) {
-                            int[] dxdy = Comms.getDxDy(botFlag);
-                            if (dxdy[0] == 0 && dxdy[1] == 0) {
-                                bot = new HunterMuckracker(rc);
-                            } else {
-                                MapLocation spawningLoc = robot.getLocation();
-                                MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
-                                bot = new HunterMuckracker(rc, enemyLoc);
-                            }
-                            break;
+                        switch (flagIC) {
+                            case ENEMY_EC_MUK:
+                                int[] dxdy = Comms.getDxDy(botFlag);
+                                if (dxdy[0] == 0 && dxdy[1] == 0) {
+                                    bot = new HunterMuckracker(rc);
+                                } else {
+                                    MapLocation spawningLoc = robot.getLocation();
+                                    MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
+                                    bot = new HunterMuckracker(rc, enemyLoc);
+                                }
+                                break;
+                            case TARGET_ROBOT:
+                                Comms.SubRobotType subType = Comms.getSubRobotTypeScout(botFlag);
+                                if (subType == Comms.SubRobotType.MUC_SCOUT) {
+                                    Direction dirToMove = Comms.getScoutDirection(botFlag);
+                                    bot = new ScoutMuckraker(rc, dirToMove);
+                                }
+                                
+                                break;
+                            default:
+                                break;
                         }
+                    }
+                    if (bot != null) {
+                        break;
                     }
                 }
                 if(bot != null) {

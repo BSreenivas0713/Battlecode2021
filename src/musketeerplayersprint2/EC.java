@@ -603,6 +603,10 @@ public class EC extends Robot {
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {
         nextFlag = Comms.getFlag(Comms.InformationCategory.TARGET_ROBOT, type);
     }
+
+    void signalScoutMuckraker(Comms.SubRobotType type, Direction dir) throws GameActionException {
+        nextFlag = Comms.getFlagScout(Comms.InformationCategory.TARGET_ROBOT, type, dir);
+    }
     
     //rush if we can
     public boolean readyToRush() {
