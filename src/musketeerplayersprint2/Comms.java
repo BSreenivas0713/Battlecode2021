@@ -4,6 +4,7 @@ import battlecode.common.*;
 
 public class Comms {
     public static final double INF_LOG_BASE = 1.35;
+    public static final double INF_SCALAR = 1;
     static final int BIT_IC_OFFSET = 19;
     static final int BIT_MASK_IC = 0x1F << BIT_IC_OFFSET;
     static final int BIT_DX_OFFSET = 7;
@@ -123,11 +124,17 @@ public class Comms {
     }
 
     public static int getInf(int flag) {
-        return (flag & ~BIT_MASK_IC) >> BIT_INF_OFFSET;
+        int encodedInf = (flag & ~BIT_MASK_IC) >> BIT_INF_OFFSET;
+        int influence = (int) (Math.exp(encodedInf * Math.log(Comms.INF_LOG_BASE)) * INF_SCALAR);
+        return influence;
     }
 
     public static int getTurnCount(int flag) {
         return (flag & ~BIT_MASK_IC) >> BIT_TURNCOUNT_OFFSET;
+    }
+
+    public static int encodeInf(int inf) {
+        return (int) Math.min(31, Math.floor(Math.log(inf / INF_SCALAR) / Math.log(Comms.INF_LOG_BASE)));
     }
 
     // DO NOT USE WITH ROBOT_TYPE_AND_CLOSEST_ENEMY

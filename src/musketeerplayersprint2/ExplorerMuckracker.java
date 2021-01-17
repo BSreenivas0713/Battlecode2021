@@ -38,12 +38,11 @@ public class ExplorerMuckracker extends Robot {
         }
 
         boolean setChillFlag = false;
+        boolean setAttackFlag = false;
 
         if(enemyLocation != null && rc.canSenseLocation(enemyLocation) ) {
             RobotInfo supposedToBeAnEC = rc.senseRobotAtLocation(enemyLocation);
             if(supposedToBeAnEC == null || supposedToBeAnEC.getType() != RobotType.ENLIGHTENMENT_CENTER) {
-                enemyLocation = null;
-                
                 Debug.println(Debug.info, "Enemy EC not found, setting chill flag, reseting enemyLocation");
                 Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
                 
@@ -194,8 +193,11 @@ public class ExplorerMuckracker extends Robot {
                         int dx = enemyLocation.x - currLoc.x;
                         int dy = enemyLocation.y - currLoc.y;
 
-                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, dx + Util.dOffset, dy + Util.dOffset);
+                        int encodedInf = Comms.encodeInf(robot.getInfluence());
+
+                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, encodedInf, dx + Util.dOffset, dy + Util.dOffset);
                         setFlag(newFlag);
+                        setAttackFlag = true;
                     }
                 }
             }
@@ -270,8 +272,10 @@ public class ExplorerMuckracker extends Robot {
         //     changeTo = new LatticeMuckraker(rc, home);
         // }
         
-        if(propagateFlags());
-        else if(broadcastECLocation());
-        else if(broadcastEnemyLocalOrGlobal());
+        if(!setChillFlag && !setAttackFlag) {
+            if(propagateFlags());
+            else if(broadcastECLocation());
+            else if(broadcastEnemyLocalOrGlobal());
+        }
     }
 }

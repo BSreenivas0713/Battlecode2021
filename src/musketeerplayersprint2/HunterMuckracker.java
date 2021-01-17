@@ -47,8 +47,6 @@ public class HunterMuckracker extends Robot {
         if(enemyLocation != null && rc.canSenseLocation(enemyLocation) ) {
             RobotInfo supposedToBeAnEC = rc.senseRobotAtLocation(enemyLocation);
             if(supposedToBeAnEC == null || supposedToBeAnEC.getType() != RobotType.ENLIGHTENMENT_CENTER) {
-                enemyLocation = null;
-                
                 Debug.println(Debug.info, "Enemy EC not found, setting chill flag, reseting enemyLocation");
                 Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
                 
@@ -75,7 +73,7 @@ public class HunterMuckracker extends Robot {
         }
 
 
-        boolean setAttackCall = false;
+        boolean setAttackFlag = false;
         boolean muckraker_Found_EC = false;
 
         RobotInfo bestSlanderer = null;
@@ -120,9 +118,11 @@ public class HunterMuckracker extends Robot {
                         int dx = enemyLocation.x - rc.getLocation().x;
                         int dy = enemyLocation.y - rc.getLocation().y;
 
-                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, dx + Util.dOffset, dy + Util.dOffset);
+                        int encodedInf = Comms.encodeInf(robot.getInfluence());
+
+                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, encodedInf, dx + Util.dOffset, dy + Util.dOffset);
                         setFlag(newFlag);
-                        setAttackCall = true;
+                        setAttackFlag = true;
                     }
                 }
             }
@@ -290,7 +290,7 @@ public class HunterMuckracker extends Robot {
             }
             else if (enemiesFound != 0 && numFollowingClosestEnemy < Util.maxFollowingSingleUnit) {
                 MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
-                if(!setAttackCall && !setChillFlag) {
+                if(!setAttackFlag && !setChillFlag) {
                     setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID()));
                     resetFlagOnNewTurn = false;
                 }
@@ -312,8 +312,10 @@ public class HunterMuckracker extends Robot {
             }
         }
         
-        if(propagateFlags());
-        else if(broadcastECLocation());
-        else if(broadcastEnemyLocalOrGlobal());
+        if(!setAttackFlag && !setChillFlag) {
+            if(propagateFlags());
+            else if(broadcastECLocation());
+            else if(broadcastEnemyLocalOrGlobal());
+        }
     }
 }
