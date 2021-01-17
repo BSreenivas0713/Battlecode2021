@@ -55,6 +55,7 @@ public class DiagonalSlanderer extends Robot {
         RobotInfo closestSlanderer = null;
         int closestSlandDist = Integer.MAX_VALUE;
         MapLocation spawnKillDude = null;
+        Direction otherSlaFleeingDir = null;
         int flag;
         int dist;
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
@@ -71,6 +72,9 @@ public class DiagonalSlanderer extends Robot {
                     closestSlanderer = robot;
                     closestSlandDist = dist;
                 }
+                if(Comms.getIC(flag) == Comms.InformationCategory.SLA_FLEEING) {
+                    otherSlaFleeingDir = Comms.getDirection(flag);
+                }
             }
         }
         int ecRadius = RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared;
@@ -80,8 +84,17 @@ public class DiagonalSlanderer extends Robot {
         }
         MapLocation latticeLoc;
 
-        if (minRobot != null) {
-            main_direction = curr.directionTo(minRobot.getLocation()).opposite();
+        if (closestKnownEnemy != null && curr.isWithinDistanceSquared(closestKnownEnemy, Util.minDistFromEnemy)) {
+            main_direction = curr.directionTo(closestKnownEnemy).opposite();
+            flag = Comms.getFlag(Comms.InformationCategory.SLA_FLEEING, main_direction.ordinal());
+            setFlag(flag);
+            Debug.println(Debug.info, "Prioritizing moving away from enemies: " + main_direction);
+        }
+        else if(otherSlaFleeingDir != null) {
+            // Direction[] candidateDirs = {avgEnemyDir.opposite(), avgEnemyDir.opposite().rotateLeft(), avgEnemyDir.opposite().rotateRight()};
+            // main_direction = candidateDirs[(int)(Math.random() * candidateDirs.length)];
+            main_direction = otherSlaFleeingDir;
+            Debug.println(Debug.info, "Prioritizing joining a fleeing slanderer " + main_direction);
         } else if (spawnKillDude != null) {
             main_direction = curr.directionTo(spawnKillDude).opposite();
         } else if (moveBack) {
