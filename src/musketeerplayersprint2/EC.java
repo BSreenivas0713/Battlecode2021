@@ -29,6 +29,7 @@ public class EC extends Robot {
         CLEANUP,
         REMOVING_BLOCKAGE,
         CHILLING,
+        ACCELERATED_SLANDERERS,
         INIT,
     };
 
@@ -97,6 +98,9 @@ public class EC extends Robot {
     static boolean savingForSlanderer;
     static boolean readyForSlanderer;
 
+    static boolean goToAcceleratedSlanderersState;
+    static RobotType lastBuiltInAccelerated;
+
     static int lastRush;
     static int spawnKillLock;
     static int lastSuccessfulBlockageRemoval;
@@ -137,6 +141,8 @@ public class EC extends Robot {
         enemyECsFound = new FastIterableLocSet(20);
         savingForSlanderer = false;
         readyForSlanderer = false;
+        goToAcceleratedSlanderersState = true;
+        lastBuiltInAccelerated = RobotType.SLANDERER;
         
         for (RobotInfo robot : rc.senseNearbyRobots(sensorRadius, enemy)) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
@@ -195,8 +201,12 @@ public class EC extends Robot {
         }
 
 
+        goToAcceleratedSlanderersState = true;
+        processChildrenFlags(); //goToAcceleratedSlanderer gets set to false if there is an enemy within 2 sensor radiuses of the base
+        if(enemySensable.length > 0 || currInfluence > Util.buildSlandererThreshold) { //also set to false if we sense an enemy in our base or we have enough influence
+            goToAcceleratedSlanderersState = false;
+        }
 
-        processChildrenFlags();
         if(currentState != State.INIT) {
             // Override everything for a spawn kill. This is fine, as it only takes 1 turn
             // and at most happens once every 10 turns.
@@ -229,7 +239,14 @@ public class EC extends Robot {
                                 stateStack.push(currentState);
                                 currentState = State.CLEANUP;
                             }
+                        }
+                        else if (currentState == State.CHILLING && goToAcceleratedSlanderersState) { //If nothing around, make more slanderers (after you have a defense from the first few rounds)
+                            currentState = State.ACCELERATED_SLANDERERS;
                         }             
+                        else if (currentState == State.ACCELERATED_SLANDERERS && !goToAcceleratedSlanderersState) {
+                            currentState = State.CHILLING;
+                            lastBuiltInAccelerated = RobotType.SLANDERER;
+                        }
                     }
                 }
             }
@@ -248,9 +265,16 @@ public class EC extends Robot {
         //updating currInfluence after a bid
         currInfluence = rc.getInfluence();
         muckrackerNear = checkIfMuckrakerNear();
-        if(robotCounter >= 30 || muckrackerNear || rc.getInfluence() > Util.buildSlandererThreshold) {
-                currentState = State.CHILLING;
+        if(currentState == State.INIT) { //Specific checks in the INIT state
+            if(robotCounter >= 30 || muckrackerNear || rc.getInfluence() > Util.buildSlandererThreshold) {
+                    currentState = State.CHILLING;
+            }
+            if(almostReadyToRush()) {
+                stateStack.push(State.CHILLING);
+                currentState = State.SAVING_FOR_RUSH;
+            }
         }
+        
 
         Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + currInfluence);
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
@@ -309,6 +333,7 @@ public class EC extends Robot {
                         case 0: case 1:
                             toBuild = RobotType.POLITICIAN;
                             influence = Math.max(18, currInfluence / 50);
+                            signalRobotType(SubRobotType.POL_PROTECTOR);
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 1 of the else case of INIT");
                                 chillingCount ++;
@@ -340,6 +365,36 @@ public class EC extends Robot {
                             break;
                     }
                 }  
+                break;
+            case ACCELERATED_SLANDERERS:
+                switch(lastBuiltInAccelerated) {
+                    case SLANDERER:
+                        toBuild = RobotType.POLITICIAN;
+                        influence = Math.max(18, currInfluence / 50);
+                        signalRobotType(SubRobotType.POL_PROTECTOR);
+                        break;
+                    case POLITICIAN:
+                        toBuild = RobotType.MUCKRAKER;
+                        influence = 1;
+                        makeMuckraker();
+                        break;
+                    case MUCKRAKER:
+                        if(Util.getBestSlandererInfluence(currInfluence ) > 100) {
+                            toBuild = RobotType.SLANDERER;
+                            influence = Util.getBestSlandererInfluence(currInfluence);
+                        }
+                        else {
+                            toBuild = RobotType.MUCKRAKER;
+                            influence = 1;
+                            makeMuckraker();
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                if(buildRobot(toBuild, influence)) {
+                    lastBuiltInAccelerated = toBuild;
+                }
                 break;
             case RUSHING:
                 trySendARush();
@@ -528,12 +583,9 @@ public class EC extends Robot {
                         int enemyLocY = enemyDxDy[1] + home.y - Util.dOffset;
 
                         MapLocation enemyLoc = new MapLocation(enemyLocX, enemyLocY);
-                        /*if (rc.getLocation().isWithinDistanceSquared(enemyLoc, rc.getType().sensorRadiusSquared * 4) &&
-                            currentState != State.BUILDING_PROTECTORS && protectorIdSet.size <= 25 && canGoBackToBuildingProtectors && noAdjacentEC) {
-                            stateStack.push(currentState);
-                            currentState = State.BUILDING_PROTECTORS;
-                            protectorsSpawnedInARow = 0;
-                        }*/
+                        if (rc.getLocation().isWithinDistanceSquared(enemyLoc, rc.getType().sensorRadiusSquared * 4)) {
+                            goToAcceleratedSlanderersState = false;
+                        }
                         break;
                 }
             } else {
@@ -659,6 +711,17 @@ public class EC extends Robot {
                 targetEC.dy - Util.dOffset);
             Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
             if(requiredInfluence < currInfluence) return true;
+        }
+        return false;
+    }
+    public boolean almostReadyToRush() {
+        RushFlag targetEC = ECflags.peek();
+        if(targetEC != null) {
+            int requiredInfluence = targetEC.requiredInfluence;
+            MapLocation enemyLocation = home.translate(targetEC.dx - Util.dOffset, 
+                targetEC.dy - Util.dOffset);
+            Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
+            if(3 * requiredInfluence / 4 < currInfluence) return true;
         }
         return false;
     }
