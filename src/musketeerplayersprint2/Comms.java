@@ -7,6 +7,7 @@ public class Comms {
     public static final double INF_SCALAR = 1;
     static final int BIT_IC_OFFSET = 20;
     static final int BIT_MASK_IC = 0xF << BIT_IC_OFFSET;
+    static final int BIT_MASK_DXDY = 0x3FFF;
     static final int BIT_DX_OFFSET = 7;
     static final int BIT_MASK_COORD = 0x7F;
     static final int BIT_MASK_COORDS = 0x3FFF;
@@ -48,6 +49,7 @@ public class Comms {
         MUC_HUNTER,
         MUC_EXPLORER,
         MUC_LATTICE,
+        MUC_SCOUT,
         EC,
     }
 
@@ -93,6 +95,10 @@ public class Comms {
         return getFlag(cat, 0, 0);
     }
 
+    public static int getFlagScout(InformationCategory cat, SubRobotType type, Direction dir) {
+        return (cat.ordinal() << BIT_IC_OFFSET) + (dir.ordinal() << BIT_INF_OFFSET) + type.ordinal();
+    }
+
     // NEUTRAL_EC / ENEMY_EC
     public static int getFlag(InformationCategory cat, int inf, int dx, int dy) {
         int flag = cat.ordinal();
@@ -133,11 +139,15 @@ public class Comms {
         return (flag & ~BIT_MASK_IC) >>> BIT_TURNCOUNT_OFFSET;
     }
 
+    public static Direction getScoutDirection(int flag) {
+        return Direction.values()[(flag & ~BIT_MASK_IC) >>> BIT_INF_OFFSET];
+    }
+
     public static int encodeInf(int inf) {
         return (int) Math.min(63, Math.floor(Math.log(inf / INF_SCALAR) / Math.log(Comms.INF_LOG_BASE)));
     }
 
-    // DO NOT USE WITH ROBOT_TYPE_AND_CLOSEST_ENEMY
+    // DO NOT USE WITH ROBOT_TYPE_AND_CLOSEST_ENEMY OR MUK_SCOUT
     public static SubRobotType getSubRobotType(int flag) {
         return SubRobotType.values()[(flag & ~BIT_MASK_IC)];
     }
@@ -145,6 +155,10 @@ public class Comms {
     // USE ONLY WITH ROBOT_TYPE_AND_CLOSEST_ENEMY
     public static SubRobotType getSubRobotTypeClosestEnemy(int flag) {
         return SubRobotType.values()[(flag & ~BIT_MASK_IC) >>> BIT_INF_OFFSET];
+    }
+
+    public static SubRobotType getSubRobotTypeScout(int flag) {
+        return SubRobotType.values()[(flag & BIT_MASK_DXDY)];
     }
 
 
