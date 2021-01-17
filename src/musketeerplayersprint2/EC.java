@@ -234,11 +234,6 @@ public class EC extends Robot {
                 }
             }
         }
-        else {
-            if(robotCounter >= 30) {
-                currentState = State.CHILLING;
-            }
-        }
 
         // At this point, state is either RUSHING, SAVING, BUILDING (spawn kill or protectors),or CLEANUP
         // At most, two things have been pushed to the state stack, the previous state, and whatever protectors overrode.
@@ -253,6 +248,9 @@ public class EC extends Robot {
         //updating currInfluence after a bid
         currInfluence = rc.getInfluence();
         muckrackerNear = checkIfMuckrakerNear();
+        if(robotCounter >= 30 || muckrackerNear || rc.getInfluence() > Util.buildSlandererThreshold) {
+                currentState = State.CHILLING;
+        }
 
         Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + currInfluence);
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
@@ -260,7 +258,7 @@ public class EC extends Robot {
         Debug.println(Debug.info, "num ids found: " + idSet.size);
         Debug.println(Debug.info, "num protectors currently: " + protectorIdSet.size);
         Debug.println(Debug.info, "State stack size: " + stateStack.size() + ", state: " + currentState);
-        Debug.println(Debug.info, "protectors built in a row: " + protectorsSpawnedInARow);
+        Debug.println(Debug.info, "Muckraker near: " + muckrackerNear);
 
         switch(currentState) {
             case INIT: 
@@ -461,7 +459,7 @@ public class EC extends Robot {
     }
     
     public boolean checkIfMuckrakerNear() throws GameActionException {
-        for(RobotInfo robot: rc.senseNearbyRobots(RobotType.MUCKRAKER.actionRadiusSquared, enemy)) {
+        for(RobotInfo robot: rc.senseNearbyRobots(sensorRadius, enemy)) {
             if(robot.getType() == RobotType.MUCKRAKER) {
                 return true;
             }
