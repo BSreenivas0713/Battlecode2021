@@ -6,6 +6,7 @@ import musketeerplayersprint2.Util.*;
 import musketeerplayersprint2.Debug.*;
 import musketeerplayersprint2.fast.FastIterableIntSet;
 import musketeerplayersprint2.fast.FastIterableLocSet;
+import musketeerplayersprint2.fast.FastLocIntMap;
 
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
@@ -115,7 +116,9 @@ public class EC extends Robot {
     static int littleBid;
     static boolean wonLastBid;
     static int lastVoteCount;
+
     static FastIterableLocSet enemyECsFound;
+    static FastLocIntMap rushingECtoTurnMap;
 
     public EC(RobotController r) {
         super(r);
@@ -149,6 +152,7 @@ public class EC extends Robot {
         goToAcceleratedSlanderersState = true;
         lastBuiltInAccelerated = RobotType.SLANDERER;
         noAdjacentEC = true;
+        rushingECtoTurnMap = new FastLocIntMap();
 
         for (RobotInfo robot : rc.senseNearbyRobots(sensorRadius, enemy)) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
@@ -515,6 +519,15 @@ public class EC extends Robot {
         influence = 0;
         currRoundNum = rc.getRoundNum();
         currInfluence = rc.getInfluence();
+
+        MapLocation[] keys = rushingECtoTurnMap.getKeys();
+        MapLocation key;
+        for(int i = keys.length - 1; i >= 0; i--) {
+            key = keys[i];
+            if(rc.getRoundNum() > rushingECtoTurnMap.getVal(key) + Util.rushCooldown) {
+                rushingECtoTurnMap.remove(key);
+            }
+        }
     }
 
     /*public void toggleBuildProtectors() throws GameActionException {
@@ -577,30 +590,39 @@ public class EC extends Robot {
                         // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                         currDxDy = Comms.getDxDy(flag);
                         neededInf = Comms.getInf(flag);
-                        currReqInf = (int)  neededInf * 2 + 10;
+                        currReqInf = (int) neededInf * 2 + 10;
                         // if(currRoundNum <= 150) {
                         //     currReqInf = (int) neededInf * 2 + 10;
                         // }
                         rushFlag = new RushFlag(currReqInf, currDxDy[0] - Util.dOffset, currDxDy[1] - Util.dOffset, flag, Team.NEUTRAL);
-                        ECflags.remove(rushFlag);
                         tempMapLoc = new MapLocation(rc.getLocation().x + rushFlag.dx, rc.getLocation().y + rushFlag.dy);
-                        ECflags.add(rushFlag);
+
+                        // Only insert if we aren't rushing this EC
+                        if(!rushingECtoTurnMap.contains(tempMapLoc)) {
+                            ECflags.remove(rushFlag);
+                            ECflags.add(rushFlag);
+                        }
                         break;
                     case ENEMY_EC:
                         // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                         currDxDy = Comms.getDxDy(flag);
                         neededInf =  Comms.getInf(flag);
-                        currReqInf = (int)  neededInf * 4 + 10;
+                        currReqInf = (int) neededInf * 4 + 10;
                         if(currRoundNum <=150) {
                             currReqInf = (int) neededInf * 2 + 10;
                         }
                         rushFlag = new RushFlag(currReqInf, currDxDy[0] - Util.dOffset, currDxDy[1] - Util.dOffset, flag, rc.getTeam().opponent());
-                        ECflags.remove(rushFlag);
                         tempMapLoc = new MapLocation(rc.getLocation().x + rushFlag.dx, rc.getLocation().y + rushFlag.dy);
+                        
+                        // Only insert if we aren't rushing this EC
+                        if(!rushingECtoTurnMap.contains(tempMapLoc)) {
+                            ECflags.remove(rushFlag);
+                            ECflags.add(rushFlag);
+                        }
+
                         if (!enemyECsFound.contains(tempMapLoc)) {
                             enemyECsFound.add(tempMapLoc);
                         }
-                        ECflags.add(rushFlag);
                         cleanUpCount = -1;
                         if (currentState == State.CLEANUP) {
                             currentState = stateStack.pop();
@@ -654,10 +676,7 @@ public class EC extends Robot {
             int flag = rushFlag.flag;
             int distanceSquared = rushFlag.dx * rushFlag.dx + rushFlag.dy * rushFlag.dy;
             int neededInf =  Comms.getInf(flag);
-            int currReqInf = (int)  neededInf * 4 + 10;
-            if(currRoundNum <=150) {
-                currReqInf = (int) neededInf * 2 + 10;
-            }
+            int currReqInf = rushFlag.requiredInfluence;
             if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4) || (distanceSquared < sensorRadius)) {
                 Debug.println(Debug.info, "tryStartSavingForRush is returning true");
                 return true;
@@ -710,6 +729,7 @@ public class EC extends Robot {
             nextFlag = rushFlag.flag;
             currentState = stateStack.pop();
             lastRush = turnCount;
+            rushingECtoTurnMap.add(enemyLocation, lastRush);
             /*if (currentState != State.BUILDING_SLANDERERS) {
                 canGoBackToBuildingProtectors = true;
             }
