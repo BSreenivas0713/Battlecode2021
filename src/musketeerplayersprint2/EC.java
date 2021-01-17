@@ -577,10 +577,10 @@ public class EC extends Robot {
                         // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                         currDxDy = Comms.getDxDy(flag);
                         neededInf = Comms.getInf(flag);
-                        currReqInf = (int)  neededInf * 4 + 10;
-                        if(currRoundNum <= 150) {
-                            currReqInf = (int) neededInf * 2 + 10;
-                        }
+                        currReqInf = (int)  neededInf * 2 + 10;
+                        // if(currRoundNum <= 150) {
+                        //     currReqInf = (int) neededInf * 2 + 10;
+                        // }
                         rushFlag = new RushFlag(currReqInf, currDxDy[0] - Util.dOffset, currDxDy[1] - Util.dOffset, flag, Team.NEUTRAL);
                         ECflags.remove(rushFlag);
                         tempMapLoc = new MapLocation(rc.getLocation().x + rushFlag.dx, rc.getLocation().y + rushFlag.dy);
