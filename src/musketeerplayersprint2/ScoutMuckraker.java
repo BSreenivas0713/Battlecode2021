@@ -32,9 +32,20 @@ public class ScoutMuckraker extends Robot {
             main_direction = Util.randomDirection();
         }
 
+        RobotInfo robot;
+        RobotInfo closestEnemy = null;
+        double minDistSquared = Integer.MAX_VALUE;
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
+            double temp = currLoc.distanceSquaredTo(robot.getLocation());
+            if (temp < minDistSquared) {
+                minDistSquared = temp;
+                closestEnemy = robot;
+            }
+        }
+
         RobotInfo powerful = null;
         int bestInfluence = Integer.MIN_VALUE;
-        RobotInfo robot;
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
             int curr = robot.getInfluence();
@@ -59,6 +70,8 @@ public class ScoutMuckraker extends Robot {
             changeTo = new ExplorerMuckracker(rc, home);
         }
 
-        broadcastECLocation();
+        if(propagateFlags());
+        else if(broadcastECLocation());
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

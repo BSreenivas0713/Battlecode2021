@@ -52,7 +52,7 @@ public class CleanupPolitician extends Robot {
 
         RobotInfo powerful = null;
         int max_influence = (rc.getConviction()-10) / 3;
-        RobotInfo minRobot = null;
+        RobotInfo closestEnemy = null;
         double minDistSquared = Integer.MAX_VALUE;
 
         for(int i = enemySensable.length - 1; i >= 0; i--) {
@@ -66,7 +66,7 @@ public class CleanupPolitician extends Robot {
             double temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
-                minRobot = robot;
+                closestEnemy = robot;
             }
         }
         
@@ -80,6 +80,6 @@ public class CleanupPolitician extends Robot {
 
         if(propagateFlags());
         else if(broadcastECLocation());
-        else if(broadcastEnemyLocalOrGlobal());
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }
