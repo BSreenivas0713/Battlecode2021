@@ -194,6 +194,7 @@ public class ExplorerMuckracker extends Robot {
                         int dy = enemyLocation.y - currLoc.y;
 
                         int encodedInf = Comms.encodeInf(robot.getInfluence());
+                        Debug.println(Debug.info, "Encoded Influece: " + encodedInf + "Actual Influence: " + robot.getInfluence());
 
                         int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, encodedInf, dx + Util.dOffset, dy + Util.dOffset);
                         setFlag(newFlag);
