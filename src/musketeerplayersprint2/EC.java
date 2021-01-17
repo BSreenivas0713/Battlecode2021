@@ -157,7 +157,8 @@ public class EC extends Robot {
         for(Direction dir : orderedDirs) {
             boolean isScout = Comms.getSubRobotType(nextFlag) == Comms.SubRobotType.MUC_SCOUT;
             boolean scoutCheck = true;
-            if(isScout && dir != Comms.getScoutDirection(nextFlag)) {
+            Direction scoutDirection = Comms.getScoutDirection(nextFlag);
+            if(isScout && dir != scoutDirection && rc.onTheMap(rc.getLocation().add(scoutDirection))) { //Try and spawn in the direction that the scout wants to go
                 scoutCheck = false;
             } 
             if (rc.canBuildRobot(toBuild, dir, influence) && scoutCheck) {
