@@ -125,6 +125,9 @@ public class LatticeProtector extends Robot {
         MapLocation closestProtectorLoc = null;
         boolean ProtectorNearby = false;
         int radius = actionRadius;
+        MapLocation enemyLoc = null;
+        boolean turnIntoRusher = false;
+
         if (!slandererNearby) {
             radius = sensorRadius;
         }
@@ -133,6 +136,26 @@ public class LatticeProtector extends Robot {
             robot = friendlySensable[i];
             if(rc.canGetFlag(robot.getID())) {
                 int robotFlag = rc.getFlag(robot.getID());
+                switch(Comms.getIC(robotFlag)) {
+                case ENEMY_EC_ATTACK_CALL:
+                    Debug.println(Debug.info, "Found Propogated flag(Attack). Acting on it. ");
+                    MapLocation robotLoc = robot.getLocation();
+                    int []DxDyFromRobot = Comms.getDxDy(robotFlag);
+                    enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
+                    int neededInf =  (int) Math.exp(Comms.getInf(robotFlag) * Math.log(Comms.INF_LOG_BASE));
+                    Debug.println(Debug.info, "Current Influence: " + rc.getInfluence() + "Required Influence for tower: " + neededInf);
+                    if((rc.getInfluence() - 10) >= (int) ((neededInf) / 10)) {
+                        Debug.println(Debug.info, "TurnIntoRusher is getting set to True");
+                        //turnIntoRusher = true;
+                    }
+                    Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+
+                    break;
+                default: 
+                    break;
+                }
+
+
                 if(Comms.isSubRobotType(robotFlag, Comms.SubRobotType.POL_PROTECTOR)) {
                     ProtectorNearby = true;
                     int currDistToProtector = robot.getLocation().distanceSquaredTo(rc.getLocation());
@@ -197,6 +220,12 @@ public class LatticeProtector extends Robot {
             Debug.println(Debug.info, "Enemy too close to base. I will empower");
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestEnemyAttackable, 255, 150, 50);
             rc.empower(maxEnemyAttackableDistSquared);
+            return;
+        }
+        //Turns into a rusher if the enemy tower has less than 10 times the amount that the politician will use when empowering
+        if(turnIntoRusher) {
+            Debug.println(Debug.info, "Changing into a Lattice Rusher");
+            changeTo = new LatticeRusher(rc, enemyLoc, home);
             return;
         }
 
