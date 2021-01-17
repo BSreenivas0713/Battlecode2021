@@ -62,6 +62,8 @@ public class Util {
     static final int startCleanupThreshold = 100;
     static final int cleanupPoliticianInfluence = 34;
     
+    static final int buildSlandererThreshold = 20000;
+    
     static final int maxSlandererInfluence = 949;
     static final int[] bestSlandererCosts = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 41, 41, 41, 41, 41, 41, 
         41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 63, 85, 85, 85, 85, 

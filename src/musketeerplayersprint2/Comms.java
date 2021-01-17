@@ -7,7 +7,6 @@ public class Comms {
     public static final double INF_SCALAR = 1;
     static final int BIT_IC_OFFSET = 20;
     static final int BIT_MASK_IC = 0xF << BIT_IC_OFFSET;
-    static final int BIT_MASK_DXDY = 0x3FFF;
     static final int BIT_DX_OFFSET = 7;
     static final int BIT_MASK_COORD = 0x7F;
     static final int BIT_MASK_COORDS = 0x3FFF;
@@ -149,16 +148,11 @@ public class Comms {
 
     // DO NOT USE WITH ROBOT_TYPE_AND_CLOSEST_ENEMY OR MUK_SCOUT
     public static SubRobotType getSubRobotType(int flag) {
-        return SubRobotType.values()[(flag & ~BIT_MASK_IC)];
-    }
-
-    // USE ONLY WITH ROBOT_TYPE_AND_CLOSEST_ENEMY
-    public static SubRobotType getSubRobotTypeClosestEnemy(int flag) {
-        return SubRobotType.values()[(flag & ~BIT_MASK_IC) >>> BIT_INF_OFFSET];
+        return SubRobotType.values()[(flag & BIT_MASK_COORDS)];
     }
 
     public static SubRobotType getSubRobotTypeScout(int flag) {
-        return SubRobotType.values()[(flag & BIT_MASK_DXDY)];
+        return SubRobotType.values()[(flag & BIT_MASK_COORDS)];
     }
 
 

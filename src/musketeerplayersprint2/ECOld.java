@@ -21,8 +21,10 @@ Muckrakers should report slanderers to the EC
 not sure how protectors should figure out who slanderers are since they basically never have the slanderer flag
 Right now ECs do not propogate flags
 */
-public class EC extends Robot {
+public class ECOld extends Robot {
     static enum State {
+        BUILDING_SLANDERERS,
+        BUILDING_PROTECTORS,
         BUILDING_SPAWNKILLS,
         RUSHING,
         SAVING_FOR_RUSH,
@@ -108,7 +110,7 @@ public class EC extends Robot {
     static int lastVoteCount;
     static FastIterableLocSet enemyECsFound;
 
-    public EC(RobotController r) {
+    public ECOld(RobotController r) {
         super(r);
         idSet = new FastIterableIntSet(1000);
         ids = idSet.ints;
@@ -155,12 +157,7 @@ public class EC extends Robot {
         Direction[] orderedDirs = Util.getOrderedDirections(pref);
 
         for(Direction dir : orderedDirs) {
-            boolean isScout = Comms.getSubRobotType(nextFlag) == Comms.SubRobotType.MUC_SCOUT;
-            boolean scoutCheck = true;
-            if(isScout && dir != Comms.getScoutDirection(nextFlag)) {
-                scoutCheck = false;
-            } 
-            if (rc.canBuildRobot(toBuild, dir, influence) && scoutCheck) {
+            if (rc.canBuildRobot(toBuild, dir, influence)) {
                 rc.buildRobot(toBuild, dir, influence);
                 RobotInfo robot = rc.senseRobotAtLocation(home.add(dir));
                 if(robot != null) {
@@ -208,6 +205,9 @@ public class EC extends Robot {
                         if (currentState != State.SAVING_FOR_RUSH) {
                             stateStack.push(currentState);
                         }
+                        if (currentState != State.BUILDING_SLANDERERS) {
+                            canGoBackToBuildingProtectors = false;
+                        }
                         currentState = State.RUSHING;
                     }
                 } else {
@@ -215,27 +215,25 @@ public class EC extends Robot {
                     tryStartRemovingBlockage();
                     // Third priority is building protectors.
                     if (currentState != State.REMOVING_BLOCKAGE) {
+                        toggleBuildProtectors(); ////////////////////////REMOVE
                         // Fourth priority is saving for rush
-                        if (tryStartSavingForRush()) {
-                            if (currentState != State.SAVING_FOR_RUSH) {
-                                stateStack.push(currentState);
-                                currentState = State.SAVING_FOR_RUSH;
+                        if (currentState != State.BUILDING_PROTECTORS) { ///////////////////////REMOVE the if statment
+                            if (tryStartSavingForRush()) {
+                                if (currentState != State.SAVING_FOR_RUSH) {
+                                    stateStack.push(currentState);
+                                    currentState = State.SAVING_FOR_RUSH;
+                                }
                             }
-                        }
-                        // If there's nothing to do, clean up
-                        else if (currRoundNum > 500 && tryStartCleanup()) {
-                            if (currentState != State.CLEANUP) {
-                                stateStack.push(currentState);
-                                currentState = State.CLEANUP;
+                            // If there's nothing to do, clean up
+                            else if (currRoundNum > 500 && tryStartCleanup()) {
+                                if (currentState != State.CLEANUP) {
+                                    stateStack.push(currentState);
+                                    currentState = State.CLEANUP;
+                                }
                             }
-                        }             
+                        }                
                     }
                 }
-            }
-        }
-        else {
-            if(robotCounter >= 30) {
-                currentState = State.CHILLING;
             }
         }
 
@@ -264,83 +262,73 @@ public class EC extends Robot {
         switch(currentState) {
             case INIT: 
                 firstRounds();
+                if(robotCounter >= 30) {
+                    currentState = State.BUILDING_SLANDERERS;
+                }
                 buildRobot(toBuild, influence);
                 break;
-            case CHILLING: 
-                if(savingForSlanderer && Util.getBestSlandererInfluence(currInfluence) > 100) {
-                    readyForSlanderer = true;
-                }
-
-                if(muckrackerNear || currInfluence > Util.buildSlandererThreshold) { //possibly add income threshold as well
-                    readyForSlanderer = false;
-                    savingForSlanderer = false;
-                }
-
-                if(readyForSlanderer) {
+            case BUILDING_SLANDERERS:
+                Debug.println(Debug.info, "building slanderers state");            
+                if(!muckrackerNear && robotCounter % 2 != 0) {
                     toBuild = RobotType.SLANDERER;
                     influence = Util.getBestSlandererInfluence(currInfluence);
-                    if(buildRobot(toBuild, influence)) {
-                        Debug.println(Debug.info, "building a slanderer");
-                        readyForSlanderer = false;
-                        savingForSlanderer = false;
-                        chillingCount = 0;
+                } else {
+                    RushFlag targetEC = ECflags.peek();
+                    if (numMucks % 2 == 0) {
+                        if (targetEC != null && targetEC.team != Team.NEUTRAL) {
+                            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.dx, targetEC.dy);
+                            Debug.println(Debug.info, "Making hunter mucker with destination " + targetEC.dx + ", " + targetEC.dy + ".");
+                        } else {
+                            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK);
+                            Debug.println(Debug.info, "Making hunter mucker with no destination.");
+                        }
                     }
-                    
+                    toBuild = RobotType.MUCKRAKER;
+                    influence = 1;
                 }
-                else if (savingForSlanderer) {
-                    switch(chillingCount % 3) {
-                        case 0: case 2: 
-                            toBuild = RobotType.MUCKRAKER;
-                            influence = 1;
-                            makeMuckraker();
-                            break;
-                        case 1: 
-                            toBuild = RobotType.POLITICIAN;
-                            influence = Math.max(18, currInfluence / 50);
-                            signalRobotType(SubRobotType.POL_PROTECTOR);
-                            break;
-                    }
-                    if(buildRobot(toBuild, influence)) {
-                        Debug.println(Debug.info, "saving for slanderers case");
-                        chillingCount ++;
-                    }
+
+                if (robotCounter == 0 && noAdjacentEC) {
+                    //the first robot built should be a 107 slanderer, otherwise in this state
+                    //we will build 130 slanderers at minimum
+                    toBuild = RobotType.SLANDERER;
+                    influence = 107;
+                }
+
+                boolean built_bot = false;
+                if (toBuild != null) built_bot = buildRobot(toBuild, influence);
+                if (built_bot && toBuild == RobotType.SLANDERER && !canGoBackToBuildingProtectors) {
+                    canGoBackToBuildingProtectors = true;
+                    protectorsSpawnedInARow = 0;
+                }
+                break;
+            case BUILDING_PROTECTORS:
+                Debug.println(Debug.info, "building protectors state");
+                if (robotCounter % 4 != 0) {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = Math.max(18, currInfluence / 50);
+                    signalRobotType(SubRobotType.POL_PROTECTOR);
                 }
                 else {
-                    switch(chillingCount % 4) {
-                        case 0: case 1:
-                            toBuild = RobotType.POLITICIAN;
-                            influence = Math.max(18, currInfluence / 50);
-                            if(buildRobot(toBuild, influence)) {
-                                Debug.println(Debug.info, "case 1 of the else case of INIT");
-                                chillingCount ++;
-                            }
-                            break;
-                        case 2: 
-                            toBuild = RobotType.MUCKRAKER;
-                            influence = 1;
-                            if(buildRobot(toBuild, influence)) {
-                                Debug.println(Debug.info, "case 2 of the else case of INIT");
-                                chillingCount ++;
-                            }
-                            break;
-                        case 3: 
-                            int currBestSlandererInfluence = Util.getBestSlandererInfluence(currInfluence);
-                            toBuild = RobotType.MUCKRAKER;
-                            influence = 1;
-                            makeMuckraker();
-                            if(buildRobot(toBuild, influence)) {
-                                Debug.println(Debug.info, "case 3 of the else case of INIT");
-                                chillingCount = 0;
-                                if(currBestSlandererInfluence > 100) {
-                                    readyForSlanderer = true;
-                                }
-                                else {
-                                    savingForSlanderer = true;
-                                }
-                            }
-                            break;
+                    RushFlag targetEC = ECflags.peek();
+                    if (numMucks % 2 == 0) {
+                        if (targetEC != null && targetEC.team != Team.NEUTRAL) {
+                            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.dx, targetEC.dy);
+                            Debug.println(Debug.info, "Making hunter mucker with destination " + targetEC.dx + ", " + targetEC.dy + ".");
+                        } else {
+                            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK);
+                            Debug.println(Debug.info, "Making hunter mucker with no destination.");
+                        }
                     }
-                }  
+                    toBuild = RobotType.MUCKRAKER;
+                    influence = 1;
+                }
+                
+                boolean built_robot = false;
+                if (toBuild != null) {
+                    built_robot = buildRobot(toBuild, influence);
+                }
+
+                if (built_robot && toBuild == RobotType.POLITICIAN) protectorsSpawnedInARow++;
                 break;
             case RUSHING:
                 trySendARush();
@@ -428,7 +416,7 @@ public class EC extends Robot {
         noAdjacentEC = true;
     }
 
-    /*public void toggleBuildProtectors() throws GameActionException {
+    public void toggleBuildProtectors() throws GameActionException {
         // Debug.println(Debug.info, "can go back to building protectors: " + canGoBackToBuildingProtectors);
         // Debug.println(Debug.info, "protector id set size: " + protectorIdSet.size);
         // Debug.println(Debug.info, "current state from toggle building protectors: " + currentState);
@@ -448,7 +436,7 @@ public class EC extends Robot {
             canGoBackToBuildingProtectors = false;
             currentState = State.BUILDING_SLANDERERS;
         }
-    }*/
+    }
 
     public void tryStartBuildingSpawnKill() throws GameActionException {
         Debug.println(Debug.info, "spawn kill lock: " + spawnKillLock);
@@ -529,12 +517,12 @@ public class EC extends Robot {
                         int enemyLocY = enemyDxDy[1] + home.y - Util.dOffset;
 
                         MapLocation enemyLoc = new MapLocation(enemyLocX, enemyLocY);
-                        /*if (rc.getLocation().isWithinDistanceSquared(enemyLoc, rc.getType().sensorRadiusSquared * 4) &&
+                        if (rc.getLocation().isWithinDistanceSquared(enemyLoc, rc.getType().sensorRadiusSquared * 4) &&
                             currentState != State.BUILDING_PROTECTORS && protectorIdSet.size <= 25 && canGoBackToBuildingProtectors && noAdjacentEC) {
                             stateStack.push(currentState);
                             currentState = State.BUILDING_PROTECTORS;
                             protectorsSpawnedInARow = 0;
-                        }*/
+                        }
                         break;
                 }
             } else {
@@ -622,10 +610,10 @@ public class EC extends Robot {
             nextFlag = rushFlag.flag;
             currentState = stateStack.pop();
             lastRush = turnCount;
-            /*if (currentState != State.BUILDING_SLANDERERS) {
+            if (currentState != State.BUILDING_SLANDERERS) {
                 canGoBackToBuildingProtectors = true;
             }
-            return true;*/
+            return true;
         }
         return false;   
     }

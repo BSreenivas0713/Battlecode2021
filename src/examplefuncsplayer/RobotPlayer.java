@@ -64,10 +64,10 @@ public strictfp class RobotPlayer {
     static void runEnlightenmentCenter() throws GameActionException {
         System.out.println("Opponent current influence: " + rc.getInfluence());
 
-        // if(turnCount > 100) {
-        //     System.out.println("Resigning");
-        //     rc.resign();
-        // }
+        if(turnCount > 100) {
+            System.out.println("Resigning");
+            rc.resign();
+        }
         
         int currRoundNum = rc.getRoundNum();
         int currInfluence = rc.getInfluence();
@@ -85,7 +85,6 @@ public strictfp class RobotPlayer {
             }
         }
     }
-
     static void runPolitician() throws GameActionException {
         Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
