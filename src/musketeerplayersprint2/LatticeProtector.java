@@ -128,6 +128,10 @@ public class LatticeProtector extends Robot {
         boolean turnIntoRusher = false;
         int maxInfSeen = -1;
 
+        int totalProtectorX = 0;
+        int totalProtectorY = 0;
+        int numProtectors = 0;
+
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
             robot = friendlySensable[i];
             if(rc.canGetFlag(robot.getID())) {
@@ -164,6 +168,12 @@ public class LatticeProtector extends Robot {
                         closestProtectorDist = currDistToProtector;
                         closestProtectorLoc = robot.getLocation();
                     }
+
+                    Debug.setIndicatorDot(Debug.info, robot.getLocation(), 100, 100, 100);
+
+                    totalProtectorX += robot.getLocation().x;
+                    totalProtectorY += robot.getLocation().y;
+                    numProtectors++;
                 }
             }
             
@@ -256,20 +266,23 @@ public class LatticeProtector extends Robot {
         }
         //Tries to lattice
         else if(ProtectorNearby) {
-            main_direction = currLoc.directionTo(closestProtectorLoc).opposite();
+            MapLocation averageProtector = new MapLocation(totalProtectorX / numProtectors, totalProtectorY / numProtectors);
+            main_direction = currLoc.directionTo(averageProtector).opposite();
+            // main_direction = currLoc.directionTo(closestProtectorLoc).opposite();
             Debug.println(Debug.info, "Latticing away from other protectors");
         }
         //If cannot lattice, go towards nearest slanderer
-        else if(lastSeenSlanderer != null) {
-            Debug.setIndicatorDot(Debug.pathfinding, lastSeenSlanderer, 200, 0, 255);
-            Debug.setIndicatorLine(Debug.pathfinding, currLoc, lastSeenSlanderer, 200, 0, 255);
-            main_direction = currLoc.directionTo(lastSeenSlanderer);
-            Debug.println(Debug.info, "going towards slanderers");
-        }
+        // else if(lastSeenSlanderer != null) {
+        //     Debug.setIndicatorDot(Debug.pathfinding, lastSeenSlanderer, 200, 0, 255);
+        //     Debug.setIndicatorLine(Debug.pathfinding, currLoc, lastSeenSlanderer, 200, 0, 255);
+        //     main_direction = currLoc.directionTo(lastSeenSlanderer);
+        //     Debug.println(Debug.info, "going towards slanderers");
+        // }
         // else rotate towards ec
         else {
-            Debug.println(Debug.info, "I see no slanderers, and cannot lattice. Rotating towards ec");
-            main_direction = Util.rotateOppositeSpinDirection(spinDirection, currLoc.directionTo(currMinEC));
+            // Debug.println(Debug.info, "I see no slanderers, and cannot lattice. Rotating towards ec");
+            // main_direction = Util.rotateOppositeSpinDirection(spinDirection, currLoc.directionTo(currMinEC));
+            Debug.println(Debug.info, "I see nobody, chilling out");
         }
 
         MapLocation target = currLoc.add(main_direction);
