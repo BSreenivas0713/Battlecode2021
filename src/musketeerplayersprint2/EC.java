@@ -122,7 +122,9 @@ public class EC extends Robot {
     static FastIterableLocSet enemyECsFound;
     static FastLocIntMap rushingECtoTurnMap;
 
-    //static int savingForRushSemaphore;
+    static int savingForRushSemaphore;
+
+    static MapLocation recentSlanderer;
 
     public EC(RobotController r) {
         super(r);
@@ -158,7 +160,8 @@ public class EC extends Robot {
         builtInAcceleratedCount = 0;
         noAdjacentEC = true;
         rushingECtoTurnMap = new FastLocIntMap();
-        //savingForRushSemaphore = 100;
+        savingForRushSemaphore = 100;
+        recentSlanderer = null;
 
         /*if (rc.getRoundNum() <= 1) {
             int encodedInfForUnknownEC = Comms.encodeInf(200);
@@ -243,18 +246,18 @@ public class EC extends Robot {
         if (spawnKillLock < 10) {
             spawnKillLock++;
         }
-        /*if (currentState == State.SAVING_FOR_RUSH) {
-            Debug.println(Debug.info, "Saving sema: " + savingForRushSemaphore);
-            if (savingForRushSemaphore == 0) {
-                currentState = stateStack.pop();
-            } else {
-                savingForRushSemaphore--;
-            }
-        } else if (currentState == State.RUSHING) {
-            savingForRushSemaphore = 100;
-        } else {
-            savingForRushSemaphore++;
-        }*/
+        // if (currentState == State.SAVING_FOR_RUSH) {
+        //     Debug.println(Debug.info, "Saving sema: " + savingForRushSemaphore);
+        //     if (savingForRushSemaphore == 0) {
+        //         currentState = stateStack.pop();
+        //     } else {
+        //         savingForRushSemaphore--;
+        //     }
+        // } else if (currentState == State.RUSHING) {
+        //     savingForRushSemaphore = 100;
+        // } else {
+        //     savingForRushSemaphore++;
+        // }
 
         if (currRoundNum > 1000 && rc.getTeamVotes() > 750) {
             currentState = State.SURVIVAL;
@@ -385,7 +388,13 @@ public class EC extends Robot {
                         savingForSlanderer = false;
                         chillingCount = 0;
                     }
-                    
+
+                    if(recentSlanderer != null) {
+                        int dx = recentSlanderer.x - home.x;
+                        int dy = recentSlanderer.y - home.y;
+                        nextFlag = Comms.getFlagRush(Comms.InformationCategory.ENEMY_FOUND, (int)(2 * Math.random()), Comms.EnemyType.SLA, 
+                                                dx + Util.dOffset, dy + Util.dOffset);
+                    }
                 }
                 else if (savingForSlanderer) {
                     switch(chillingCount % 3) {
@@ -454,6 +463,13 @@ public class EC extends Robot {
                         if(Util.getBestSlandererInfluence(currInfluence ) > 100) {
                             toBuild = RobotType.SLANDERER;
                             influence = Util.getBestSlandererInfluence(currInfluence);
+                    
+                            if(recentSlanderer != null) {
+                                int dx = recentSlanderer.x - home.x;
+                                int dy = recentSlanderer.y - home.y;
+                                nextFlag = Comms.getFlagRush(Comms.InformationCategory.ENEMY_FOUND, (int)(2 * Math.random()), Comms.EnemyType.SLA, 
+                                                        dx + Util.dOffset, dy + Util.dOffset);
+                            }
                         }
                         else {
                             toBuild = RobotType.MUCKRAKER;
@@ -574,6 +590,11 @@ public class EC extends Robot {
         influence = 0;
         currRoundNum = rc.getRoundNum();
         currInfluence = rc.getInfluence();
+
+        // Reset slanderer every 3 rounds
+        if(rc.getRoundNum() % 3 == 0) {
+            recentSlanderer = null;
+        }
 
         MapLocation[] keys = rushingECtoTurnMap.getKeys();
         MapLocation key;
@@ -701,6 +722,11 @@ public class EC extends Robot {
                         if (rc.getLocation().isWithinDistanceSquared(enemyLoc, rc.getType().sensorRadiusSquared * 4)) {
                             goToAcceleratedSlanderersState = false;
                         }
+
+                        Comms.EnemyType enemyType = Comms.getEnemyType(flag);
+                        if(enemyType == Comms.EnemyType.SLA) {
+                            recentSlanderer = enemyLoc;
+                        }
                         break;
                 }
             } else {
@@ -731,10 +757,10 @@ public class EC extends Robot {
             }*/
             int currReqInf = rushFlag.requiredInfluence;
             if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4) || (distanceSquared < sensorRadius)) {
-                //if (savingForRushSemaphore == 100) {
+                // if (savingForRushSemaphore == 100) {
                     Debug.println(Debug.info, "tryStartSavingForRush is returning true");
                     return true;
-                //}
+                // }
             }
         }
         return false;
@@ -916,6 +942,7 @@ public class EC extends Robot {
         if (bigBid == 0) bigBid++;
         return res;
     }
+    
     public void firstRounds() throws GameActionException {
         switch(robotCounter) {
             case 0: case 12: case 15: case 18: case 21: case 24: case 27: 

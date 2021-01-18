@@ -209,6 +209,7 @@ public class Robot {
                                                         DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
                             Debug.println(Debug.info, "Apparant enemy location: " + enemyLoc);
                             Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                            Debug.setIndicatorDot(Debug.info, robotLoc, 0, 0, 255);
     
                             dx = enemyLoc.x - currLoc.x;
                             dy = enemyLoc.y - currLoc.y;
@@ -229,6 +230,7 @@ public class Robot {
                                                         DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
                             Debug.println(Debug.info, "Apparant enemy location: " + enemyLoc);
                             Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                            Debug.setIndicatorDot(Debug.info, robotLoc, 0, 0, 255);
     
                             dx = enemyLoc.x - currLoc.x;
                             dy = enemyLoc.y - currLoc.y;
@@ -276,23 +278,27 @@ public class Robot {
     }
 
     boolean broadcastEnemyLocalOrGlobal(MapLocation enemyLoc) throws GameActionException {
+        return broadcastEnemyLocalOrGlobal(enemyLoc, Comms.EnemyType.UNKNOWN);
+    }
+
+    boolean broadcastEnemyLocalOrGlobal(MapLocation enemyLoc, Comms.EnemyType type) throws GameActionException {
         if(enemyLoc == null)
             return false;
             
         Debug.setIndicatorDot(Debug.info, enemyLoc, 0, 0, 0);
 
         if(rc.getRoundNum() % 2 == parityBroadcastEnemy) {
-            broadcastEnemyFound(enemyLoc);
+            broadcastEnemyFound(enemyLoc, type);
         } else {
             // Broadcast locally first, and then globally if we can't fit it in the local version.
             if(!broadcastEnemyLocal(enemyLoc)) {
-                broadcastEnemyFound(enemyLoc);
+                broadcastEnemyFound(enemyLoc, type);
             }
         }
         return true;
     }
 
-    boolean broadcastEnemyFound(MapLocation enemyLoc) throws GameActionException {
+    boolean broadcastEnemyFound(MapLocation enemyLoc, Comms.EnemyType type) throws GameActionException {
         int enemyDx = enemyLoc.x - home.x;
         int enemyDy = enemyLoc.y - home.y;
 
@@ -302,7 +308,7 @@ public class Robot {
 
         Debug.println(Debug.info, "Broadcasting enemy globally at: dX: " + dx + ", dY: " + dy);
 
-        int flag = Comms.getFlag(InformationCategory.ENEMY_FOUND, enemyDx + Util.dOffset, enemyDy + Util.dOffset);
+        int flag = Comms.getFlag(InformationCategory.ENEMY_FOUND, type.ordinal(), enemyDx + Util.dOffset, enemyDy + Util.dOffset);
         setFlag(flag);
 
         return true;
