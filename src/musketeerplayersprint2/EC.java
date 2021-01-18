@@ -99,6 +99,7 @@ public class EC extends Robot {
     static boolean haveSeenEnemy;
 
     static State currentState;
+    static State prevState;
 
     static int chillingCount;
     static boolean savingForSlanderer;
@@ -133,6 +134,7 @@ public class EC extends Robot {
         ECflags = new PriorityQueue<RushFlag>();
         stateStack = new ArrayDeque<State>();
         currentState = State.INIT;
+        prevState = State.INIT;
 
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
 
@@ -476,6 +478,27 @@ public class EC extends Robot {
                 
                 toBuild = RobotType.MUCKRAKER;
                 influence = 1;
+                
+                // if(robotCounter % 2 == 0 || prevState != currentState) {
+                //     toBuild = RobotType.MUCKRAKER;
+                //     influence = 1;
+                // } else {
+                //     toBuild = RobotType.POLITICIAN;
+                //     influence = Math.max(15, currInfluence / 50);
+                //     signalRobotType(SubRobotType.POL_PROTECTOR);
+                // }
+
+                // // Signal to troops to lead the rush
+                // if(prevState != currentState) {
+                //     if(targetEC.team == enemy) {
+                //         nextFlag = Comms.getFlagRush(InformationCategory.ENEMY_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC, 
+                //                                     targetEC.dx + Util.dOffset, targetEC.dy + Util.dOffset);
+                //     } else { 
+                //         nextFlag = Comms.getFlagRush(InformationCategory.NEUTRAL_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC, 
+                //                                     targetEC.dx + Util.dOffset, targetEC.dy + Util.dOffset);
+                //     }
+                // }
+
                 buildRobot(toBuild, influence);
                 break;
             case CLEANUP:
@@ -525,6 +548,8 @@ public class EC extends Robot {
                 System.out.println("CRITICAL: Maxwell screwed up stateStack");
                 break;
         }
+
+        prevState = currentState;
 
         Debug.println(Debug.info, "next flag that will be set: " + nextFlag);
     }
@@ -667,15 +692,7 @@ public class EC extends Robot {
                 }
             } else {
                 idSet.remove(id);
-            }
-        }
-        
-        //remove protector ids if dead
-        int protectorID;
-        for (int i = protectorIdSet.size - 1; i >= 0; i--) {
-            protectorID = protectorIds[i];
-            if (!rc.canGetFlag(protectorID)) {
-                protectorIdSet.remove(protectorID);
+                protectorIdSet.remove(id);
             }
         }
 
@@ -753,10 +770,10 @@ public class EC extends Robot {
             ECflags.remove();
             // nextFlag = rushFlag.flag;
             if(rushFlag.team == enemy) {
-                nextFlag = Comms.getFlagRush(InformationCategory.ENEMY_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC, 
+                nextFlag = Comms.getFlagRush(InformationCategory.ENEMY_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
                                             rushFlag.dx + Util.dOffset, rushFlag.dy + Util.dOffset);
             } else { 
-                nextFlag = Comms.getFlagRush(InformationCategory.NEUTRAL_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC, 
+                nextFlag = Comms.getFlagRush(InformationCategory.NEUTRAL_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
                                             rushFlag.dx + Util.dOffset, rushFlag.dy + Util.dOffset);
             }
             currentState = stateStack.pop();

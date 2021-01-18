@@ -45,6 +45,7 @@ public class LatticeRusher extends Robot {
         RobotInfo closestMuckrakerSensable = null;
         int minMuckrakerDistance = Integer.MAX_VALUE;
         int maxEnemyAttackableDistSquared = Integer.MIN_VALUE;
+        int numMuckAttackable = 0;
 
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
@@ -74,6 +75,9 @@ public class LatticeRusher extends Robot {
                 int temp = currLoc.distanceSquaredTo(robot.getLocation());
                 if (temp > maxEnemyAttackableDistSquared) {
                     maxEnemyAttackableDistSquared = temp;
+                }
+                if(robot.getType() == RobotType.MUCKRAKER) {
+                    numMuckAttackable++;
                 }
             }
         }
@@ -130,8 +134,8 @@ public class LatticeRusher extends Robot {
         }
 
         //empower if near 2 enemies or enemy is in sensing radius of our base
-        if (((enemyAttackable.length > 1 || 
-            (enemyAttackable.length > 0 && slandererNearby)))
+        if (((numMuckAttackable > 1 || 
+            (numMuckAttackable > 0 && slandererNearby)))
             && rc.canEmpower(maxEnemyAttackableDistSquared)) {
             Debug.println(Debug.info, "Enemy too close to base. I will empower");
             rc.empower(maxEnemyAttackableDistSquared);
