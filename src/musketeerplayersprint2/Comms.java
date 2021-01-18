@@ -60,11 +60,20 @@ public class Comms {
         FLEEING,
     }
 
+    public enum EnemyType {
+        UNKNOWN,
+        SLA,
+    }
+
     public static int addCoord(int flag, int dx, int dy) {
         return (flag << BIT_IC_OFFSET) + (dx << BIT_DX_OFFSET) + dy;
     }
 
     public static int getFlagRush(InformationCategory cat, int idMod, GroupRushType type, int dx, int dy) {
+        return getFlag(cat, idMod << 2 + type.ordinal(), dx, dy);
+    }
+
+    public static int getFlagRush(InformationCategory cat, int idMod, EnemyType type, int dx, int dy) {
         return getFlag(cat, idMod << 2 + type.ordinal(), dx, dy);
     }
 
@@ -174,6 +183,10 @@ public class Comms {
 
     public static GroupRushType getRushType(int flag) {
         return GroupRushType.values()[(flag >>> BIT_INF_OFFSET) & 0x3];
+    }
+
+    public static EnemyType getEnemyType(int flag) {
+        return EnemyType.values()[(flag >>> BIT_INF_OFFSET) & 0x3];
     }
 
     public static int getRushMod(int flag) {
