@@ -31,7 +31,7 @@ public class CleanupPolitician extends Robot {
         
         RobotInfo robot;
         MapLocation currLoc = rc.getLocation();
-        int maxEnemyAttackableDistSquared = Integer.MAX_VALUE;
+        int maxEnemyAttackableDistSquared = 0;
         MapLocation maxEnemyAtackableLoc = null;
 
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
@@ -71,7 +71,7 @@ public class CleanupPolitician extends Robot {
         }
         
         if (powerful != null) {
-            Direction toMove = rc.getLocation().directionTo(powerful.getLocation());
+            main_direction = rc.getLocation().directionTo(powerful.getLocation());
         }
 
         while (!tryMove(main_direction) && rc.isReady()){

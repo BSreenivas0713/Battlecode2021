@@ -120,6 +120,8 @@ public class EC extends Robot {
     static FastIterableLocSet enemyECsFound;
     static FastLocIntMap rushingECtoTurnMap;
 
+    static int savingForRushSemaphore;
+
     public EC(RobotController r) {
         super(r);
         idSet = new FastIterableIntSet(1000);
@@ -153,6 +155,15 @@ public class EC extends Robot {
         lastBuiltInAccelerated = RobotType.SLANDERER;
         noAdjacentEC = true;
         rushingECtoTurnMap = new FastLocIntMap();
+        savingForRushSemaphore = 100;
+
+        /*if (rc.getRoundNum() <= 1) {
+            int encodedInfForUnknownEC = Comms.encodeInf(200);
+            int flagForUnknownEC = Comms.getFlag(Comms.InformationCategory.ENEMY_EC, encodedInfForUnknownEC, Util.dOffset, Util.dOffset);
+            RushFlag rfForUnknownEC = new RushFlag(810, 0, 0, flagForUnknownEC, rc.getTeam().opponent());
+            ECflags.add(rfForUnknownEC);
+            Debug.println(Debug.info, "Added thingy to ECflags.");
+        }*/
 
         for (RobotInfo robot : rc.senseNearbyRobots(sensorRadius, enemy)) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
@@ -229,6 +240,18 @@ public class EC extends Robot {
 
         if (spawnKillLock < 10) {
             spawnKillLock++;
+        }
+        if (currentState == State.SAVING_FOR_RUSH) {
+            Debug.println(Debug.info, "Saving sema: " + savingForRushSemaphore);
+            if (savingForRushSemaphore == 0) {
+                currentState = stateStack.pop();
+            } else {
+                savingForRushSemaphore--;
+            }
+        } else if (currentState == State.RUSHING) {
+            savingForRushSemaphore = 100;
+        } else {
+            savingForRushSemaphore++;
         }
 
 
@@ -676,10 +699,15 @@ public class EC extends Robot {
             int flag = rushFlag.flag;
             int distanceSquared = rushFlag.dx * rushFlag.dx + rushFlag.dy * rushFlag.dy;
             int neededInf =  Comms.getInf(flag);
+            /*if (rushFlag.dx == 0 && rushFlag.dy == 0 && currRoundNum <= 50) {
+                return false;
+            }*/
             int currReqInf = rushFlag.requiredInfluence;
             if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4) || (distanceSquared < sensorRadius)) {
-                Debug.println(Debug.info, "tryStartSavingForRush is returning true");
-                return true;
+                if (savingForRushSemaphore == 100) {
+                    Debug.println(Debug.info, "tryStartSavingForRush is returning true");
+                    return true;
+                }
             }
         }
         return false;
@@ -777,6 +805,9 @@ public class EC extends Robot {
         RushFlag targetEC = ECflags.peek();
         if(targetEC != null) {
             int requiredInfluence = targetEC.requiredInfluence;
+            /*if (targetEC.dx == 0 && targetEC.dy == 0 && currRoundNum <= 50) {
+                return false;
+            }*/
             MapLocation enemyLocation = home.translate(targetEC.dx, targetEC.dy);
             Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
             if(3 * requiredInfluence / 4 < currInfluence) return true;
