@@ -773,10 +773,10 @@ public class EC extends Robot {
             ECflags.remove();
             // nextFlag = rushFlag.flag;
             if(rushFlag.team == enemy) {
-                nextFlag = Comms.getFlagRush(InformationCategory.ENEMY_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC, 
+                nextFlag = Comms.getFlagRush(InformationCategory.ENEMY_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
                                             rushFlag.dx + Util.dOffset, rushFlag.dy + Util.dOffset);
             } else { 
-                nextFlag = Comms.getFlagRush(InformationCategory.NEUTRAL_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC, 
+                nextFlag = Comms.getFlagRush(InformationCategory.NEUTRAL_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
                                             rushFlag.dx + Util.dOffset, rushFlag.dy + Util.dOffset);
             }
             currentState = stateStack.pop();

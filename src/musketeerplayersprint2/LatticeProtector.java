@@ -240,7 +240,7 @@ public class LatticeProtector extends Robot {
                     int GRmod = Comms.getRushMod(flag);
                     Debug.println(Debug.info, "EC is sending a rush: Read ENEMY_EC flag. Type: " + GRtype + ", mod: " + GRmod);
 
-                    if(GRtype == Comms.GroupRushType.MUC && GRmod == rc.getID() % 4 && 
+                    if(GRtype == Comms.GroupRushType.MUC_POL && GRmod == rc.getID() % 4 && 
                         !slandererNearby && currLoc.distanceSquaredTo(home) >= 2 * RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared) {
                         Debug.println(Debug.info, "Joining the rush");
                         turnIntoRusher = true;

@@ -51,6 +51,7 @@ public class Comms {
 
     public enum GroupRushType {
         MUC,
+        MUC_POL,
     }
 
     public enum ClosestEnemyOrFleeing {
