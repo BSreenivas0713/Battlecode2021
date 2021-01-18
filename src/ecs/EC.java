@@ -179,7 +179,7 @@ public class EC extends Robot {
         Direction[] orderedDirs = Util.getOrderedDirections(pref);
 
         for(Direction dir : orderedDirs) {
-            boolean isScout = Comms.getIC(nextFlag) == Comms.InformationCategory.ROBOT_TYPE  ;
+            boolean isScout = Comms.getIC(nextFlag) == Comms.InformationCategory.TARGET_ROBOT  ;
             if (isScout) {
                 isScout = Comms.getSubRobotType(nextFlag) == Comms.SubRobotType.MUC_SCOUT;
             }
