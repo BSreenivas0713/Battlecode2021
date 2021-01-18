@@ -312,7 +312,7 @@ public class EC extends Robot {
 
         //bidding code
         int biddingInfluence = bidBS();
-        if (rc.canBid(biddingInfluence)) {
+        if (rc.canBid(biddingInfluence) && currentState != State.INIT) {
             rc.bid(biddingInfluence);
         }
         Debug.println(Debug.info, "Amount bid: " + biddingInfluence);
@@ -908,10 +908,10 @@ public class EC extends Robot {
     }
     public void firstRounds() throws GameActionException {
         switch(robotCounter) {
-            case 0: case 13: case 15: case 19: case 22: case 23: case 25: case 26: case 27: case 29: 
+            case 0: case 12: case 15: case 18: case 21: case 24: case 27: 
                 toBuild = RobotType.SLANDERER;
                 if(robotCounter == 0) {
-                    influence = 107;
+                    influence = 130;
                 }
                 else {
                     influence = Util.getBestSlandererInfluence(currInfluence);
@@ -920,14 +920,14 @@ public class EC extends Robot {
                     }
                 }
                 break;
-            case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 14: case 18: 
+            case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 11: 
                 toBuild = RobotType.MUCKRAKER;
                 influence = 1;
                 if(robotCounter <= 8) {
                     signalScoutMuckraker(Comms.SubRobotType.MUC_SCOUT, Util.directions[robotCounter-1]);
                 }
                 break;
-            case 9: case 10: case 11: case 12: case 16: case 17: case 20: case 21: case 24: case 28:
+            case 9: case 10: case 13: case 14: case 16: case 17: case 19: case 20: case 22: case 23: case 25: case 26: case 28: case 29:
                 toBuild = RobotType.POLITICIAN;
                 influence = 15;
                 signalRobotType(SubRobotType.POL_PROTECTOR);
