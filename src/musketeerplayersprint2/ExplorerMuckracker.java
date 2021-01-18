@@ -80,6 +80,26 @@ public class ExplorerMuckracker extends Robot {
                         }
                     }
                     break;
+                case ENEMY_FOUND:
+                    if(enemyLocation == null) {
+                        int[] dxdy = Comms.getDxDy(flag);
+                        MapLocation enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
+                        Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+
+                        Debug.println(Debug.info, "EC is reporting slanderer location");
+
+                        Comms.EnemyType enemyType = Comms.getEnemyType(flag);
+                        int GRmod = Comms.getRushMod(flag);
+
+                        if(enemyType == Comms.EnemyType.SLA && 
+                            GRmod == rc.getID() % 2) {
+                            Debug.println(Debug.info, "Following the slanderer");
+                            enemyLocation = enemyLoc;
+                        } else {
+                            Debug.println(Debug.info, "I was not included in this call");
+                        }
+                    }
+                    break;
             }
         } else {
             Debug.println(Debug.info, "Can't get home flag: " + homeID);
@@ -127,6 +147,7 @@ public class ExplorerMuckracker extends Robot {
                         DxDyFromRobot = Comms.getDxDy(flag);
                         enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
                         Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                        Debug.setIndicatorDot(Debug.info, robotLoc, 0, 0, 255);
                         enemyLocation = enemyLoc;
                     }
                     break;
@@ -137,6 +158,7 @@ public class ExplorerMuckracker extends Robot {
                         DxDyFromRobot = Comms.getDxDy(flag);
                         enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
                         Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+                        Debug.setIndicatorDot(Debug.info, robotLoc, 0, 0, 255);
                         if(enemyLoc.equals(enemyLocation)) {
                             enemyLocation = null;
                             Debug.println(Debug.info, "Reset enemy location as a result of the chill flag");
@@ -305,6 +327,7 @@ public class ExplorerMuckracker extends Robot {
         if(!setChillFlag && !setAttackFlag) {
             if(propagateFlags());
             else if(broadcastECLocation());
+            else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
             else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
         }
     }
