@@ -32,6 +32,7 @@ public class EC extends Robot {
         CHILLING,
         ACCELERATED_SLANDERERS,
         INIT,
+        SURVIVAL,
     };
 
     static class RushFlag implements Comparable<RushFlag> {
@@ -255,6 +256,9 @@ public class EC extends Robot {
             savingForRushSemaphore++;
         }*/
 
+        if (currRoundNum > 1000 && rc.getTeamVotes() > 750) {
+            currentState = State.SURVIVAL;
+        }
 
         goToAcceleratedSlanderersState = true;
         processChildrenFlags(); //goToAcceleratedSlanderer gets set to false if there is an enemy within 2 sensor radiuses of the base
@@ -262,50 +266,53 @@ public class EC extends Robot {
             goToAcceleratedSlanderersState = false;
         }
 
-        if(currentState != State.INIT) {
-            // Override everything for a spawn kill. This is fine, as it only takes 1 turn
-            // and at most happens once every 10 turns.
-            tryStartBuildingSpawnKill();
-
-            if (currentState != State.BUILDING_SPAWNKILLS) {
-                // If we have enough to rush a tower, make that the #1 priority
-                if (readyToRush()) {
-                    if (currentState != State.RUSHING) {
-                        if (currentState != State.SAVING_FOR_RUSH) {
-                            stateStack.push(currentState);
-                        }
-                        currentState = State.RUSHING;
-                    }
-                } else {
-                    // Second priority is removing blockage
-                    tryStartRemovingBlockage();
-                    // Third priority is building protectors.
-                    if (currentState != State.REMOVING_BLOCKAGE) {
-                        // Fourth priority is saving for rush
-                        if (tryStartSavingForRush()) {
+        if (currentState != State.SURVIVAL) {
+            if(currentState != State.INIT) {
+                // Override everything for a spawn kill. This is fine, as it only takes 1 turn
+                // and at most happens once every 10 turns.
+                tryStartBuildingSpawnKill();
+    
+                if (currentState != State.BUILDING_SPAWNKILLS) {
+                    // If we have enough to rush a tower, make that the #1 priority
+                    if (readyToRush()) {
+                        if (currentState != State.RUSHING) {
                             if (currentState != State.SAVING_FOR_RUSH) {
                                 stateStack.push(currentState);
-                                currentState = State.SAVING_FOR_RUSH;
                             }
+                            currentState = State.RUSHING;
                         }
-                        // If there's nothing to do, clean up
-                        else if (currRoundNum > 500 && tryStartCleanup()) {
-                            if (currentState != State.CLEANUP) {
-                                stateStack.push(currentState);
-                                currentState = State.CLEANUP;
+                    } else {
+                        // Second priority is removing blockage
+                        tryStartRemovingBlockage();
+                        // Third priority is building protectors.
+                        if (currentState != State.REMOVING_BLOCKAGE) {
+                            // Fourth priority is saving for rush
+                            if (tryStartSavingForRush()) {
+                                if (currentState != State.SAVING_FOR_RUSH) {
+                                    stateStack.push(currentState);
+                                    currentState = State.SAVING_FOR_RUSH;
+                                }
                             }
-                        }
-                        else if (currentState == State.CHILLING && goToAcceleratedSlanderersState) { //If nothing around, make more slanderers (after you have a defense from the first few rounds)
-                            currentState = State.ACCELERATED_SLANDERERS;
-                        }             
-                        else if (currentState == State.ACCELERATED_SLANDERERS && !goToAcceleratedSlanderersState) {
-                            currentState = State.CHILLING;
-                            builtInAcceleratedCount = 0;
+                            // If there's nothing to do, clean up
+                            else if (currRoundNum > 500 && tryStartCleanup()) {
+                                if (currentState != State.CLEANUP) {
+                                    stateStack.push(currentState);
+                                    currentState = State.CLEANUP;
+                                }
+                            }
+                            else if (currentState == State.CHILLING && goToAcceleratedSlanderersState) { //If nothing around, make more slanderers (after you have a defense from the first few rounds)
+                                currentState = State.ACCELERATED_SLANDERERS;
+                            }             
+                            else if (currentState == State.ACCELERATED_SLANDERERS && !goToAcceleratedSlanderersState) {
+                                currentState = State.CHILLING;
+                                builtInAcceleratedCount = 0;
+                            }
                         }
                     }
                 }
             }
         }
+        
 
         // At this point, state is either RUSHING, SAVING, BUILDING (spawn kill or protectors),or CLEANUP
         // At most, two things have been pushed to the state stack, the previous state, and whatever protectors overrode.
@@ -353,6 +360,12 @@ public class EC extends Robot {
                 firstRounds();
                 buildRobot(toBuild, influence);
                 break;
+            case SURVIVAL:
+                toBuild = RobotType.MUCKRAKER;
+                signalRobotType(SubRobotType.MUC_SURVIVAL);
+                influence = Integer.max(1, currInfluence / 500);
+                buildRobot(toBuild, influence);
+                break;
             case CHILLING: 
                 if(savingForSlanderer && Util.getBestSlandererInfluence(currInfluence) > 100) {
                     readyForSlanderer = true;
@@ -378,7 +391,7 @@ public class EC extends Robot {
                     switch(chillingCount % 3) {
                         case 0: case 2: 
                             toBuild = RobotType.MUCKRAKER;
-                            influence = 1;
+                            influence = Integer.max(1, currInfluence / 500);
                             makeMuckraker();
                             break;
                         case 1: 
@@ -405,7 +418,7 @@ public class EC extends Robot {
                             break;
                         case 2: 
                             toBuild = RobotType.MUCKRAKER;
-                            influence = 1;
+                            influence = Integer.max(1, currInfluence / 500);
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 2 of the else case of CHILLING");
                                 chillingCount ++;
@@ -414,7 +427,7 @@ public class EC extends Robot {
                         case 3: 
                             int currBestSlandererInfluence = Util.getBestSlandererInfluence(currInfluence);
                             toBuild = RobotType.MUCKRAKER;
-                            influence = 1;
+                            influence = Integer.max(1, currInfluence / 500);
                             makeMuckraker();
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 3 of the else case of CHILLING");
@@ -444,7 +457,7 @@ public class EC extends Robot {
                         }
                         else {
                             toBuild = RobotType.MUCKRAKER;
-                            influence = 1;
+                            influence = Integer.max(1, currInfluence / 500);
                             makeMuckraker();
                         }
                         break;
@@ -477,11 +490,11 @@ public class EC extends Robot {
                 }
                 
                 toBuild = RobotType.MUCKRAKER;
-                influence = 1;
+                influence = Integer.max(1, currInfluence / 500);
                 
                 // if(robotCounter % 2 == 0 || prevState != currentState) {
                 //     toBuild = RobotType.MUCKRAKER;
-                //     influence = 1;
+                //     influence = Integer.max(1, currInfluence / 500);
                 // } else {
                 //     toBuild = RobotType.POLITICIAN;
                 //     influence = Math.max(15, currInfluence / 50);
@@ -514,7 +527,7 @@ public class EC extends Robot {
                     nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK);
                     Debug.println(Debug.info, "Making hunter mucker with no destination.");
                     toBuild = RobotType.MUCKRAKER;
-                    influence = 1;
+                    influence = Integer.max(1, currInfluence / 500);
                 }
 
                 if(toBuild != null) {
@@ -919,7 +932,7 @@ public class EC extends Robot {
                 break;
             case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11:
                 toBuild = RobotType.MUCKRAKER;
-                influence = 1;
+                influence = Integer.max(1, currInfluence / 500);
                 if(robotCounter <= 8) {
                     signalScoutMuckraker(Comms.SubRobotType.MUC_SCOUT, Util.directions[robotCounter-1]);
                 }
