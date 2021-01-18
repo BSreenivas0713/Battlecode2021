@@ -99,6 +99,7 @@ public class EC extends Robot {
     static boolean haveSeenEnemy;
 
     static State currentState;
+    static State prevState;
 
     static int chillingCount;
     static boolean savingForSlanderer;
@@ -133,6 +134,7 @@ public class EC extends Robot {
         ECflags = new PriorityQueue<RushFlag>();
         stateStack = new ArrayDeque<State>();
         currentState = State.INIT;
+        prevState = State.INIT;
 
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
 
@@ -381,7 +383,7 @@ public class EC extends Robot {
                             break;
                         case 1: 
                             toBuild = RobotType.POLITICIAN;
-                            influence = Math.max(18, currInfluence / 50);
+                            influence = Math.max(15, currInfluence / 50);
                             signalRobotType(SubRobotType.POL_PROTECTOR);
                             break;
                     }
@@ -394,7 +396,7 @@ public class EC extends Robot {
                     switch(chillingCount % 4) {
                         case 0: case 1:
                             toBuild = RobotType.POLITICIAN;
-                            influence = Math.max(18, currInfluence / 50);
+                            influence = Math.max(15, currInfluence / 50);
                             signalRobotType(SubRobotType.POL_PROTECTOR);
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 1 of the else case of CHILLING");
@@ -432,7 +434,7 @@ public class EC extends Robot {
                 switch(lastBuiltInAccelerated) {
                     case SLANDERER:
                         toBuild = RobotType.POLITICIAN;
-                        influence = Math.max(18, currInfluence / 50);
+                        influence = Math.max(15, currInfluence / 50);
                         signalRobotType(SubRobotType.POL_PROTECTOR);
                         break;
                     case POLITICIAN:
@@ -481,6 +483,27 @@ public class EC extends Robot {
                 
                 toBuild = RobotType.MUCKRAKER;
                 influence = 1;
+                
+                // if(robotCounter % 2 == 0 || prevState != currentState) {
+                //     toBuild = RobotType.MUCKRAKER;
+                //     influence = 1;
+                // } else {
+                //     toBuild = RobotType.POLITICIAN;
+                //     influence = Math.max(15, currInfluence / 50);
+                //     signalRobotType(SubRobotType.POL_PROTECTOR);
+                // }
+
+                // // Signal to troops to lead the rush
+                // if(prevState != currentState) {
+                //     if(targetEC.team == enemy) {
+                //         nextFlag = Comms.getFlagRush(InformationCategory.ENEMY_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC, 
+                //                                     targetEC.dx + Util.dOffset, targetEC.dy + Util.dOffset);
+                //     } else { 
+                //         nextFlag = Comms.getFlagRush(InformationCategory.NEUTRAL_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC, 
+                //                                     targetEC.dx + Util.dOffset, targetEC.dy + Util.dOffset);
+                //     }
+                // }
+
                 buildRobot(toBuild, influence);
                 break;
             case CLEANUP:
@@ -530,6 +553,8 @@ public class EC extends Robot {
                 System.out.println("CRITICAL: Maxwell screwed up stateStack");
                 break;
         }
+
+        prevState = currentState;
 
         Debug.println(Debug.info, "next flag that will be set: " + nextFlag);
     }
@@ -670,15 +695,7 @@ public class EC extends Robot {
                 }
             } else {
                 idSet.remove(id);
-            }
-        }
-        
-        //remove protector ids if dead
-        int protectorID;
-        for (int i = protectorIdSet.size - 1; i >= 0; i--) {
-            protectorID = protectorIds[i];
-            if (!rc.canGetFlag(protectorID)) {
-                protectorIdSet.remove(protectorID);
+                protectorIdSet.remove(id);
             }
         }
 
@@ -912,7 +929,7 @@ public class EC extends Robot {
                 break;
             case 9: case 10: case 11: case 12: case 16: case 17: case 20: case 21: case 24: case 28:
                 toBuild = RobotType.POLITICIAN;
-                influence = 18;
+                influence = 15;
                 signalRobotType(SubRobotType.POL_PROTECTOR);
                 break;
         }
