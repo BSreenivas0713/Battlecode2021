@@ -71,7 +71,8 @@ public class ExplorerMuckracker extends Robot {
                         int GRmod = Comms.getRushMod(flag);
                         Debug.println(Debug.info, "EC is sending a rush: Read ENEMY_EC flag. Type: " + GRtype + ", mod: " + GRmod);
 
-                        if(GRtype == Comms.GroupRushType.MUC && GRmod == rc.getID() % 2) {
+                        if((GRtype == Comms.GroupRushType.MUC || GRtype == Comms.GroupRushType.MUC_POL) && 
+                            GRmod == rc.getID() % 2) {
                             Debug.println(Debug.info, "Joining the rush");
                             enemyLocation = enemyLoc;
                         } else {
