@@ -46,6 +46,7 @@ public class Comms {
         MUC_EXPLORER,
         MUC_LATTICE,
         MUC_SCOUT,
+        MUC_SURVIVAL,
         EC,
     }
 

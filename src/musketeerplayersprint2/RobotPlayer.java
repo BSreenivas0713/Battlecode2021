@@ -97,6 +97,8 @@ public strictfp class RobotPlayer {
                                 if (subType == Comms.SubRobotType.MUC_SCOUT) {
                                     Direction dirToMove = Comms.getScoutDirection(botFlag);
                                     bot = new ScoutMuckraker(rc, dirToMove);
+                                } else if (subType == Comms.SubRobotType.MUC_SURVIVAL) {
+                                    bot = new SurvivalMuckracker(rc);
                                 }
                                 
                                 break;
