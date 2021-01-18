@@ -24,11 +24,11 @@ public class Robot {
 
     static Comms.SubRobotType subRobotType;
 
-    static MapLocation closestKnownEnemy;
-    static int turnClosestKnownEnemy;
     static final int parityBroadcastEnemy = (int) (Math.random() * 2);
 
     static FastIntIntMap ICtoTurnMap;
+
+    int homeID;
 
     public static Robot changeTo = null;
 
@@ -48,14 +48,13 @@ public class Robot {
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                     MapLocation ecLoc = robot.getLocation();
                     home = ecLoc;
+                    homeID = robot.getID();
                 }
             }
         }
         if (home == null) {
             home = rc.getLocation();
         }
-
-        nextFlag = Comms.getFlag(InformationCategory.NEW_ROBOT);
     }
 
     public void takeTurn() throws GameActionException {
@@ -69,8 +68,6 @@ public class Robot {
 
         if(resetFlagOnNewTurn)
             nextFlag = defaultFlag;
-        
-        findClosestEnemyGlobal();
     }
 
     public void initializeGlobals() throws GameActionException {
@@ -244,141 +241,61 @@ public class Robot {
         return false;
     }
 
-    MapLocation findClosestEnemyGlobal() throws GameActionException {
-        int dx = 0;
-        int dy = 0;
-        int turn = -1;
-
-        RobotInfo robot;
+    boolean broadcastEnemyLocal(MapLocation enemyLoc) throws GameActionException {
+        if(enemyLoc == null || !rc.canSenseLocation(enemyLoc))
+            return false;
+        
         MapLocation currLoc = rc.getLocation();
-        MapLocation closestEnemyLoc = null;
-        int minDistSquared = Integer.MAX_VALUE;
-        
-        for(int i = enemySensable.length - 1; i >= 0; i--) {
-            robot = enemySensable[i];
-            int temp = currLoc.distanceSquaredTo(robot.getLocation());
-            if (temp < minDistSquared) {
-                minDistSquared = temp;
-                closestEnemyLoc = robot.getLocation();
-                turn = rc.getRoundNum();
-            }
-        }
+        int dx = enemyLoc.x - currLoc.x;
+        int dy = enemyLoc.y - currLoc.y;
 
-        int flag;
+        Debug.println(Debug.info, "Broadcasting enemy locally at: dX: " + dx + ", dY: " + dy);
 
-        // Did not find its own sensable enemy, propagate other flags
-        if(closestEnemyLoc == null) {
-            for(int i = friendlySensable.length - 1; i >= 0; i--) {
-                robot = friendlySensable[i];
-                if(rc.canGetFlag(robot.getID())) {
-                    flag = rc.getFlag(robot.getID());
-                    switch(Comms.getIC(flag)) {
-                        case CLOSEST_ENEMY:
-                        case SLA_CLOSEST_ENEMY:
-                            MapLocation robotLoc = robot.getLocation();
-                            int[] enemyDxDyFromRobot = Comms.getSmallDxDy(flag);
-
-                            // Both dSmallOffset means no enemy found.
-                            if(enemyDxDyFromRobot[0] != Util.dSmallOffset || enemyDxDyFromRobot[1] != Util.dSmallOffset) {
-                                MapLocation enemyLoc = new MapLocation(enemyDxDyFromRobot[0] + robotLoc.x - Util.dSmallOffset, 
-                                                                        enemyDxDyFromRobot[1] + robotLoc.y - Util.dSmallOffset);
-
-                                int temp = currLoc.distanceSquaredTo(enemyLoc);
-                                if (temp < minDistSquared) {
-                                    minDistSquared = temp;
-                                    closestEnemyLoc = enemyLoc;
-                                    turn = Comms.getTurnCount(flag);
-                                }
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-        }
-
-        if(closestEnemyLoc != null) {
-            dx = closestEnemyLoc.x - currLoc.x;
-            dy = closestEnemyLoc.y - currLoc.y;
-
-            closestKnownEnemy = closestEnemyLoc;
-            turnClosestKnownEnemy = turn;
-        }
-        
-        // Reset the enemy location after a number of turns
-        if(rc.getRoundNum() > turnClosestKnownEnemy + Util.turnsEnemyBroadcastValid) {
-            closestKnownEnemy = null;
-            turnClosestKnownEnemy = -1;
-        }
-
-        // Reset the enemy location if we don't see an enemy there.
-        // if(closestKnownEnemy != null && rc.canSenseLocation(closestKnownEnemy)) {
-        //     RobotInfo oldEnemy = rc.senseRobotAtLocation(closestKnownEnemy);
-        //     if(oldEnemy == null || oldEnemy.team != enemy) {
-        //         closestKnownEnemy = null;
-        //         turnClosestKnownEnemy = -1;
-        //     }
-        // }
-
-        // nextFlag = Comms.getFlag(InformationCategory.ROBOT_TYPE_AND_CLOSEST_ENEMY, 
-        //                             subRobotType, dx + Util.dOffset, dy + Util.dOffset);
-        if(closestKnownEnemy == null) {
-            Debug.println(Debug.info, "No closest enemy found");
+        if(subRobotType == Comms.SubRobotType.SLANDERER) {
+            int flag = Comms.getFlag(InformationCategory.CLOSEST_ENEMY_OR_FLEEING, 
+                                    Comms.ClosestEnemyOrFleeing.SLA,
+                                    dx + Util.dOffset, dy + Util.dOffset);
+            setFlag(flag);
         } else {
-            Debug.println(Debug.info, "Found closest enemy on turn: " + turnClosestKnownEnemy + " at: dX: " + dx + ", dY: " + dy);
-            Debug.setIndicatorDot(Debug.info, closestEnemyLoc, 0, 0, 0);
+            int flag = Comms.getFlag(InformationCategory.CLOSEST_ENEMY_OR_FLEEING, 
+                                    Comms.ClosestEnemyOrFleeing.NOT_SLA, 
+                                    dx + Util.dOffset, dy + Util.dOffset);
+            setFlag(flag);
         }
 
-        return closestEnemyLoc;
+        return true;
     }
 
-    boolean broadcastClosestEnemy() throws GameActionException {
-        if(closestKnownEnemy == null)
+    boolean broadcastEnemyLocalOrGlobal(MapLocation enemyLoc) throws GameActionException {
+        if(enemyLoc == null)
             return false;
-        
-        MapLocation currLoc = rc.getLocation();
-        int dx = closestKnownEnemy.x - currLoc.x;
-        int dy = closestKnownEnemy.y - currLoc.y;
+            
+        Debug.setIndicatorDot(Debug.info, enemyLoc, 0, 0, 0);
 
-        if(Math.abs(dx) < Util.dSmallOffset && Math.abs(dy) < Util.dSmallOffset) {
-            Debug.println(Debug.info, "Broadcasting closest enemy from turn: " + turnClosestKnownEnemy + " at: dX: " + dx + ", dY: " + dy);
-            if(subRobotType == Comms.SubRobotType.SLANDERER) {
-                int flag = Comms.getFlagTurn(InformationCategory.SLA_CLOSEST_ENEMY, 
-                                            turnClosestKnownEnemy, dx + Util.dSmallOffset, dy + Util.dSmallOffset);
-                setFlag(flag);
-            } else {
-                int flag = Comms.getFlagTurn(InformationCategory.CLOSEST_ENEMY, 
-                                            turnClosestKnownEnemy, dx + Util.dSmallOffset, dy + Util.dSmallOffset);
-                setFlag(flag);
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    boolean broadcastEnemyLocalOrGlobal() throws GameActionException {
-        if(closestKnownEnemy == null)
-            return false;
-        
         if(rc.getRoundNum() % 2 == parityBroadcastEnemy) {
-            broadcastEnemyFound(closestKnownEnemy);
+            broadcastEnemyFound(enemyLoc);
         } else {
             // Broadcast locally first, and then globally if we can't fit it in the local version.
-            if(!broadcastClosestEnemy()) {
-                broadcastEnemyFound(closestKnownEnemy);
+            if(!broadcastEnemyLocal(enemyLoc)) {
+                broadcastEnemyFound(enemyLoc);
             }
         }
         return true;
     }
 
-    boolean broadcastEnemyFound(MapLocation enemyLoc) {
+    boolean broadcastEnemyFound(MapLocation enemyLoc) throws GameActionException {
         int enemyDx = enemyLoc.x - home.x;
         int enemyDy = enemyLoc.y - home.y;
 
-        nextFlag = Comms.getFlag(InformationCategory.ENEMY_FOUND, enemyDx + Util.dOffset, enemyDy + Util.dOffset);
+        MapLocation currLoc = rc.getLocation();
+        int dx = enemyLoc.x - currLoc.x;
+        int dy = enemyLoc.y - currLoc.y;
+
+        Debug.println(Debug.info, "Broadcasting enemy globally at: dX: " + dx + ", dY: " + dy);
+
+        int flag = Comms.getFlag(InformationCategory.ENEMY_FOUND, enemyDx + Util.dOffset, enemyDy + Util.dOffset);
+        setFlag(flag);
+
         return true;
     }
 

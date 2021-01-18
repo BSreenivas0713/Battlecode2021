@@ -90,7 +90,7 @@ public class LatticeMuckraker extends Robot {
         boolean muckraker_Found_EC = false;
         RobotInfo bestSlanderer = null;
         bestInfluence = Integer.MIN_VALUE;
-        RobotInfo minRobot = null;
+        RobotInfo closestEnemy = null;
         double minDistSquared = Integer.MAX_VALUE;
         
         for(int i = enemySensable.length - 1; i >= 0; i--) {
@@ -106,7 +106,7 @@ public class LatticeMuckraker extends Robot {
             double temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
-                minRobot = robot;
+                closestEnemy = robot;
             }
             
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
@@ -154,6 +154,6 @@ public class LatticeMuckraker extends Robot {
          
         if(propagateFlags());
         else if(broadcastECLocation());
-        else if(broadcastEnemyLocalOrGlobal());
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }
