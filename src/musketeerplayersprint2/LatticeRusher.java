@@ -41,6 +41,10 @@ public class LatticeRusher extends Robot {
         boolean tooSmall = false;
         boolean needToChill = false;
         MapLocation possibleNewHome = null;
+        boolean slandererNearby = false;
+        RobotInfo closestMuckrakerSensable = null;
+        int minMuckrakerDistance = Integer.MAX_VALUE;
+        int maxEnemyAttackableDistSquared = Integer.MIN_VALUE;
 
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
@@ -66,10 +70,13 @@ public class LatticeRusher extends Robot {
                         possibleNewHome = loc;
                     }
                 }
+            } else {
+                int temp = currLoc.distanceSquaredTo(robot.getLocation());
+                if (temp > maxEnemyAttackableDistSquared) {
+                    maxEnemyAttackableDistSquared = temp;
+                }
             }
         }
-        
-
 
         for(int i = neutrals.length - 1; i >= 0; i--) {
             robot = neutrals[i];
@@ -83,7 +90,6 @@ public class LatticeRusher extends Robot {
                 }
             }
         }
-
 
         if (minEnemyDistSquared == Integer.MAX_VALUE) {
             for(int i = friendlySensable.length - 1; i >= 0; i--) {
@@ -105,6 +111,7 @@ public class LatticeRusher extends Robot {
                         possibleNewHome = loc;
                     }
                 }
+
                 if(rc.canGetFlag(robot.getID())) {
                     int flag = rc.getFlag(robot.getID());
                     if (Comms.getIC(flag) == Comms.InformationCategory.ENEMY_EC_CHILL_CALL) {
@@ -114,12 +121,23 @@ public class LatticeRusher extends Robot {
                             Debug.println(Debug.info, "Recieved chill call, needToChill is getting set to true.");
                         }
                     }
+
+                    if(Comms.isSubRobotType(flag, Comms.SubRobotType.SLANDERER)) {
+                        slandererNearby = true;
+                    }
                 }
             }
         }
 
+        //empower if near 2 enemies or enemy is in sensing radius of our base
+        if (((enemyAttackable.length > 1 || 
+            (enemyAttackable.length > 0 && slandererNearby)))
+            && rc.canEmpower(maxEnemyAttackableDistSquared)) {
+            Debug.println(Debug.info, "Enemy too close to base. I will empower");
+            rc.empower(maxEnemyAttackableDistSquared);
+            return;
+        }
 
-        
         if (rc.canEmpower(minEnemyDistSquared) && !tooSmall && (moveSemaphore <= 0 || minEnemyDistSquared <= 1)) {
             int radius = Math.min(actionRadius, minEnemyDistSquared);
             Debug.println(Debug.info, "Empowered with radius: " + radius);

@@ -5,6 +5,7 @@ import musketeerplayersprint2.Util.*;
 import musketeerplayersprint2.Comms.*;
 import musketeerplayersprint2.Debug.*;
 import musketeerplayersprint2.fast.FastIntIntMap;
+import musketeerplayersprint2.fast.FastLocIntMap;
 
 public class Robot {
     static RobotController rc;
@@ -14,6 +15,8 @@ public class Robot {
     static int nextFlag;
     static boolean resetFlagOnNewTurn = true;
     static MapLocation home;
+    static int homeID;
+
     static int sensorRadius;
     static int actionRadius;
     static Team enemy;
@@ -27,8 +30,7 @@ public class Robot {
     static final int parityBroadcastEnemy = (int) (Math.random() * 2);
 
     static FastIntIntMap ICtoTurnMap;
-
-    int homeID;
+    static FastLocIntMap friendlyECs;
 
     public static Robot changeTo = null;
 
@@ -40,8 +42,12 @@ public class Robot {
         actionRadius = rc.getType().actionRadiusSquared;
         defaultFlag = 0;
         ICtoTurnMap = new FastIntIntMap();
+        friendlyECs = new FastLocIntMap();
+
         if(rc.getType() == RobotType.ENLIGHTENMENT_CENTER) {
             home = rc.getLocation();
+            homeID = rc.getID();
+            friendlyECs.add(home, homeID);
         } else {
             RobotInfo[] sensableWithin2 = rc.senseNearbyRobots(2, rc.getTeam());
             for (RobotInfo robot : sensableWithin2) {
@@ -49,11 +55,14 @@ public class Robot {
                     MapLocation ecLoc = robot.getLocation();
                     home = ecLoc;
                     homeID = robot.getID();
+                    friendlyECs.add(home, homeID);
                 }
             }
         }
+
         if (home == null) {
             home = rc.getLocation();
+            homeID = -1;
         }
     }
 
