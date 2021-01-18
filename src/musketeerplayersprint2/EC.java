@@ -120,7 +120,7 @@ public class EC extends Robot {
     static FastIterableLocSet enemyECsFound;
     static FastLocIntMap rushingECtoTurnMap;
 
-    static int savingForRushSemaphore;
+    //static int savingForRushSemaphore;
 
     public EC(RobotController r) {
         super(r);
@@ -155,7 +155,7 @@ public class EC extends Robot {
         lastBuiltInAccelerated = RobotType.SLANDERER;
         noAdjacentEC = true;
         rushingECtoTurnMap = new FastLocIntMap();
-        savingForRushSemaphore = 100;
+        //savingForRushSemaphore = 100;
 
         /*if (rc.getRoundNum() <= 1) {
             int encodedInfForUnknownEC = Comms.encodeInf(200);
@@ -240,7 +240,7 @@ public class EC extends Robot {
         if (spawnKillLock < 10) {
             spawnKillLock++;
         }
-        if (currentState == State.SAVING_FOR_RUSH) {
+        /*if (currentState == State.SAVING_FOR_RUSH) {
             Debug.println(Debug.info, "Saving sema: " + savingForRushSemaphore);
             if (savingForRushSemaphore == 0) {
                 currentState = stateStack.pop();
@@ -251,7 +251,7 @@ public class EC extends Robot {
             savingForRushSemaphore = 100;
         } else {
             savingForRushSemaphore++;
-        }
+        }*/
 
 
         goToAcceleratedSlanderersState = true;
@@ -704,10 +704,10 @@ public class EC extends Robot {
             }*/
             int currReqInf = rushFlag.requiredInfluence;
             if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4) || (distanceSquared < sensorRadius)) {
-                if (savingForRushSemaphore == 100) {
+                //if (savingForRushSemaphore == 100) {
                     Debug.println(Debug.info, "tryStartSavingForRush is returning true");
                     return true;
-                }
+                //}
             }
         }
         return false;
