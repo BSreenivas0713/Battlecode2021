@@ -160,7 +160,7 @@ public class ExplorerMuckracker extends Robot {
 
         RobotInfo bestSlanderer = null;
         bestInfluence = Integer.MIN_VALUE;
-        RobotInfo minRobot = null;
+        RobotInfo closestEnemy = null;
         double minDistSquared = Integer.MAX_VALUE;
 
         for(int i = enemySensable.length - 1; i >= 0; i--) {
@@ -176,7 +176,7 @@ public class ExplorerMuckracker extends Robot {
             double temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
-                minRobot = robot;
+                closestEnemy = robot;
             }
             
             // Attack call
@@ -276,7 +276,7 @@ public class ExplorerMuckracker extends Robot {
         if(!setChillFlag && !setAttackFlag) {
             if(propagateFlags());
             else if(broadcastECLocation());
-            else if(broadcastEnemyLocalOrGlobal());
+            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
         }
     }
 }

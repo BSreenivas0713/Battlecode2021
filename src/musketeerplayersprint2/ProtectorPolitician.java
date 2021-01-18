@@ -60,7 +60,7 @@ public class ProtectorPolitician extends Robot {
 
         RobotInfo closestMuckrakerSensable = null;
         int minMuckrakerDistance = Integer.MAX_VALUE;
-        RobotInfo minRobot = null;
+        RobotInfo closestEnemy = null;
         double minDistSquared = Integer.MAX_VALUE;
 
         for(int i = enemySensable.length - 1; i >= 0; i--) {
@@ -74,7 +74,7 @@ public class ProtectorPolitician extends Robot {
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
-                minRobot = robot;
+                closestEnemy = robot;
             }
         }
         
@@ -160,6 +160,6 @@ public class ProtectorPolitician extends Robot {
 
         if(propagateFlags());
         else if(broadcastECLocation());
-        else if(broadcastEnemyLocalOrGlobal());
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

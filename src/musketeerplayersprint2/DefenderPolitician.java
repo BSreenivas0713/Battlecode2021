@@ -46,13 +46,13 @@ public class DefenderPolitician extends Robot {
             return;
         }
 
-        RobotInfo enemyRobot = null;
+        RobotInfo closestEnemy = null;
         int minDistance = Integer.MAX_VALUE;
         for(int i = enemySensable.length - 1; i >= 0; i--) {
             robot = enemySensable[i];
             int dist = rc.getLocation().distanceSquaredTo(robot.location);
             if(dist < minDistance) {
-                enemyRobot = robot;
+                closestEnemy = robot;
                 minDistance = dist;
                 hasSeenEnemy = true;
             }
@@ -63,8 +63,8 @@ public class DefenderPolitician extends Robot {
             return;
         }
         
-        if (enemyRobot != null) {
-            Direction toMove = rc.getLocation().directionTo(enemyRobot.getLocation());
+        if (closestEnemy != null) {
+            Direction toMove = rc.getLocation().directionTo(closestEnemy.getLocation());
             tryMoveDest(toMove);
         }
 
@@ -113,6 +113,6 @@ public class DefenderPolitician extends Robot {
         
         if(propagateFlags());
         else if(broadcastECLocation());
-        else if(broadcastEnemyLocalOrGlobal());
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

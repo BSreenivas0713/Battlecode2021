@@ -24,16 +24,13 @@ public class Comms {
         ENEMY_EC,
         ENEMY_EC_MUK,
         FRIENDLY_EC,
-        NEW_ROBOT,
         TARGET_ROBOT,
         ROBOT_TYPE,
         ENEMY_FOUND,
         FOLLOWING,
-        SLA_CLOSEST_ENEMY,
-        CLOSEST_ENEMY,
         ENEMY_EC_ATTACK_CALL,
         ENEMY_EC_CHILL_CALL,
-        SLA_FLEEING,
+        CLOSEST_ENEMY_OR_FLEEING,
     }
 
     public enum SubRobotType {
@@ -59,8 +56,18 @@ public class Comms {
         HUNTER_DELETE,
     }
 
+    public enum ClosestEnemyOrFleeing {
+        NOT_SLA,
+        SLA,
+        FLEEING,
+    }
+
     public static int addCoord(int flag, int dx, int dy) {
         return (flag << BIT_IC_OFFSET) + (dx << BIT_DX_OFFSET) + dy;
+    }
+
+    public static int getFlag(InformationCategory cat, ClosestEnemyOrFleeing CEOF, int dx, int dy) {
+        return getFlag(cat, CEOF.ordinal(), dx, dy);
     }
 
     // dx/dy max 4 bits
@@ -142,11 +149,15 @@ public class Comms {
         return Direction.values()[(flag & ~BIT_MASK_IC) >>> BIT_INF_OFFSET];
     }
 
+    public static ClosestEnemyOrFleeing getSubCEOF(int flag) {
+        return ClosestEnemyOrFleeing.values()[(flag & ~BIT_MASK_IC) >>> BIT_INF_OFFSET];
+    }
+
     public static int encodeInf(int inf) {
         return (int) Math.min(63, Math.floor(Math.log(inf / INF_SCALAR) / Math.log(Comms.INF_LOG_BASE)));
     }
 
-    // DO NOT USE WITH ROBOT_TYPE_AND_CLOSEST_ENEMY OR MUK_SCOUT
+    // DO NOT USE WITH OR MUK_SCOUT
     public static SubRobotType getSubRobotType(int flag) {
         return SubRobotType.values()[(flag & BIT_MASK_COORDS)];
     }
@@ -163,10 +174,9 @@ public class Comms {
     public static boolean isSubRobotType(int flag, SubRobotType type) {
         switch(Comms.getIC(flag)) {
             case ROBOT_TYPE:
-                return Comms.getSubRobotType(flag) == type;
-            case SLA_CLOSEST_ENEMY:
-            case SLA_FLEEING:
-                return SubRobotType.SLANDERER == type;
+                return getSubRobotType(flag) == type;
+            case CLOSEST_ENEMY_OR_FLEEING:
+                return getSubCEOF(flag) != ClosestEnemyOrFleeing.NOT_SLA && SubRobotType.SLANDERER == type;
             default:
                 return false;
         }

@@ -316,7 +316,7 @@ public class HunterMuckracker extends Robot {
         if(!setAttackFlag && !setChillFlag) {
             if(propagateFlags());
             else if(broadcastECLocation());
-            else if(broadcastEnemyLocalOrGlobal());
+            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
         }
     }
 }
