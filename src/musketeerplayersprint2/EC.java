@@ -429,7 +429,7 @@ public class EC extends Robot {
                 }  
                 break;
             case ACCELERATED_SLANDERERS:
-                switch(builtInAcceleratedCount) {
+                switch(builtInAcceleratedCount % 3) {
                     case 0: case 1:
                         toBuild = RobotType.POLITICIAN;
                         influence = Math.max(15, currInfluence / 50);
