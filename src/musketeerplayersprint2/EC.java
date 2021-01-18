@@ -189,15 +189,14 @@ public class EC extends Robot {
         Direction[] orderedDirs = Util.getOrderedDirections(pref);
 
         for(Direction dir : orderedDirs) {
-            boolean isScout = Comms.getIC(nextFlag) == Comms.InformationCategory.TARGET_ROBOT;
-            if (isScout) {
-                isScout = Comms.getSubRobotType(nextFlag) == Comms.SubRobotType.MUC_SCOUT;
-            }
+            boolean isScout = Comms.getIC(nextFlag) == Comms.InformationCategory.TARGET_ROBOT &&
+                            Comms.getSubRobotType(nextFlag) == Comms.SubRobotType.MUC_SCOUT;
             boolean scoutCheck = true;
             Direction scoutDirection = Comms.getScoutDirection(nextFlag);
             if(isScout && dir != scoutDirection && rc.onTheMap(rc.getLocation().add(scoutDirection))) { //Try and spawn in the direction that the scout wants to go
                 scoutCheck = false;
             } 
+
             if (rc.canBuildRobot(toBuild, dir, influence) && scoutCheck) {
                 rc.buildRobot(toBuild, dir, influence);
                 RobotInfo robot = rc.senseRobotAtLocation(home.add(dir));
@@ -632,6 +631,7 @@ public class EC extends Robot {
                         currDxDy = Comms.getDxDy(flag);
                         rushFlag = new RushFlag(0, currDxDy[0] - Util.dOffset, currDxDy[1] - Util.dOffset, 0, rc.getTeam());
                         tempMapLoc = new MapLocation(rc.getLocation().x + rushFlag.dx, rc.getLocation().y + rushFlag.dy);
+                        ECflags.remove(rushFlag);
                         if (enemyECsFound.contains(tempMapLoc)) enemyECsFound.remove(tempMapLoc);
                         break;
                     case ENEMY_FOUND:
@@ -726,7 +726,14 @@ public class EC extends Robot {
         
         if(buildRobot(toBuild, influence)) {
             ECflags.remove();
-            nextFlag = rushFlag.flag;
+            // nextFlag = rushFlag.flag;
+            if(rushFlag.team == enemy) {
+                nextFlag = Comms.getFlagRush(InformationCategory.ENEMY_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC, 
+                                            rushFlag.dx + Util.dOffset, rushFlag.dy + Util.dOffset);
+            } else { 
+                nextFlag = Comms.getFlagRush(InformationCategory.NEUTRAL_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC, 
+                                            rushFlag.dx + Util.dOffset, rushFlag.dy + Util.dOffset);
+            }
             currentState = stateStack.pop();
             lastRush = turnCount;
             rushingECtoTurnMap.add(enemyLocation, lastRush);

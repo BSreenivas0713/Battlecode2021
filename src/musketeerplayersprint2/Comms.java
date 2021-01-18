@@ -49,11 +49,8 @@ public class Comms {
         EC,
     }
 
-    public enum ECFoundType {
-        ENEMY,
-        NEUTRAL,
-        HUNTER_ADD,
-        HUNTER_DELETE,
+    public enum GroupRushType {
+        MUC,
     }
 
     public enum ClosestEnemyOrFleeing {
@@ -64,6 +61,10 @@ public class Comms {
 
     public static int addCoord(int flag, int dx, int dy) {
         return (flag << BIT_IC_OFFSET) + (dx << BIT_DX_OFFSET) + dy;
+    }
+
+    public static int getFlagRush(InformationCategory cat, int idMod, GroupRushType type, int dx, int dy) {
+        return getFlag(cat, idMod << 2 + type.ordinal(), dx, dy);
     }
 
     public static int getFlag(InformationCategory cat, ClosestEnemyOrFleeing CEOF, int dx, int dy) {
@@ -166,9 +167,16 @@ public class Comms {
         return SubRobotType.values()[(flag & BIT_MASK_COORDS)];
     }
 
-
     public static Direction getDirection(int flag) {
         return Direction.values()[(flag & BIT_MASK_DIR)];
+    }
+
+    public static GroupRushType getRushType(int flag) {
+        return GroupRushType.values()[(flag >>> BIT_INF_OFFSET) & 0x3];
+    }
+
+    public static int getRushMod(int flag) {
+        return (flag >>> BIT_INF_OFFSET >>> 2) & 0x3;
     }
 
     public static boolean isSubRobotType(int flag, SubRobotType type) {

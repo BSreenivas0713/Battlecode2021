@@ -222,6 +222,32 @@ public class LatticeProtector extends Robot {
             lastSeenSlanderer = null;
         }
         
+        if(rc.canGetFlag(homeID)) {
+            Debug.println(Debug.info, "Checking home flag");
+            int flag = rc.getFlag(homeID);
+            Comms.InformationCategory IC = Comms.getIC(flag);
+            switch(IC) {
+                case ENEMY_EC:
+                    int[] dxdy = Comms.getDxDy(flag);
+                    enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
+                    Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+
+                    Comms.GroupRushType GRtype = Comms.getRushType(flag);
+                    int GRmod = Comms.getRushMod(flag);
+                    Debug.println(Debug.info, "EC is sending a rush: Read ENEMY_EC flag. Type: " + GRtype + ", mod: " + GRmod);
+
+                    if(GRtype == Comms.GroupRushType.MUC && GRmod == rc.getID() % 4 && 
+                        !slandererNearby && currLoc.distanceSquaredTo(home) >= 2 * RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared) {
+                        Debug.println(Debug.info, "Joining the rush");
+                        turnIntoRusher = true;
+                    } else {
+                        Debug.println(Debug.info, "I was not included in this rush");
+                    }
+            }
+        } else {
+            Debug.println(Debug.info, "Can't get home flag: " + homeID);
+        }
+        
         /* Step by Step decision making*/
         //empower if near 2 enemies or enemy is in sensing radius of our base
         if (((maxPoliticianSize > 0 && maxPoliticianSize <= 1.5 * rc.getInfluence()) || 
@@ -263,7 +289,6 @@ public class LatticeProtector extends Robot {
         if (ECNearby) {
             Debug.println(Debug.info, "I am moving away from the base");
             main_direction = Util.rotateInSpinDirection(spinDirection, currLoc.directionTo(currMinEC).opposite());
-            Debug.setIndicatorLine(Debug.pathfinding, currLoc, lastSeenSlanderer, 200, 0, 255);
         }
         //Tries to lattice
         else if(ProtectorNearby) {
