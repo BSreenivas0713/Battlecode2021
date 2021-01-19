@@ -128,6 +128,7 @@ public class HunterMuckracker extends Robot {
         int totalEnemyY = 0;
         int enemiesFound = 0;
         RobotInfo closestEnemy = null;
+        Comms.EnemyType closestEnemyType = null;
         int closestEnemyDist = Integer.MAX_VALUE;
         int temp;
         for(int i = enemySensable.length - 1; i >= 0; i--) {
@@ -141,6 +142,11 @@ public class HunterMuckracker extends Robot {
             if (robot.getType() != RobotType.MUCKRAKER && temp < closestEnemyDist) {
                 closestEnemyDist = temp;
                 closestEnemy = robot;
+                if(robot.getType() == RobotType.MUCKRAKER) {
+                    closestEnemyType = Comms.EnemyType.MUC;
+                } else {
+                    closestEnemyType = Comms.EnemyType.UNKNOWN;
+                }
             }
 
             if (robot.getType() == RobotType.SLANDERER) {
@@ -280,7 +286,7 @@ public class HunterMuckracker extends Robot {
             if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
             else if(broadcastECLocation());
             else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
-            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
+            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
         }
     }
 }
