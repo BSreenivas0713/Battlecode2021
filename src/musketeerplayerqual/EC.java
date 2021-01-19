@@ -118,6 +118,9 @@ public class EC extends Robot {
     static int littleBid;
     static boolean wonLastBid;
     static int lastVoteCount;
+    static int initialMucksDirection;
+    static Direction closestWall;
+    static int[] wallLocations = {0,0,0,0};
 
     static FastIterableLocSet enemyECsFound;
     static FastLocIntMap rushingECtoTurnMap;
@@ -162,6 +165,8 @@ public class EC extends Robot {
         rushingECtoTurnMap = new FastLocIntMap();
         savingForRushSemaphore = 100;
         recentSlanderer = null;
+        initialMucksDirection = 0;
+        closestWall = null;
 
         /*if (rc.getRoundNum() <= 1) {
             int encodedInfForUnknownEC = Comms.encodeInf(200);
@@ -357,6 +362,8 @@ public class EC extends Robot {
         Debug.println(Debug.info, "num protectors currently: " + protectorIdSet.size);
         Debug.println(Debug.info, "State stack size: " + stateStack.size() + ", state: " + currentState);
         Debug.println(Debug.info, "Muckraker near: " + muckrackerNear);
+        Debug.println(Debug.info, "Wall locations: north: " + wallLocations[0] + "; east: " + wallLocations[1] + "; south: " + wallLocations[2] + "; west: " + wallLocations[3]);
+        Debug.println(Debug.info, "closest wall direction: " + closestWall);
 
         switch(currentState) {
             case INIT: 
@@ -406,7 +413,7 @@ public class EC extends Robot {
                         case 1: 
                             toBuild = RobotType.POLITICIAN;
                             influence = Math.max(15, currInfluence / 50);
-                            signalRobotType(SubRobotType.POL_PROTECTOR);
+                            signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                             break;
                     }
                     if(buildRobot(toBuild, influence)) {
@@ -419,7 +426,7 @@ public class EC extends Robot {
                         case 0: case 1:
                             toBuild = RobotType.POLITICIAN;
                             influence = Math.max(15, currInfluence / 50);
-                            signalRobotType(SubRobotType.POL_PROTECTOR);
+                            signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 1 of the else case of CHILLING");
                                 chillingCount ++;
@@ -457,7 +464,7 @@ public class EC extends Robot {
                     case 0: case 1:
                         toBuild = RobotType.POLITICIAN;
                         influence = Math.max(15, currInfluence / 50);
-                        signalRobotType(SubRobotType.POL_PROTECTOR);
+                        signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                         break;
                     case 2:
                         if(Util.getBestSlandererInfluence(currInfluence ) > 100) {
@@ -514,7 +521,7 @@ public class EC extends Robot {
                 // } else {
                 //     toBuild = RobotType.POLITICIAN;
                 //     influence = Math.max(15, currInfluence / 50);
-                //     signalRobotType(SubRobotType.POL_PROTECTOR);
+                //     signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                 // }
 
                 // // Signal to troops to lead the rush
@@ -583,6 +590,56 @@ public class EC extends Robot {
         Debug.println(Debug.info, "next flag that will be set: " + nextFlag);
     }
 
+    public Direction findClosestWall() throws GameActionException {
+        Direction firstWall = null;
+        Direction secondWall = null;
+        int firstClosest = Integer.MAX_VALUE;
+        int secondClosest = Integer.MAX_VALUE;
+        Direction[] cardinalDirs = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
+        int currWallDist;
+        Direction dir;
+        for (int i = cardinalDirs.length - 1; i >= 0; i--) {
+            dir = cardinalDirs[i];
+            currWallDist = Math.abs(wallLocations[i]);
+            if (currWallDist != 0) {
+                if (currWallDist < firstClosest) {
+                    firstClosest = currWallDist;
+                    firstWall = dir;
+                    secondClosest = currWallDist;
+                    secondWall = dir;
+                }
+                else if (currWallDist <= secondClosest && dir != firstWall) {
+                    secondClosest = currWallDist;
+                    secondWall = dir;
+                }
+            }
+        }
+        Debug.println(Debug.info, "closest wall: " + firstWall + " at location: " + firstClosest + "; second closest wall: " + secondWall + " at location: " + secondClosest);
+        if ((firstClosest == Integer.MAX_VALUE && secondClosest == Integer.MAX_VALUE) || 
+            firstClosest >= 20) {
+            return null;
+        }
+        if (firstClosest == secondClosest) {
+            if ((firstWall == Direction.NORTH && secondWall == Direction.WEST) || 
+                (secondWall == Direction.NORTH && firstWall == Direction.WEST)) {
+                return Direction.NORTHWEST;
+            }
+            else if ((firstWall == Direction.NORTH && secondWall == Direction.EAST) || 
+                     (secondWall == Direction.NORTH && firstWall == Direction.EAST)) {
+                return Direction.NORTHEAST;
+            }
+            else if ((firstWall == Direction.SOUTH && secondWall == Direction.WEST) || 
+                    (secondWall == Direction.SOUTH && firstWall == Direction.WEST)) {
+                return Direction.SOUTHWEST;
+            }
+            else if ((firstWall == Direction.SOUTH && secondWall == Direction.EAST) || 
+                    (secondWall == Direction.SOUTH && firstWall == Direction.EAST)) {
+                return Direction.SOUTHEAST;
+            }
+        }
+        return firstWall;
+    } 
+
     public void initializeGlobals() throws GameActionException {
         super.initializeGlobals();
 
@@ -590,6 +647,7 @@ public class EC extends Robot {
         influence = 0;
         currRoundNum = rc.getRoundNum();
         currInfluence = rc.getInfluence();
+        closestWall = findClosestWall();
 
         // Reset slanderer every 3 rounds
         if(rc.getRoundNum() % 3 == 0) {
@@ -728,6 +786,28 @@ public class EC extends Robot {
                             recentSlanderer = enemyLoc;
                         }
                         break;
+                    case REPORTING_WALL:
+                        int[] wallDxDy = Comms.getDxDy(flag);
+                        int wallDx = wallDxDy[0] != 0 ? wallDxDy[0] - Util.dOffset : 0;
+                        int wallDy = wallDxDy[1] != 0 ? wallDxDy[1] - Util.dOffset : 0;
+                        if (wallDx < 0) { 
+                            Debug.println(Debug.info, "scout with id: " + id + "found wall to the west at dx: " + wallDx);
+                            wallLocations[3] = wallDx;
+                        } 
+                        else if (wallDx > 0) {
+                            Debug.println(Debug.info, "scout with id: " + id + "found wall to the east at dx: " + wallDx);
+                            wallLocations[1] = wallDx;
+                        }
+
+                        if (wallDy < 0) {
+                            Debug.println(Debug.info, "scout with id: " + id + "found wall to the south at dx: " + wallDy);
+                            wallLocations[2] = wallDy;
+                        } 
+                        else if (wallDy > 0) {
+                            Debug.println(Debug.info, "scout with id: " + id + "found wall to the north at dx: " + wallDy);
+                            wallLocations[0] = wallDy;
+                        }
+                        break;
                 }
             } else {
                 idSet.remove(id);
@@ -845,8 +925,13 @@ public class EC extends Robot {
         nextFlag = Comms.getFlag(Comms.InformationCategory.TARGET_ROBOT, type);
     }
 
-    void signalScoutMuckraker(Comms.SubRobotType type, Direction dir) throws GameActionException {
-        nextFlag = Comms.getFlagScout(Comms.InformationCategory.TARGET_ROBOT, type, dir);
+    void signalRobotAndDirection(Comms.SubRobotType type, Direction dir) throws GameActionException {
+        if (dir == null) {
+            nextFlag = Comms.getFlagScout(Comms.InformationCategory.TARGET_ROBOT, type, Direction.CENTER);
+        }
+        else {
+            nextFlag = Comms.getFlagScout(Comms.InformationCategory.TARGET_ROBOT, type, dir);
+        }
     }
     
     //rush if we can
@@ -960,14 +1045,14 @@ public class EC extends Robot {
             case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11:
                 toBuild = RobotType.MUCKRAKER;
                 influence = Integer.max(1, currInfluence / 500);
-                if(robotCounter <= 10) {
-                    signalScoutMuckraker(Comms.SubRobotType.MUC_SCOUT, Util.directions[robotCounter-3]);
+                if(numMucks < 8) {
+                    signalRobotAndDirection(Comms.SubRobotType.MUC_SCOUT, Util.directions[numMucks]);
                 }
                 break;
             case 1: case 2: case 13: case 14: case 16: case 17: case 19: case 20: case 22: case 23: case 25: case 26: case 28: case 29:
                 toBuild = RobotType.POLITICIAN;
                 influence = 15;
-                signalRobotType(SubRobotType.POL_PROTECTOR);
+                signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                 break;
         }
     }

@@ -7,6 +7,7 @@ import musketeerplayerqual.fast.FastIterableLocSet;
 
 public class ScoutMuckraker extends Robot {
     static Direction main_direction;
+    static boolean canBroadcastEC = true;
 
     public ScoutMuckraker(RobotController r, Direction dir) {
         super(r);
@@ -72,5 +73,6 @@ public class ScoutMuckraker extends Robot {
 
         if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
+        else if(broadcastWall());
     }
 }

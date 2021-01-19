@@ -29,6 +29,7 @@ public class Comms {
         ENEMY_FOUND,
         FOLLOWING,
         CLOSEST_ENEMY_OR_FLEEING,
+        REPORTING_WALL
     }
 
     public enum SubRobotType {
@@ -156,7 +157,7 @@ public class Comms {
     }
 
     public static Direction getScoutDirection(int flag) {
-        return Direction.values()[(flag & ~BIT_MASK_IC) >>> BIT_INF_OFFSET];
+        return getDirectionFromSubRobotTypeFlag(flag);
     }
 
     public static ClosestEnemyOrFleeing getSubCEOF(int flag) {
@@ -178,6 +179,10 @@ public class Comms {
 
     public static Direction getDirection(int flag) {
         return Direction.values()[(flag & BIT_MASK_DIR)];
+    }
+
+    public static Direction getDirectionFromSubRobotTypeFlag(int flag) {
+        return Direction.values()[(flag & ~BIT_MASK_IC) >>> BIT_INF_OFFSET];
     }
 
     public static GroupRushType getRushType(int flag) {

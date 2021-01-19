@@ -164,6 +164,54 @@ public class Robot {
         return res;
     }
 
+    boolean broadcastWall() throws GameActionException {
+        boolean res = false;
+        MapLocation currLoc = rc.getLocation();
+        Direction[] cardinalDirs = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
+        int[][] dirToCoordMap = {{0,0},{0,0},{0,0},{0,0}};
+        Direction dir;
+        MapLocation temp;
+        for (int i = cardinalDirs.length - 1; i >= 0; i--) {
+            dir = cardinalDirs[i];
+            temp = currLoc;
+            for (int j = 4; j >= 0; j--) {
+                temp = temp.add(dir);
+                if (!rc.onTheMap(temp)) {
+                    dirToCoordMap[i][0] = 1;
+                    if (i == 0 || i == 2) { //found a wall north or south of home
+                        dirToCoordMap[i][1] = temp.y - home.y + Util.dOffset;
+                    }
+                    else { //found a wall east or west of home
+                        dirToCoordMap[i][1] = temp.x - home.x + Util.dOffset;
+                    }
+                    break;
+                }
+            }  
+        }
+        int[] currDirToCoord;
+        int wallDx = 0;
+        int wallDy = 0;
+        for (int i = dirToCoordMap.length - 1; i >= 0; i--) {
+            currDirToCoord = dirToCoordMap[i];
+            dir = cardinalDirs[i];
+            if (currDirToCoord[0] == 1) { //only set wallDx or wallDy if we found a wall in one of the dirs
+                if (dir == Direction.NORTH || dir == Direction.SOUTH) {
+                    wallDy = currDirToCoord[1];
+                }
+                else {
+                    wallDx = currDirToCoord[1];
+                }
+            }
+        }
+        if (wallDx != 0 || wallDy != 0) {
+            Debug.println(Debug.info, "broadcasting wall with dx: " + wallDx + ", dy: " + wallDy);
+            nextFlag = Comms.getFlag(InformationCategory.REPORTING_WALL, wallDx, wallDy);
+            res = true;
+        }
+
+        return res;
+    }
+
     boolean broadcastEnemyLocal(MapLocation enemyLoc) throws GameActionException {
         if(enemyLoc == null || !rc.canSenseLocation(enemyLoc))
             return false;

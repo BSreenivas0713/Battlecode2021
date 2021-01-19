@@ -19,6 +19,7 @@ public class LatticeProtector extends Robot {
     static int turnLastSeenSlanderer;
     static FastIterableLocSet seenECs;
     static MapLocation currMinEC;
+    static Direction wallDirection = null;
 
     
     public LatticeProtector(RobotController r) {
@@ -35,6 +36,11 @@ public class LatticeProtector extends Robot {
     public LatticeProtector(RobotController r, MapLocation h) {
         this(r);
         home = h;
+    }
+
+    public LatticeProtector(RobotController r, Direction nearestWall) {
+        this(r);
+        wallDirection = nearestWall;
     }
 
     public MapLocation seenECmin(MapLocation currLoc) {
@@ -229,9 +235,8 @@ public class LatticeProtector extends Robot {
         
         /* Step by Step decision making*/
         //empower if near 2 enemies or enemy is in sensing radius of our base
-        if (((maxPoliticianSize > 0 && maxPoliticianSize <= 1.5 * rc.getInfluence()) || 
-            (numMuckAttackable > 1 || 
-            (numMuckAttackable > 0 && (slandererNearby || minMuckrakerDistance <= RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared))))
+        if ((numMuckAttackable > 1 || 
+            (numMuckAttackable > 0 && (slandererNearby || minMuckrakerDistance <= RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared)))
             && rc.canEmpower(maxEnemyAttackableDistSquared)) {
             Debug.println(Debug.info, "Enemy too close to base. I will empower");
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestEnemyAttackable, 255, 150, 50);
@@ -265,9 +270,21 @@ public class LatticeProtector extends Robot {
 
         main_direction = Direction.CENTER;
         //moves out of sensor radius of Enlightenment Center
-        if (ECNearby) {
-            Debug.println(Debug.info, "I am moving away from the base");
-            main_direction = Util.rotateInSpinDirection(spinDirection, currLoc.directionTo(currMinEC).opposite());
+        if(ECNearby) { //this is the old case, changed it to what is below for experimentation
+            // if (currMinEC != null && currLoc.isWithinDistanceSquared(currMinEC, RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared * 4)) {
+            // Debug.println(Debug.info, "I am moving away from the base");
+            // main_direction = Util.rotateInSpinDirection(spinDirection, currLoc.directionTo(currMinEC).opposite());
+
+            Direction dirOfMovement = currLoc.directionTo(currMinEC).opposite();
+            if (wallDirection == null || (dirOfMovement != wallDirection && dirOfMovement != wallDirection.rotateLeft() &&
+                dirOfMovement != wallDirection.rotateRight())) { //if wallDir == null or you're not moving towards wall
+                Debug.println(Debug.info, "I am moving away from the base");
+                main_direction = Util.rotateInSpinDirection(spinDirection, dirOfMovement);
+            }
+            else {
+                Debug.println(Debug.info, "I am moving away from wall direction: " + wallDirection);
+                main_direction = Util.rotateInSpinDirection(spinDirection, wallDirection.opposite()); //move away from wall near EC
+            }
         }
         //Tries to lattice
         else if(ProtectorNearby) {
