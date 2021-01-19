@@ -72,7 +72,6 @@ public class Robot {
         if(rc.getFlag(rc.getID()) != nextFlag) {
             setFlag(nextFlag);
         }
-        Debug.println(Debug.info, "Flag set: " + rc.getFlag(rc.getID()));
 
         if(resetFlagOnNewTurn)
             nextFlag = defaultFlag;
@@ -132,7 +131,7 @@ public class Robot {
      * @return true if found an EC and broadcasted
      */
     boolean broadcastECLocation() throws GameActionException {
-        Debug.println(Debug.info, "Broadcasting EC location");
+        Debug.println(Debug.info, "Trying to broadcast EC locations");
         boolean res = false;
 
         RobotInfo robot;
@@ -306,7 +305,7 @@ public class Robot {
         int dx = enemyLoc.x - currLoc.x;
         int dy = enemyLoc.y - currLoc.y;
 
-        Debug.println(Debug.info, "Broadcasting enemy globally at: dX: " + dx + ", dY: " + dy);
+        Debug.println(Debug.info, "Broadcasting enemy globally at: dX: " + dx + ", dY: " + dy + " of type: " + type);
 
         int flag;
         if(subRobotType == SubRobotType.SLANDERER) {
@@ -314,6 +313,7 @@ public class Robot {
         } else {
             flag = Comms.getFlagEnemyFound(InformationCategory.ENEMY_FOUND, IsSla.NO, type, enemyDx + Util.dOffset, enemyDy + Util.dOffset);
         }
+
         setFlag(flag);
 
         return true;
