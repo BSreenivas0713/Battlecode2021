@@ -152,8 +152,7 @@ public class LatticeMuckraker extends Robot {
             }
         }
          
-        if(propagateFlags());
-        else if(broadcastECLocation());
+        if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

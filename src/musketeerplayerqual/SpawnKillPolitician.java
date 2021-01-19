@@ -49,8 +49,7 @@ public class SpawnKillPolitician extends Robot {
             changeTo = new LatticeProtector(rc, home);
         }
         
-        if(propagateFlags());
-        else if(broadcastECLocation());
+        if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

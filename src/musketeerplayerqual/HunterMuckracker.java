@@ -53,9 +53,6 @@ public class HunterMuckracker extends Robot {
                 int dx = enemyLocation.x - currLoc.x;
                 int dy = enemyLocation.y - currLoc.y;
 
-                int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_CHILL_CALL, dx + Util.dOffset, dy + Util.dOffset);
-                setFlag(newFlag);
-                setChillFlag = true;
                 enemyLocation = null;
             }
         }
@@ -158,22 +155,6 @@ public class HunterMuckracker extends Robot {
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
                 if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
                     muckraker_Found_EC = true;
-                } else {
-                    enemyLocation = tempLoc;
-                    if(!ICtoTurnMap.contains(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL.ordinal())) {
-                        Debug.println(Debug.info, "Found Enemy EC, Generating Attack call");
-                        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
-                        
-                        int dx = enemyLocation.x - rc.getLocation().x;
-                        int dy = enemyLocation.y - rc.getLocation().y;
-
-                        int encodedInf = Comms.encodeInf(robot.getInfluence());
-                        Debug.println(Debug.info, "Encoded Influece: " + encodedInf + "Actual Influence: " + robot.getInfluence());
-
-                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_ATTACK_CALL, encodedInf, dx + Util.dOffset, dy + Util.dOffset);
-                        setFlag(newFlag);
-                        setAttackFlag = true;
-                    }
                 }
             }
         }
@@ -199,77 +180,11 @@ public class HunterMuckracker extends Robot {
                     disperseBot = robot;
                 }
 
-                // React to attack calls
-                switch(Comms.getIC(flag)) {
-                case ENEMY_EC_ATTACK_CALL:
-                    if(enemyLocation == null) {
-                        Debug.println(Debug.info, "Found Propogated flag(Attack). Acting on it. ");
-                        robotLoc = robot.getLocation();
-                        DxDyFromRobot = Comms.getDxDy(flag);
-                        enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
-                        Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
-                        Debug.setIndicatorDot(Debug.info, robotLoc, 0, 0, 255);
-                        enemyLocation = enemyLoc;
-                    }
-                    break;
-                case ENEMY_EC_CHILL_CALL:
-                    if(enemyLocation != null) {
-                        Debug.println(Debug.info, "Found Propogated flag(Chill). Acting on it. ");
-                        robotLoc = robot.getLocation();
-                        DxDyFromRobot = Comms.getDxDy(flag);
-                        enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
-                        Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
-                        Debug.setIndicatorDot(Debug.info, robotLoc, 0, 0, 255);
-                        if(enemyLoc.equals(enemyLocation)) {
-                            enemyLocation = null;
-                            Debug.println(Debug.info, "Reset enemy location as a result of the chill flag");
-                        }
-                    }
-                    break;
-                default: 
-                    break;
-                }
-                
                 if(closestEnemy != null) {
                     if(flag == Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID())) {
                         numFollowingClosestEnemy++;
                     }
                 }
-            }
-
-            // Send chill flag
-            MapLocation tempLoc = robot.getLocation();
-            int dist = currLoc.distanceSquaredTo(tempLoc);
-            if (robot.getType() == RobotType.MUCKRAKER && dist < closest_muk_dist) {
-                closest_muk = robot;
-                closest_muk_dist = dist;
-            }
-            int botFlag;
-            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
-                awayFromBase = true;
-                friendlyBase = robot;
-                Debug.println(Debug.info, "friendly base at " + friendlyBase.getLocation() + "; enemy Location is " + enemyLocation);
-                if (tempLoc.equals(enemyLocation)) {
-                        Debug.println(Debug.info, "Enemy EC overtaken, setting chill flag, reseting enemyLocation");
-                        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
-                        
-                        int dx = enemyLocation.x - currLoc.x;
-                        int dy = enemyLocation.y - currLoc.y;
-
-                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_CHILL_CALL, dx + Util.dOffset, dy + Util.dOffset);
-                        setFlag(newFlag);
-                        setChillFlag = true;
-                        enemyLocation = null;
-                }
-                // if(rc.canGetFlag(robot.getID())) {
-                //     botFlag = rc.getFlag(robot.getID());
-                //     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
-                //     if (flagIC == Comms.InformationCategory.ENEMY_EC) {
-                //         int[] dxdy = Comms.getDxDy(botFlag);
-                //         enemyLocation = new MapLocation(dxdy[0] + tempLoc.x - Util.dOffset, dxdy[1] + tempLoc.y - Util.dOffset);
-                //         break;
-                //     }
-                // }
             }
         }
 
@@ -364,11 +279,8 @@ public class HunterMuckracker extends Robot {
             }
         }
         
-        if(!setAttackFlag && !setChillFlag) {
-            if(propagateFlags());
-            else if(broadcastECLocation());
-            else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
-            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
-        }
+        if(broadcastECLocation());
+        else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

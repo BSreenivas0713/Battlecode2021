@@ -28,8 +28,6 @@ public class Comms {
         ROBOT_TYPE,
         ENEMY_FOUND,
         FOLLOWING,
-        ENEMY_EC_ATTACK_CALL,
-        ENEMY_EC_CHILL_CALL,
         CLOSEST_ENEMY_OR_FLEEING,
     }
 

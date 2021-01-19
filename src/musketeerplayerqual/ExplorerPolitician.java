@@ -96,8 +96,7 @@ public class ExplorerPolitician extends Robot {
             main_direction = Util.randomDirection();
         }
 
-        if(propagateFlags());
-        else if(broadcastECLocation());
+        if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }
