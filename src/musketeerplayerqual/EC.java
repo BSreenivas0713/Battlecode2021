@@ -288,6 +288,7 @@ public class EC extends Robot {
                     // If we have enough to rush a tower, make that the #1 priority
                     if (readyToRush()) {
                         if (currentState != State.RUSHING) {
+                            stateStack.push(currentState);
                             currentState = State.RUSHING;
                         }
                     } else {
