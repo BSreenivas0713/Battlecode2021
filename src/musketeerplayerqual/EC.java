@@ -133,8 +133,6 @@ public class EC extends Robot {
     static FastIntIntMap slandererIDToRound;
 
 
-    static int savingForRushSemaphore;
-
     static MapLocation recentSlanderer;
 
     public EC(RobotController r) {
@@ -151,7 +149,6 @@ public class EC extends Robot {
         flagQueue = new FastQueue<>(100);
         currentState = State.INIT;
         prevState = State.INIT;
-
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
 
         cleanUpCount = 0;
@@ -173,7 +170,6 @@ public class EC extends Robot {
         builtInAcceleratedCount = 0;
         noAdjacentEC = true;
         rushingECtoTurnMap = new FastLocIntMap();
-        savingForRushSemaphore = 100;
         recentSlanderer = null;
         idToFriendlyECLocMap = new FastIntLocMap();
 
@@ -270,18 +266,6 @@ public class EC extends Robot {
         if (spawnKillLock < 10) {
             spawnKillLock++;
         }
-        // if (currentState == State.SAVING_FOR_RUSH) {
-        //     Debug.println(Debug.info, "Saving sema: " + savingForRushSemaphore);
-        //     if (savingForRushSemaphore == 0) {
-        //         currentState = stateStack.pop();
-        //     } else {
-        //         savingForRushSemaphore--;
-        //     }
-        // } else if (currentState == State.RUSHING) {
-        //     savingForRushSemaphore = 100;
-        // } else {
-        //     savingForRushSemaphore++;
-        // }
 
         if (currRoundNum > 1250 && rc.getTeamVotes() > 750) {
             currentState = State.SURVIVAL;
@@ -319,15 +303,8 @@ public class EC extends Robot {
                         tryStartRemovingBlockage();
                         // Third priority is building protectors.
                         if (currentState != State.REMOVING_BLOCKAGE) {
-                            // Fourth priority is saving for rush
-                            if (tryStartSavingForRush()) {
-                                if (currentState != State.SAVING_FOR_RUSH) {
-                                    stateStack.push(currentState);
-                                    currentState = State.SAVING_FOR_RUSH;
-                                }
-                            }
                             // If there's nothing to do, clean up
-                            else if (currRoundNum > 500 && tryStartCleanup()) {
+                            if (currRoundNum > 500 && tryStartCleanup()) {
                                 if (currentState != State.CLEANUP) {
                                     stateStack.push(currentState);
                                     currentState = State.CLEANUP;
@@ -364,13 +341,6 @@ public class EC extends Robot {
             if(robotCounter >= 30 || muckrakerNear || rc.getInfluence() > Util.buildSlandererThreshold) { //Dont initialize if a muckraker is near or we have a lot of money from buff
                 Debug.println(Debug.info, "set state from INIT to CHILLING");
                 currentState = State.CHILLING;
-            }
-            if(!noAdjacentEC) {
-                Debug.println(Debug.info, "Adjacent EC found");
-                if (tryStartSavingForRush()) {
-                    stateStack.push(State.CHILLING);
-                    currentState = State.SAVING_FOR_RUSH;
-                }
             }
             else if(almostReadyToRush()) {
                 stateStack.push(State.CHILLING);
@@ -999,26 +969,6 @@ public class EC extends Robot {
         Debug.println(Debug.info, "Cleanup count: " + cleanUpCount);
         if (enemyECsFound.size == 0 && cleanUpCount > Util.startCleanupThreshold) {
             return true;
-        }
-        return false;
-    }
-
-    public boolean tryStartSavingForRush() throws GameActionException {
-        if (!ECflags.isEmpty() && turnCount > lastRush + Util.minTimeBetweenRushes) {
-            RushFlag rushFlag = ECflags.peek();
-            int flag = rushFlag.flag;
-            int distanceSquared = rushFlag.dx * rushFlag.dx + rushFlag.dy * rushFlag.dy;
-            int neededInf =  Comms.getInf(flag);
-            /*if (rushFlag.dx == 0 && rushFlag.dy == 0 && currRoundNum <= 50) {
-                return false;
-            }*/
-            int currReqInf = rushFlag.requiredInfluence;
-            if (neededInf <= Util.maxECRushConviction || rc.getInfluence() >= (currReqInf * 3 / 4) || (distanceSquared < sensorRadius)) {
-                // if (savingForRushSemaphore == 100) {
-                    Debug.println(Debug.info, "tryStartSavingForRush is returning true");
-                    return true;
-                // }
-            }
         }
         return false;
     }
