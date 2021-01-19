@@ -130,6 +130,12 @@ public class Util {
         }
     }
 
+    static Direction[] getOrderedDirections(Direction dir) {
+        dir = randomDirection();
+        return new Direction[]{dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(), dir.opposite().rotateRight(), dir.opposite(),
+                dir.opposite().rotateLeft(), dir.rotateRight().rotateRight(), dir.rotateRight()};
+    }
+
     static Direction rotateInSpinDirection(RotationDirection Rot, Direction dir) {
         switch(Rot) {
             case COUNTERCLOCKWISE:
