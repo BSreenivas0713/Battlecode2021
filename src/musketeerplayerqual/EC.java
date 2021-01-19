@@ -276,7 +276,7 @@ public class EC extends Robot {
         //     savingForRushSemaphore++;
         // }
 
-        if (currRoundNum > 1000 && rc.getTeamVotes() > 750) {
+        if (currRoundNum > 1250 && rc.getTeamVotes() > 750) {
             currentState = State.SURVIVAL;
         }
 
