@@ -103,6 +103,7 @@ public class EC extends Robot {
     static boolean haveSeenEnemy;
 
     static State currentState;
+    static State prevState;
 
     static int chillingCount;
     static boolean savingForSlanderer;
@@ -146,7 +147,7 @@ public class EC extends Robot {
         stateStack = new ArrayDeque<State>();
         flagQueue = new FastQueue<>(100);
         currentState = State.INIT;
-
+        prevState = State.INIT;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
 
         cleanUpCount = 0;
@@ -290,7 +291,9 @@ public class EC extends Robot {
                     // If we have enough to rush a tower, make that the #1 priority
                     if (readyToRush()) {
                         if (currentState != State.RUSHING) {
-                            stateStack.push(currentState);
+                            if (currentState != State.SAVING_FOR_RUSH) {
+                                stateStack.push(currentState);
+                            }
                             currentState = State.RUSHING;
                         }
                     } else {
