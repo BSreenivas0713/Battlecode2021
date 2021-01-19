@@ -313,7 +313,9 @@ public class LatticeProtector extends Robot {
             tryMove +=1;
         }
 
-        if(broadcastECLocation());
-        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
+        if(!resetFlagOnNewTurn) {
+            if(broadcastECLocation());
+            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
+        }
     }
 }

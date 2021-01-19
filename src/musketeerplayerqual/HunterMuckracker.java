@@ -279,8 +279,10 @@ public class HunterMuckracker extends Robot {
             }
         }
         
-        if(broadcastECLocation());
-        else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
-        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
+        if(resetFlagOnNewTurn) {
+            if(broadcastECLocation());
+            else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
+            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
+        }
     }
 }
