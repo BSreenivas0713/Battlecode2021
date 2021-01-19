@@ -29,6 +29,7 @@ public class SpawnKillPolitician extends Robot {
 
         RobotInfo robot;
         RobotInfo closestEnemy = null;
+        Comms.EnemyType closestEnemyType = null;
         double minDistSquared = Integer.MAX_VALUE;
         MapLocation currLoc = rc.getLocation();
         for(int i = enemySensable.length - 1; i >= 0; i--) {
@@ -37,6 +38,11 @@ public class SpawnKillPolitician extends Robot {
             if (temp < minDistSquared) {
                 minDistSquared = temp;
                 closestEnemy = robot;
+                if(robot.getType() == RobotType.MUCKRAKER) {
+                    closestEnemyType = Comms.EnemyType.MUC;
+                } else {
+                    closestEnemyType = Comms.EnemyType.UNKNOWN;
+                }
             }
         }
 
@@ -54,6 +60,6 @@ public class SpawnKillPolitician extends Robot {
         // This means that the first half of an EC-ID/EC-ID broadcast finished.
         if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
         else if(broadcastECLocation());
-        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
     }
 }

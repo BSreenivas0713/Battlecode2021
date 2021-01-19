@@ -40,7 +40,6 @@ public class LatticeRusher extends Robot {
         int minEnemyDistSquared = Integer.MAX_VALUE;
         MapLocation closestEnemy = null;
         boolean baseConverted = false;
-        boolean tooSmall = false;
         boolean needToChill = false;
         MapLocation possibleNewHome = null;
         boolean slandererNearby = false;
@@ -48,16 +47,22 @@ public class LatticeRusher extends Robot {
         int minMuckrakerDistance = Integer.MAX_VALUE;
         int maxEnemyAttackableDistSquared = Integer.MIN_VALUE;
         int numMuckAttackable = 0;
+        int possibleNewHomeID = 0;
 
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
             MapLocation loc = robot.getLocation();
-            int temp = currLoc.distanceSquaredTo(robot.getLocation());
+            int temp = currLoc.distanceSquaredTo(loc);
             if (temp > maxEnemyAttackableDistSquared) {
                 maxEnemyAttackableDistSquared = temp;
             }
             if(robot.getType() == RobotType.MUCKRAKER) {
                 numMuckAttackable++;
+            }
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
+                temp < minEnemyDistSquared) {
+                minEnemyDistSquared = temp;
+                closestEnemy = loc;
             }
         }
 
@@ -74,6 +79,17 @@ public class LatticeRusher extends Robot {
             }
         }
 
+        for (int i = friendlySensable.length - 1; i >= 0; i--) {
+            robot = friendlySensable[i];
+            if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
+                robot.getLocation().isWithinDistanceSquared(enemyLocation, 5)) {
+                baseConverted = true;
+                possibleNewHome = robot.getLocation();
+                possibleNewHomeID = robot.getID();
+                break;
+            }
+        }
+
         //empower if near 2 enemies or enemy is in sensing radius of our base
         if (((numMuckAttackable > 1 || 
             (numMuckAttackable > 0 && slandererNearby)))
@@ -83,24 +99,23 @@ public class LatticeRusher extends Robot {
             return;
         }
 
-        if (rc.canEmpower(minEnemyDistSquared) && !tooSmall && (moveSemaphore <= 0 || minEnemyDistSquared <= 1)) {
-            int radius = Math.min(actionRadius, minEnemyDistSquared);
-            Debug.println(Debug.info, "Empowered with radius: " + radius);
+        if (rc.canEmpower(minEnemyDistSquared) && (moveSemaphore <= 0 || minEnemyDistSquared <= 1)) {
+            Debug.println(Debug.info, "Empowered with radius: " + minEnemyDistSquared);
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), closestEnemy, 255, 150, 50);
-            rc.empower(radius);
+            rc.empower(minEnemyDistSquared);
             return;
         }
 
         if(baseConverted) {
             Debug.println(Debug.info, "Becoming a lattice Protector for this new base that has been overtaken");
-            changeTo = new LatticeProtector(rc, possibleNewHome, homeID);
-            return;
-        }
-        if(needToChill || tooSmall) {
-            Debug.println(Debug.info, "New base overtaken/too big to attack, becoming protector for old base");
             changeTo = new LatticeProtector(rc, home, homeID);
             return;
         }
+        // if(needToChill || tooSmall) {
+        //     Debug.println(Debug.info, "New base overtaken/too big to attack, becoming protector for old base");
+        //     changeTo = new LatticeProtector(rc, home, homeID);
+        //     return;
+        // }
 
         if(currLoc.isWithinDistanceSquared(enemyLocation, actionRadius)) {
             Debug.println(Debug.info, "Close to EC; using heuristic for movement");
