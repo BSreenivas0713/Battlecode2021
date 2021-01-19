@@ -23,9 +23,11 @@ public class RushPolitician extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
     }
     
-    public RushPolitician(RobotController r, MapLocation enemyLoc, MapLocation h) {
+    public RushPolitician(RobotController r, MapLocation enemyLoc, MapLocation h, int hID) {
         this(r, enemyLoc);
         home = h;
+        homeID = hID;
+        friendlyECs.add(home, homeID);
     }
 
     public void takeTurn() throws GameActionException {
