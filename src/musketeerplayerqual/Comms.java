@@ -66,6 +66,7 @@ public class Comms {
     public enum EnemyType {
         UNKNOWN,
         SLA,
+        MUC,
     }
 
     public enum IsSla {
@@ -89,15 +90,15 @@ public class Comms {
     }
 
     public static int getFlagRush(InformationCategory cat, int idMod, GroupRushType type, int dx, int dy) {
-        return getFlag(cat, idMod << 2 + type.ordinal(), dx, dy);
+        return getFlag(cat, (idMod << 2) + type.ordinal(), dx, dy);
     }
 
     public static int getFlagRush(InformationCategory cat, int idMod, EnemyType type, int dx, int dy) {
-        return getFlag(cat, idMod << 2 + type.ordinal(), dx, dy);
+        return getFlag(cat, (idMod << 2) + type.ordinal(), dx, dy);
     }
 
     public static int getFlagEnemyFound(InformationCategory cat, IsSla sla, EnemyType type, int dx, int dy) {
-        return getFlag(cat, sla.ordinal() << 2 + type.ordinal(), dx, dy);
+        return getFlag(cat, (sla.ordinal() << 2) + type.ordinal(), dx, dy);
     }
 
     public static int getFlag(InformationCategory cat, ClosestEnemyOrFleeing CEOF, int dx, int dy) {
@@ -217,7 +218,7 @@ public class Comms {
     }
 
     public static IsSla getIsSla(int flag) {
-        return IsSla.values()[(flag >>> (BIT_INF_OFFSET + 2)) & 0x1];
+        return IsSla.values()[(flag >>> BIT_INF_OFFSET >>> 2) & 0x1];
     }
 
     public static FriendlyECType getFriendlyECType(int flag) {
