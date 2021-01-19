@@ -30,7 +30,8 @@ public class Comms {
         ENEMY_FOUND,
         FOLLOWING,
         CLOSEST_ENEMY_OR_FLEEING,
-        REPORTING_WALL
+        REPORTING_WALL,
+        TEST,
     }
 
     public enum SubRobotType {
@@ -56,14 +57,20 @@ public class Comms {
     }
 
     public enum ClosestEnemyOrFleeing {
-        NOT_SLA,
+        POL_PROTECTOR,
         SLA,
+        OTHER,
         FLEEING,
     }
 
     public enum EnemyType {
         UNKNOWN,
         SLA,
+    }
+
+    public enum IsSla {
+        NO,
+        YES,
     }
 
     public enum FriendlyECType {
@@ -87,6 +94,10 @@ public class Comms {
 
     public static int getFlagRush(InformationCategory cat, int idMod, EnemyType type, int dx, int dy) {
         return getFlag(cat, idMod << 2 + type.ordinal(), dx, dy);
+    }
+
+    public static int getFlagEnemyFound(InformationCategory cat, IsSla sla, EnemyType type, int dx, int dy) {
+        return getFlag(cat, sla.ordinal() << 2 + type.ordinal(), dx, dy);
     }
 
     public static int getFlag(InformationCategory cat, ClosestEnemyOrFleeing CEOF, int dx, int dy) {
@@ -205,6 +216,10 @@ public class Comms {
         return EnemyType.values()[(flag >>> BIT_INF_OFFSET) & 0x3];
     }
 
+    public static IsSla getIsSla(int flag) {
+        return IsSla.values()[(flag >>> (BIT_INF_OFFSET + 2)) & 0x1];
+    }
+
     public static FriendlyECType getFriendlyECType(int flag) {
         return FriendlyECType.values()[flag & 0x3];
     }
@@ -229,7 +244,17 @@ public class Comms {
             case ROBOT_TYPE:
                 return getSubRobotType(flag) == type;
             case CLOSEST_ENEMY_OR_FLEEING:
-                return getSubCEOF(flag) != ClosestEnemyOrFleeing.NOT_SLA && SubRobotType.SLANDERER == type;
+                switch(getSubCEOF(flag)) {
+                    case POL_PROTECTOR:
+                        return type == SubRobotType.POL_PROTECTOR;
+                    case SLA:
+                    case FLEEING:
+                        return type == SubRobotType.SLANDERER;
+                    case OTHER:
+                        return false;
+                }
+            case ENEMY_FOUND:
+                return getIsSla(flag) == IsSla.YES && type == SubRobotType.SLANDERER;
             default:
                 return false;
         }

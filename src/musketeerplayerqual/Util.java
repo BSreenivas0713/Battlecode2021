@@ -74,7 +74,9 @@ public class Util {
         724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 724, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 766, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 810, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 855, 
         855, 855, 855, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 902, 949};
 
-    static final double[] pathfindingDistances = {1, .5, 0};
+    static final int pathfindingDistanceMult = 3;
+
+    static final int PoliticianSensorRadius = 5;
 
     static final int maxFollowingSingleUnit = 1;
 
@@ -83,6 +85,7 @@ public class Util {
     static final int flagCooldown = 10;
 
     static final int explorerMuckrakerLifetime = 200;
+    static final int slandererLifetime = 300;
 
     static final int turnsSlandererLocValid = 5;
     static final int minRotationRadius = 15;
@@ -128,6 +131,12 @@ public class Util {
                 return new Direction[]{dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(), dir.opposite().rotateRight(), dir.opposite(),
                         dir.opposite().rotateLeft(), dir.rotateRight().rotateRight(), dir.rotateRight()};
         }
+    }
+
+    static Direction[] getOrderedDirections(Direction dir) {
+        dir = randomDirection();
+        return new Direction[]{dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(), dir.opposite().rotateRight(), dir.opposite(),
+                dir.opposite().rotateLeft(), dir.rotateRight().rotateRight(), dir.rotateRight()};
     }
 
     static Direction rotateInSpinDirection(RotationDirection Rot, Direction dir) {

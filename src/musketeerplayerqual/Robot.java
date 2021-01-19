@@ -31,7 +31,6 @@ public class Robot {
     static final int parityBroadcastEnemy = (int) (Math.random() * 2);
 
     static FastLocIntMap friendlyECs;
-    static FastQueue<Integer> flagQueue;
     static boolean needToBroadcastHomeEC;
 
     public static Robot changeTo = null;
@@ -44,7 +43,6 @@ public class Robot {
         actionRadius = rc.getType().actionRadiusSquared;
         defaultFlag = 0;
         friendlyECs = new FastLocIntMap();
-        flagQueue = new FastQueue<>(100);
         needToBroadcastHomeEC = false;
 
         if(rc.getType() == RobotType.ENLIGHTENMENT_CENTER) {
@@ -256,18 +254,26 @@ public class Robot {
 
         Debug.println(Debug.info, "Broadcasting enemy locally at: dX: " + dx + ", dY: " + dy);
 
-        if(subRobotType == Comms.SubRobotType.SLANDERER) {
-            int flag = Comms.getFlag(InformationCategory.CLOSEST_ENEMY_OR_FLEEING, 
+        int flag;
+        switch(subRobotType) {
+            case SLANDERER:
+                flag = Comms.getFlag(InformationCategory.CLOSEST_ENEMY_OR_FLEEING, 
                                     Comms.ClosestEnemyOrFleeing.SLA,
                                     dx + Util.dOffset, dy + Util.dOffset);
-            setFlag(flag);
-        } else {
-            int flag = Comms.getFlag(InformationCategory.CLOSEST_ENEMY_OR_FLEEING, 
-                                    Comms.ClosestEnemyOrFleeing.NOT_SLA, 
+                break;
+            case POL_PROTECTOR:
+                flag = Comms.getFlag(InformationCategory.CLOSEST_ENEMY_OR_FLEEING, 
+                                    Comms.ClosestEnemyOrFleeing.POL_PROTECTOR,
                                     dx + Util.dOffset, dy + Util.dOffset);
-            setFlag(flag);
+                break;
+            default:
+                flag = Comms.getFlag(InformationCategory.CLOSEST_ENEMY_OR_FLEEING, 
+                                    Comms.ClosestEnemyOrFleeing.OTHER,
+                                    dx + Util.dOffset, dy + Util.dOffset);
+                break;
         }
 
+        setFlag(flag);
         return true;
     }
 
@@ -302,7 +308,12 @@ public class Robot {
 
         Debug.println(Debug.info, "Broadcasting enemy globally at: dX: " + dx + ", dY: " + dy);
 
-        int flag = Comms.getFlag(InformationCategory.ENEMY_FOUND, type.ordinal(), enemyDx + Util.dOffset, enemyDy + Util.dOffset);
+        int flag;
+        if(subRobotType == SubRobotType.SLANDERER) {
+            flag = Comms.getFlagEnemyFound(InformationCategory.ENEMY_FOUND, IsSla.YES, type, enemyDx + Util.dOffset, enemyDy + Util.dOffset);
+        } else {
+            flag = Comms.getFlagEnemyFound(InformationCategory.ENEMY_FOUND, IsSla.NO, type, enemyDx + Util.dOffset, enemyDy + Util.dOffset);
+        }
         setFlag(flag);
 
         return true;
