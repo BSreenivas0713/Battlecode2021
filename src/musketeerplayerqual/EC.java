@@ -88,7 +88,7 @@ public class EC extends Robot {
     static boolean noAdjacentEC;
     static boolean builtRobot;
 
-    static boolean muckrackerNear;
+    static boolean muckrakerNear;
     
     static FastIterableIntSet idSet;
     static FastIterableIntSet protectorIdSet;
@@ -280,6 +280,8 @@ public class EC extends Robot {
             currentState = State.SURVIVAL;
         }
 
+        muckrakerNear = checkIfMuckrakerNear();
+
         processChildrenFlags(); 
         processLocalFlags();
         processFriendlyECFlags();
@@ -350,20 +352,19 @@ public class EC extends Robot {
 
         //updating currInfluence after a bid
         currInfluence = rc.getInfluence();
-        muckrackerNear = checkIfMuckrakerNear();
         if(currentState == State.INIT) { //Specific checks in the INIT state
             Debug.println(Debug.info, "Inside INIT checker");
-            if(robotCounter >= 30 || muckrackerNear || rc.getInfluence() > Util.buildSlandererThreshold) { //Dont initialize if a muckraker is near or we have a lot of money from buff
-                    Debug.println(Debug.info, "set state from INIT to CHILLING");
-                    currentState = State.CHILLING;
+            if(robotCounter >= 30 || muckrakerNear || rc.getInfluence() > Util.buildSlandererThreshold) { //Dont initialize if a muckraker is near or we have a lot of money from buff
+                Debug.println(Debug.info, "set state from INIT to CHILLING");
+                currentState = State.CHILLING;
             }
             if(!noAdjacentEC) {
                 Debug.println(Debug.info, "Adjacent EC found");
                 if (tryStartSavingForRush()) {
-                        stateStack.push(State.CHILLING);
-                        currentState = State.SAVING_FOR_RUSH;
-                    }
+                    stateStack.push(State.CHILLING);
+                    currentState = State.SAVING_FOR_RUSH;
                 }
+            }
             else if(almostReadyToRush()) {
                 stateStack.push(State.CHILLING);
                 currentState = State.SAVING_FOR_RUSH;
@@ -378,7 +379,7 @@ public class EC extends Robot {
         Debug.println(Debug.info, "num ids found: " + idSet.size);
         Debug.println(Debug.info, "num protectors currently: " + protectorIdSet.size);
         Debug.println(Debug.info, "State stack size: " + stateStack.size() + ", state: " + currentState);
-        Debug.println(Debug.info, "Muckraker near: " + muckrackerNear);
+        Debug.println(Debug.info, "Muckraker near: " + muckrakerNear);
         Debug.println(Debug.info, "Wall locations: north: " + wallLocations[0] + "; east: " + wallLocations[1] + "; south: " + wallLocations[2] + "; west: " + wallLocations[3]);
         Debug.println(Debug.info, "closest wall direction: " + closestWall);
 
@@ -398,7 +399,7 @@ public class EC extends Robot {
                     readyForSlanderer = true;
                 }
 
-                if(muckrackerNear || currInfluence > Util.buildSlandererThreshold) { //possibly add income threshold as well
+                if(muckrakerNear || currInfluence > Util.buildSlandererThreshold) { //possibly add income threshold as well
                     readyForSlanderer = false;
                     savingForSlanderer = false;
                 }
@@ -555,7 +556,7 @@ public class EC extends Robot {
                 buildRobot(toBuild, influence);
                 break;
             case CLEANUP:
-                if(Util.getBestSlandererInfluence(currInfluence) >= 100 && robotCounter % 3 == 1 && !muckrackerNear && currInfluence < Util.buildSlandererThreshold) {
+                if(Util.getBestSlandererInfluence(currInfluence) >= 100 && robotCounter % 3 == 1 && !muckrakerNear && currInfluence < Util.buildSlandererThreshold) {
                     toBuild = RobotType.SLANDERER;
                     influence = Util.getBestSlandererInfluence(currInfluence / 4);
                 }
@@ -768,6 +769,8 @@ public class EC extends Robot {
                             ECflags.remove(rushFlag);
                             ECflags.add(rushFlag);
                         }
+
+                        Debug.println(Debug.info, "Found neutral EC at : " + tempMapLoc);
                         break;
                     case ENEMY_EC:
                         // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
@@ -836,8 +839,21 @@ public class EC extends Robot {
                         }
 
                         Comms.EnemyType enemyType = Comms.getEnemyType(flag);
-                        if(enemyType == Comms.EnemyType.SLA) {
-                            recentSlanderer = enemyLoc;
+                        Debug.println(Debug.info, id + " Found enemy: " + enemyType + " at " + enemyLoc);
+                        switch(enemyType) {
+                            case SLA:
+                                recentSlanderer = enemyLoc;
+                                Debug.setIndicatorDot(Debug.info, enemyLoc, 50, 150, 50);
+                                break;
+                            case MUC:
+                                if (rc.getLocation().isWithinDistanceSquared(enemyLoc, rc.getType().sensorRadiusSquared * 4)) {
+                                    muckrakerNear = true;
+                                }
+                                Debug.setIndicatorDot(Debug.info, enemyLoc, 200, 50, 50);
+                                break;
+                            default:
+                                Debug.setIndicatorDot(Debug.info, enemyLoc, 0, 0, 0);
+                                break;
                         }
                         break;
                     case REPORTING_WALL:

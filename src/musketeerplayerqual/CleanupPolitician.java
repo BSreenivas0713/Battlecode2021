@@ -55,6 +55,7 @@ public class CleanupPolitician extends Robot {
         RobotInfo powerful = null;
         int max_influence = (rc.getConviction()-10) / 3;
         RobotInfo closestEnemy = null;
+        Comms.EnemyType closestEnemyType = null;
         double minDistSquared = Integer.MAX_VALUE;
 
         for(int i = enemySensable.length - 1; i >= 0; i--) {
@@ -69,6 +70,11 @@ public class CleanupPolitician extends Robot {
             if (temp < minDistSquared) {
                 minDistSquared = temp;
                 closestEnemy = robot;
+                if(robot.getType() == RobotType.MUCKRAKER) {
+                    closestEnemyType = Comms.EnemyType.MUC;
+                } else {
+                    closestEnemyType = Comms.EnemyType.UNKNOWN;
+                }
             }
         }
         
@@ -83,6 +89,6 @@ public class CleanupPolitician extends Robot {
         // This means that the first half of an EC-ID/EC-ID broadcast finished.
         if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
         else if(broadcastECLocation());
-        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
     }
 }
