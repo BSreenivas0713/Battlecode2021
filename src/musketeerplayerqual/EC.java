@@ -609,10 +609,9 @@ public class EC extends Robot {
         }
 
         // If we aren't ready, then we just built a bot and can use nextFlag safely
-        // if(/*!flagQueue.isEmpty() && */!builtRobot) {
-        //     // nextFlag = flagQueue.poll();
-        //     nextFlag = Comms.getFlag(Comms.InformationCategory.TEST);
-        // }
+        if(!flagQueue.isEmpty() && !builtRobot) {
+            nextFlag = flagQueue.poll();
+        }
 
         prevState = currentState;
 
@@ -936,15 +935,30 @@ public class EC extends Robot {
     }
 
     // TODO: Figure out what the heck to do here
-    public void processFriendlyECFlags() {
+    public void processFriendlyECFlags() throws GameActionException{
         MapLocation[] keys = friendlyECs.getKeys();
         MapLocation key;
         int id;
+        int ECflag;
+        MapLocation rushLoc;
         for(int i = keys.length - 1; i >= 0; i--) {
             key = keys[i];
             id = friendlyECs.getVal(key);
 
             if(rc.canGetFlag(id)) {
+                ECflag = rc.getFlag(id);
+                switch (Comms.getIC(ECflag)) {
+                    case ENEMY_EC:
+                        int[] friendlyDxDy = Comms.getDxDy(ECflag);
+                        rushLoc = new MapLocation(friendlyDxDy[0] + key.x - Util.dOffset, friendlyDxDy[1] + key.y - Util.dOffset);
+                        int rushDx = rushLoc.x - home.x + Util.dOffset;
+                        int rushDy = rushLoc.y - home.y + Util.dOffset;
+                        flagQueue.add(Comms.getFlagRush(InformationCategory.ENEMY_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
+                                            rushDx, rushDy));
+                        break;
+                    default:
+                        break;
+                }
                 Debug.setIndicatorDot(Debug.info, key, 200, 200, 200);
                 Debug.println(Debug.info, "EC at: " + key + ", id: " + id);
             } else {

@@ -171,10 +171,10 @@ public class Robot {
                     int encodedInf = Comms.encodeInf(robot.getInfluence());
                     if(robot.getTeam() == enemy) {
                         Debug.println(Debug.info, "Broadcasting enemy EC location");
-                        nextFlag = Comms.getFlag(InformationCategory.ENEMY_EC, encodedInf, ecDX, ecDY);
+                        setFlag(Comms.getFlag(InformationCategory.ENEMY_EC, encodedInf, ecDX, ecDY));
                     } else {
                         Debug.println(Debug.info, "Broadcasting neutral EC location");
-                        nextFlag = Comms.getFlag(InformationCategory.NEUTRAL_EC, encodedInf, ecDX, ecDY);
+                        setFlag(Comms.getFlag(InformationCategory.NEUTRAL_EC, encodedInf, ecDX, ecDY));
                     }
 
                     friendlyECs.remove(ecLoc);
