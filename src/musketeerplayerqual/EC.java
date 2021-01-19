@@ -1120,7 +1120,7 @@ public class EC extends Robot {
             bigBid = prevBid;
             prevBid = res;
         } else {
-            if (bigBid < currInfluence / 10) bigBid *= 2;
+            if (bigBid < currInfluence / 10) bigBid = littleBid * 2;
             res = Integer.min(Integer.max((prevBid + bigBid) / 2, 2), currInfluence / 25);
             littleBid = prevBid;
             prevBid = res;
