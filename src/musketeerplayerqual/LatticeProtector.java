@@ -17,6 +17,8 @@ public class LatticeProtector extends Robot {
     static final int slandererFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.SLANDERER);
     static MapLocation lastSeenSlanderer;
     static int turnLastSeenSlanderer;
+    static Direction wallDirection = null;
+
     
     public LatticeProtector(RobotController r) {
         super(r);
@@ -24,6 +26,11 @@ public class LatticeProtector extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         lastSeenSlanderer = null;
         turnLastSeenSlanderer = 0;
+    }
+
+    public LatticeProtector(RobotController r, Direction nearestWall) {
+        this(r);
+        wallDirection = nearestWall;
     }
     
     public LatticeProtector(RobotController r, MapLocation h, int hID) {
@@ -231,9 +238,21 @@ public class LatticeProtector extends Robot {
 
         main_direction = Direction.CENTER;
         //moves out of sensor radius of Enlightenment Center
-        if (ECNearby) {
-            Debug.println(Debug.info, "I am moving away from the base");
-            main_direction = Util.rotateInSpinDirection(spinDirection, currLoc.directionTo(home).opposite());
+        if(ECNearby) { //this is the old case, changed it to what is below for experimentation
+            // if (home != null && currLoc.isWithinDistanceSquared(home, RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared * 4)) {
+            // Debug.println(Debug.info, "I am moving away from the base");
+            // main_direction = Util.rotateInSpinDirection(spinDirection, currLoc.directionTo(home).opposite());
+
+            Direction dirOfMovement = currLoc.directionTo(home).opposite();
+            if (wallDirection == null || (dirOfMovement != wallDirection && dirOfMovement != wallDirection.rotateLeft() &&
+                dirOfMovement != wallDirection.rotateRight())) { //if wallDir == null or you're not moving towards wall
+                Debug.println(Debug.info, "I am moving away from the base");
+                main_direction = Util.rotateInSpinDirection(spinDirection, dirOfMovement);
+            }
+            else {
+                Debug.println(Debug.info, "I am moving away from wall direction: " + wallDirection);
+                main_direction = Util.rotateInSpinDirection(spinDirection, wallDirection.opposite()); //move away from wall near EC
+            }
         }
         //Tries to lattice
         else if(ProtectorNearby) {

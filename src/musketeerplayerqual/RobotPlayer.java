@@ -44,7 +44,14 @@ public strictfp class RobotPlayer {
                                         bot = new CleanupPolitician(rc);
                                         break;
                                     case POL_PROTECTOR:
-                                        bot = new LatticeProtector(rc);
+                                        Direction closestWall = Comms.getDirectionFromSubRobotTypeFlag(botFlag);
+                                        Debug.println(Debug.info, "building protector with closest: " + closestWall);
+                                        if (closestWall != Direction.CENTER) {
+                                            bot = new LatticeProtector(rc, closestWall);
+                                        }
+                                        else {
+                                            bot = new LatticeProtector(rc);
+                                        }
                                         break;
                                     case POL_DEFENDER:
                                         bot = new DefenderPolitician(rc);
