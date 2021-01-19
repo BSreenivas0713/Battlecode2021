@@ -14,9 +14,11 @@ public class CleanupPolitician extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
     }
     
-    public CleanupPolitician(RobotController r, MapLocation h) {
+    public CleanupPolitician(RobotController r, MapLocation h, int hID) {
         this(r);
         home = h;
+        homeID = hID;
+        friendlyECs.add(home, homeID);
     }
 
     public void takeTurn() throws GameActionException {
@@ -78,7 +80,9 @@ public class CleanupPolitician extends Robot {
             main_direction = Util.randomDirection();
         }
 
-        if(broadcastECLocation());
+        // This means that the first half of an EC-ID/EC-ID broadcast finished.
+        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+        else if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

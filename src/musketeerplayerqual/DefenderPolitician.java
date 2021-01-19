@@ -14,9 +14,11 @@ public class DefenderPolitician extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
     }
     
-    public DefenderPolitician(RobotController r, MapLocation h) {
+    public DefenderPolitician(RobotController r, MapLocation h, int hID) {
         this(r);
         home = h;
+        homeID = hID;
+        friendlyECs.add(home, homeID);
     }
 
     public void takeTurn() throws GameActionException {
@@ -59,7 +61,7 @@ public class DefenderPolitician extends Robot {
         }
 
         if(hasSeenEnemy && enemySensable.length == 0) {
-            changeTo = new ExplorerPolitician(rc, home);
+            changeTo = new ExplorerPolitician(rc, home, homeID);
             return;
         }
         
@@ -111,7 +113,9 @@ public class DefenderPolitician extends Robot {
             tryMoveDest(toMove);
         }
         
-        if(broadcastECLocation());
+        // This means that the first half of an EC-ID/EC-ID broadcast finished.
+        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+        else if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

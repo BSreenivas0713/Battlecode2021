@@ -15,9 +15,11 @@ public class ScoutMuckraker extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
     }
 
-    public ScoutMuckraker(RobotController r, Direction dir, MapLocation h) {
+    public ScoutMuckraker(RobotController r, Direction dir, MapLocation h, int hID) {
         this(r, dir);
         home = h;
+        homeID = hID;
+        friendlyECs.add(home, homeID);
     }
 
     public void takeTurn() throws GameActionException {
@@ -67,10 +69,13 @@ public class ScoutMuckraker extends Robot {
         }
         else {
             Debug.println(Debug.info, "new location not on the map. switching to explorer");
-            changeTo = new ExplorerMuckracker(rc, home);
+            changeTo = new ExplorerMuckracker(rc, home, homeID);
+            return;
         }
 
-        if(broadcastECLocation());
+        // This means that the first half of an EC-ID/EC-ID broadcast finished.
+        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+        else if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

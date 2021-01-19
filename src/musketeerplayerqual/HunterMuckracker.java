@@ -23,9 +23,11 @@ public class HunterMuckracker extends Robot {
         this(r, null);
     }
 
-    public HunterMuckracker(RobotController r, MapLocation enemyLoc, MapLocation h) {
+    public HunterMuckracker(RobotController r, MapLocation enemyLoc, MapLocation h, int hID) {
         this(r, enemyLoc);
         home = h;
+        homeID = hID;
+        friendlyECs.add(home, homeID);
     }
 
     public void takeTurn() throws GameActionException {
@@ -41,8 +43,6 @@ public class HunterMuckracker extends Robot {
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
-
-        boolean setChillFlag = false;
 
         if(enemyLocation != null && rc.canSenseLocation(enemyLocation) ) {
             RobotInfo supposedToBeAnEC = rc.senseRobotAtLocation(enemyLocation);
@@ -119,7 +119,6 @@ public class HunterMuckracker extends Robot {
         }
 
 
-        boolean setAttackFlag = false;
         boolean muckraker_Found_EC = false;
 
         RobotInfo bestSlanderer = null;
@@ -202,8 +201,7 @@ public class HunterMuckracker extends Robot {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
         
-        //reset flag next turn unless chasing down an enemy
-        resetFlagOnNewTurn = true;
+        boolean setFollowingFlag = false;
 
         if(!muckraker_Found_EC){
             if (bestSlanderer != null) {
@@ -257,10 +255,8 @@ public class HunterMuckracker extends Robot {
             }
             else if (enemiesFound != 0 && numFollowingClosestEnemy < Util.maxFollowingSingleUnit) {
                 MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
-                if(!setAttackFlag && !setChillFlag) {
-                    setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID()));
-                    resetFlagOnNewTurn = false;
-                }
+                setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID()));
+                setFollowingFlag = true;
                 tryMoveDest(currLoc.directionTo(hunterLoc));
                 if(rc.isReady()) {
                     Debug.println(Debug.info, "Prioritizing going towards average enemy at " + hunterLoc);
@@ -279,8 +275,10 @@ public class HunterMuckracker extends Robot {
             }
         }
         
-        if(resetFlagOnNewTurn) {
-            if(broadcastECLocation());
+        if(!setFollowingFlag) {
+            // This means that the first half of an EC-ID/EC-ID broadcast finished.
+            if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+            else if(broadcastECLocation());
             else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
             else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
         }
