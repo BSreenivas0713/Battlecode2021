@@ -115,6 +115,8 @@ public class LatticeProtector extends Robot {
         boolean turnIntoRusher = false;
         int maxInfSeen = -1;
 
+        MapLocation rusherLoc = null;
+
         int totalProtectorX = 0;
         int totalProtectorY = 0;
         int numProtectors = 0;
@@ -136,6 +138,8 @@ public class LatticeProtector extends Robot {
                     totalProtectorX += robot.getLocation().x;
                     totalProtectorY += robot.getLocation().y;
                     numProtectors++;
+                } else if (Comms.isSubRobotType(robotFlag, Comms.SubRobotType.POL_RUSH)) {
+                    rusherLoc = robot.getLocation();
                 }
             }
             
@@ -209,6 +213,12 @@ public class LatticeProtector extends Robot {
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestEnemyAttackable, 255, 150, 50);
             rc.empower(maxEnemyAttackableDistSquared);
             return;
+        }
+
+        if (rusherLoc != null && rc.isReady()) {
+            Debug.println(Debug.info, "Running away from a rusher.");
+            main_direction = currLoc.directionTo(rusherLoc).opposite();
+            tryMoveDest(main_direction);
         }
 
         //Turns into a rusher if the enemy tower has less than 10 times the amount that the politician will use when empowering
