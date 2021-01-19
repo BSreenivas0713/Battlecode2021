@@ -66,7 +66,7 @@ public strictfp class RobotPlayer {
 
         if(turnCount > 100) {
             System.out.println("Resigning");
-            rc.resign();
+            // rc.resign();
         }
         
         int currRoundNum = rc.getRoundNum();
