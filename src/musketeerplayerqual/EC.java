@@ -124,6 +124,7 @@ public class EC extends Robot {
     static int initialMucksDirection;
     static Direction closestWall;
     static int[] wallLocations = {0,0,0,0};
+    static int flagQueueCooldown;
 
     static FastIterableLocSet enemyECsFound;
     static FastLocIntMap rushingECtoTurnMap;
@@ -175,6 +176,7 @@ public class EC extends Robot {
         friendlyECs.remove(rc.getLocation());
         initialMucksDirection = 0;
         closestWall = null;
+        flagQueueCooldown = 0;
 
         /*if (rc.getRoundNum() <= 1) {
             int encodedInfForUnknownEC = Comms.encodeInf(200);
@@ -358,6 +360,12 @@ public class EC extends Robot {
         Debug.println(Debug.info, "Muckraker near: " + muckrakerNear);
         Debug.println(Debug.info, "Wall locations: north: " + wallLocations[0] + "; east: " + wallLocations[1] + "; south: " + wallLocations[2] + "; west: " + wallLocations[3]);
         Debug.println(Debug.info, "closest wall direction: " + closestWall);
+        if (!flagQueue.isEmpty()) {
+            Debug.println(Debug.info, "IC of first elem in flag queue: " + Comms.getIC(flagQueue.peek()));
+        }
+        else {
+            Debug.println(Debug.info, "flag queue is empty");
+        }
 
         switch(currentState) {
             case INIT: 
@@ -580,10 +588,9 @@ public class EC extends Robot {
         }
 
         // If we just built a bot, then we can use nextFlag safely
-        // if(/*!flagQueue.isEmpty() && */!builtRobot) {
-        //     // nextFlag = flagQueue.poll();
-        //     nextFlag = Comms.getFlag(Comms.InformationCategory.TEST);
-        // }
+        if(!flagQueue.isEmpty() && !builtRobot) {
+            nextFlag = flagQueue.poll();
+        }
 
         prevState = currentState;
 
@@ -922,21 +929,40 @@ public class EC extends Robot {
     }
 
     // TODO: Figure out what the heck to do here
-    public void processFriendlyECFlags() {
+    public void processFriendlyECFlags() throws GameActionException{
         MapLocation[] keys = friendlyECs.getKeys();
         MapLocation key;
         int id;
+        int ECflag;
+        MapLocation rushLoc;
         for(int i = keys.length - 1; i >= 0; i--) {
             key = keys[i];
             id = friendlyECs.getVal(key);
 
             if(rc.canGetFlag(id)) {
+                ECflag = rc.getFlag(id);
+                switch (Comms.getIC(ECflag)) {
+                    case ENEMY_EC:
+                        int[] friendlyDxDy = Comms.getDxDy(ECflag);
+                        rushLoc = new MapLocation(friendlyDxDy[0] + key.x - Util.dOffset, friendlyDxDy[1] + key.y - Util.dOffset);
+                        int rushDx = rushLoc.x - home.x + Util.dOffset;
+                        int rushDy = rushLoc.y - home.y + Util.dOffset;
+                        if (flagQueueCooldown >= 10) {
+                            flagQueueCooldown = 0;
+                            flagQueue.add(Comms.getFlagRush(InformationCategory.ENEMY_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
+                                            rushDx, rushDy));
+                        }
+                        break;
+                    default:
+                        break;
+                }
                 Debug.setIndicatorDot(Debug.info, key, 200, 200, 200);
                 Debug.println(Debug.info, "EC at: " + key + ", id: " + id);
             } else {
                 friendlyECs.remove(key);
             }
         }
+        flagQueueCooldown++;
     }
 
     public boolean tryStartCleanup() throws GameActionException {
