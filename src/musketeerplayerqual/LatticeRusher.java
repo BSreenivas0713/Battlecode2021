@@ -19,9 +19,11 @@ public class LatticeRusher extends Robot {
         Nav.setDest(enemyLoc);
     }
     
-    public LatticeRusher(RobotController r, MapLocation enemyLoc, MapLocation h) {
+    public LatticeRusher(RobotController r, MapLocation enemyLoc, MapLocation h, int hID) {
         this(r, enemyLoc);
         home = h;
+        homeID = hID;
+        friendlyECs.add(home, homeID);
     }
 
     public void takeTurn() throws GameActionException {
@@ -91,12 +93,12 @@ public class LatticeRusher extends Robot {
 
         if(baseConverted) {
             Debug.println(Debug.info, "Becoming a lattice Protector for this new base that has been overtaken");
-            changeTo = new LatticeProtector(rc, possibleNewHome);
+            changeTo = new LatticeProtector(rc, possibleNewHome, homeID);
             return;
         }
         if(needToChill || tooSmall) {
             Debug.println(Debug.info, "New base overtaken/too big to attack, becoming protector for old base");
-            changeTo = new LatticeProtector(rc, home);
+            changeTo = new LatticeProtector(rc, home, homeID);
             return;
         }
 

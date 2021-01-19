@@ -14,9 +14,11 @@ public class SpawnKillPolitician extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
     }
     
-    public SpawnKillPolitician(RobotController r, MapLocation h) {
+    public SpawnKillPolitician(RobotController r, MapLocation h, int hID) {
         this(r);
         home = h;
+        homeID = hID;
+        friendlyECs.add(home, homeID);
     }
 
     public void takeTurn() throws GameActionException {
@@ -46,10 +48,12 @@ public class SpawnKillPolitician extends Robot {
                 rc.empower(radius);
             }
         } else {
-            changeTo = new LatticeProtector(rc, home);
+            changeTo = new LatticeProtector(rc, home, homeID);
         }
         
-        if(broadcastECLocation());
+        // This means that the first half of an EC-ID/EC-ID broadcast finished.
+        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+        else if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

@@ -15,6 +15,7 @@ public class Comms {
     static final int BIT_SMALL_DX_OFFSET = 4;
     static final int BIT_MASK_SMALL_COORD = 0xF;
     static final int BIT_MASK_DIR = 0xF;
+    static final int BIT_FRIEND_OFFSET = 2;
     //Old flag setup: CCCCCIIIIIXXXXXXXYYYYYYY
     //New flag setup: CCCCIIIIIIXXXXXXXYYYYYYY
 
@@ -64,8 +65,19 @@ public class Comms {
         SLA,
     }
 
+    public enum FriendlyECType {
+        HOME_READ_LOC,
+        HOME_READ_ID,
+        OTHER_READ_LOC,
+        OTHER_READ_ID,
+    }
+
     public static int addCoord(int flag, int dx, int dy) {
         return (flag << BIT_IC_OFFSET) + (dx << BIT_DX_OFFSET) + dy;
+    }
+
+    public static int getFlag(InformationCategory cat, FriendlyECType type, int dx, int dy) {
+        return (cat.ordinal() << BIT_IC_OFFSET) + (dx << (BIT_DX_OFFSET + BIT_FRIEND_OFFSET)) + (dy << BIT_FRIEND_OFFSET) + type.ordinal();
     }
 
     public static int getFlagRush(InformationCategory cat, int idMod, GroupRushType type, int dx, int dy) {
@@ -186,6 +198,21 @@ public class Comms {
 
     public static EnemyType getEnemyType(int flag) {
         return EnemyType.values()[(flag >>> BIT_INF_OFFSET) & 0x3];
+    }
+
+    public static FriendlyECType getFriendlyECType(int flag) {
+        return FriendlyECType.values()[flag & 0x3];
+    }
+
+    public static int getFriendlyID(int flag) {
+        return (flag & ~BIT_MASK_IC) >>> BIT_FRIEND_OFFSET;
+    }
+
+    public static int[] getFriendlyDxDy(int flag) {
+        int[] res = new int[2];
+        res[0] = (flag >>> (BIT_DX_OFFSET + BIT_FRIEND_OFFSET)) & BIT_MASK_COORD;
+        res[1] = (flag >>> BIT_FRIEND_OFFSET) & BIT_MASK_COORD;
+        return res;
     }
 
     public static int getRushMod(int flag) {

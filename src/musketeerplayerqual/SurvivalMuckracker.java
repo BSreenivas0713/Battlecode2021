@@ -17,9 +17,11 @@ public class SurvivalMuckracker extends Robot {
         seenEnemyLocation = false;
     }
 
-    public SurvivalMuckracker(RobotController r, MapLocation h) {
+    public SurvivalMuckracker(RobotController r, MapLocation h, int hID) {
         this(r);
         home = h;
+        homeID = hID;
+        friendlyECs.add(home, homeID);
     }
 
     public void takeTurn() throws GameActionException {

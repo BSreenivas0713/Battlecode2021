@@ -62,4 +62,12 @@ public class FastLocIntMap {
         }
         return locs;
     }
+
+    public int[] getInts() {
+        int[] ints = new int[size];
+        for(int i = 3; i < keys.length(); i += 4) {
+            ints[i/4] = (int)keys.charAt(i) - 0x100;
+        }
+        return ints;
+    }
 }

@@ -6,6 +6,7 @@ import musketeerplayerqual.Comms.*;
 import musketeerplayerqual.Debug.*;
 import musketeerplayerqual.fast.FastIntIntMap;
 import musketeerplayerqual.fast.FastLocIntMap;
+import musketeerplayerqual.fast.FastQueue;
 
 public class Robot {
     static RobotController rc;
@@ -29,8 +30,9 @@ public class Robot {
 
     static final int parityBroadcastEnemy = (int) (Math.random() * 2);
 
-    static FastIntIntMap ICtoTurnMap;
     static FastLocIntMap friendlyECs;
+    static FastQueue<Integer> flagQueue;
+    static boolean needToBroadcastHomeEC;
 
     public static Robot changeTo = null;
 
@@ -41,13 +43,13 @@ public class Robot {
         sensorRadius = rc.getType().sensorRadiusSquared;
         actionRadius = rc.getType().actionRadiusSquared;
         defaultFlag = 0;
-        ICtoTurnMap = new FastIntIntMap();
         friendlyECs = new FastLocIntMap();
+        flagQueue = new FastQueue<>(100);
+        needToBroadcastHomeEC = false;
 
         if(rc.getType() == RobotType.ENLIGHTENMENT_CENTER) {
             home = rc.getLocation();
             homeID = rc.getID();
-            friendlyECs.add(home, homeID);
         } else {
             RobotInfo[] sensableWithin2 = rc.senseNearbyRobots(2, rc.getTeam());
             for (RobotInfo robot : sensableWithin2) {
@@ -73,10 +75,22 @@ public class Robot {
             setFlag(nextFlag);
         }
         Debug.println(Debug.info, "Flag set: " + rc.getFlag(rc.getID()));
-        Debug.setIndicatorDot(Debug.info, home, 255, 255, 255);
 
         if(resetFlagOnNewTurn)
             nextFlag = defaultFlag;
+        
+        MapLocation[] keys = friendlyECs.getKeys();
+        int[] ids = friendlyECs.getInts();
+        MapLocation key;
+        int id;
+        for(int i = keys.length - 1; i >= 0; i--) {
+            key = keys[i];
+            id = friendlyECs.getVal(key);
+
+            Debug.setIndicatorDot(Debug.info, key, 200, 200, 200);
+            Debug.println(Debug.info, "EC at: " + key + ", id: " + id + " - " + ids[i]);
+        }
+        Debug.setIndicatorDot(Debug.info, home, 255, 255, 255);
     }
 
     public void initializeGlobals() throws GameActionException {
@@ -119,7 +133,8 @@ public class Robot {
     /**
      * @return true if found an EC and broadcasted
      */
-    boolean broadcastECLocation() {
+    boolean broadcastECLocation() throws GameActionException {
+        Debug.println(Debug.info, "Broadcasting EC location");
         boolean res = false;
 
         RobotInfo robot;
@@ -130,22 +145,26 @@ public class Robot {
             robot = sensable[i];
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
                 if(robot.getTeam() == rc.getTeam()) {
-                    if(!robot.getLocation().equals(home)) {
-                        res = true;
-    
+                    Debug.println(Debug.info, "Found a friendly EC: "+ friendlyECs.size);
+                    if(!friendlyECs.contains(robot.getLocation())) {
                         MapLocation ecLoc = robot.getLocation();
+                        Debug.println(Debug.info, "Reporting a friendly EC");
         
-                        int ecDX = ecLoc.x - home.x + Util.dOffset;
-                        int ecDY = ecLoc.y - home.y + Util.dOffset;
+                        int ecDX = ecLoc.x - home.x;
+                        int ecDY = ecLoc.y - home.y;
     
-                        int encodedInf = Comms.encodeInf(robot.getInfluence());
+                        int id = robot.getID();
 
-                        nextFlag = Comms.getFlag(InformationCategory.FRIENDLY_EC, encodedInf, ecDX, ecDY);
+                        setFlag(Comms.getFlag(InformationCategory.FRIENDLY_EC, FriendlyECType.HOME_READ_LOC, ecDX + Util.dOffset, ecDY + Util.dOffset));
+                        nextFlag = Comms.getFlag(InformationCategory.FRIENDLY_EC, FriendlyECType.HOME_READ_ID, 0, id);
+
+                        needToBroadcastHomeEC = true;
+
+                        friendlyECs.add(ecLoc, id);
+
+                        return true;
                     }
                 } else {
-                    Debug.println(Debug.info, "Broadcasting enemy EC location");
-                    res = true;
-    
                     MapLocation ecLoc = robot.getLocation();
     
                     int ecDX = ecLoc.x - home.x + Util.dOffset;
@@ -153,15 +172,30 @@ public class Robot {
     
                     int encodedInf = Comms.encodeInf(robot.getInfluence());
                     if(robot.getTeam() == enemy) {
+                        Debug.println(Debug.info, "Broadcasting enemy EC location");
                         nextFlag = Comms.getFlag(InformationCategory.ENEMY_EC, encodedInf, ecDX, ecDY);
                     } else {
+                        Debug.println(Debug.info, "Broadcasting neutral EC location");
                         nextFlag = Comms.getFlag(InformationCategory.NEUTRAL_EC, encodedInf, ecDX, ecDY);
                     }
+
+                    friendlyECs.remove(ecLoc);
+                    return true;
                 }
             }
         }
 
-        return res;
+        return false;
+    }
+
+    void broadcastHomeEC() throws GameActionException {
+        MapLocation currLoc = rc.getLocation();
+        int homeDx = home.x - currLoc.x;
+        int homeDy = home.y - currLoc.y;
+
+        setFlag(Comms.getFlag(InformationCategory.FRIENDLY_EC, FriendlyECType.OTHER_READ_LOC, homeDx + Util.dOffset, homeDy + Util.dOffset));
+        nextFlag = Comms.getFlag(InformationCategory.FRIENDLY_EC, FriendlyECType.OTHER_READ_ID, 0, homeID);
+        needToBroadcastHomeEC = false;
     }
 
     boolean broadcastEnemyLocal(MapLocation enemyLoc) throws GameActionException {

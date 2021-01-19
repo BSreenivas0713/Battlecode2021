@@ -31,9 +31,11 @@ public class ProtectorPoliticianNew extends Robot {
         currMinEC = home;
     }
     
-    public ProtectorPoliticianNew(RobotController r, MapLocation h) {
+    public ProtectorPoliticianNew(RobotController r, MapLocation h, int hID) {
         this(r);
         home = h;
+        homeID = hID;
+        friendlyECs.add(home, homeID);
     }
 
     public MapLocation seenECmin(MapLocation currLoc) {
@@ -173,21 +175,21 @@ public class ProtectorPoliticianNew extends Robot {
             return;
         }
 
+        boolean setFollowingFlag = false;
+
         //tries to block a muckraker in its path(if the muckraker is within 2 sensing radiuses of the EC)
         if (closestMuckrakerSensable != null && 
             closestMuckrakerSensable.getLocation().isWithinDistanceSquared(currMinEC, (5 * sensorRadius)) &&
             numFollowingClosestMuckraker < Util.maxFollowingSingleUnit) {
             Debug.println(Debug.info, "I am pushing a muckraker away. ID: " + closestMuckrakerSensable.getID());
             setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestMuckrakerSensable.getID()));
-            resetFlagOnNewTurn = false;
+            setFollowingFlag = true;
             Debug.println(Debug.info, "I am pushing a muckraker away");
             MapLocation closestMuckrakerSensableLoc = closestMuckrakerSensable.getLocation();
             Direction muckrakerPathtoBase = closestMuckrakerSensableLoc.directionTo(currMinEC);
             MapLocation squareToBlock = closestMuckrakerSensableLoc.add(muckrakerPathtoBase);
             Direction toMove = rc.getLocation().directionTo(squareToBlock);
             tryMoveDest(toMove);
-        } else {
-            resetFlagOnNewTurn = true;
         }
 
         //moves out of sensor radius of Enlightenment Center
@@ -250,7 +252,11 @@ public class ProtectorPoliticianNew extends Robot {
             tryMove +=1;
         }
 
-        if(broadcastECLocation());
-        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
+        if(!setFollowingFlag) {
+            // This means that the first half of an EC-ID/EC-ID broadcast finished.
+            if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+            else if(broadcastECLocation());
+            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
+        }
     }
 }

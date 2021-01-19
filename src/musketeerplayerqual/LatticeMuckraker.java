@@ -15,9 +15,11 @@ public class LatticeMuckraker extends Robot {
         enemyLocation = null;
     }
     
-    public LatticeMuckraker(RobotController r, MapLocation h) {
+    public LatticeMuckraker(RobotController r, MapLocation h, int hID) {
         this(r);
         home = h;
+        homeID = hID;
+        friendlyECs.add(home, homeID);
     }
 
     public void takeTurn() throws GameActionException {
@@ -152,10 +154,10 @@ public class LatticeMuckraker extends Robot {
             }
         }
         
-        if(resetFlagOnNewTurn) {
-            if(broadcastECLocation());
-            else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
-            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
-        }
+        // This means that the first half of an EC-ID/EC-ID broadcast finished.
+        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+        else if(broadcastECLocation());
+        else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

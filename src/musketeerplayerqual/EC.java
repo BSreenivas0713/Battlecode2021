@@ -7,6 +7,7 @@ import musketeerplayerqual.Debug.*;
 import musketeerplayerqual.fast.FastIterableIntSet;
 import musketeerplayerqual.fast.FastIterableLocSet;
 import musketeerplayerqual.fast.FastLocIntMap;
+import musketeerplayerqual.fast.FastIntLocMap;
 
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
@@ -121,6 +122,7 @@ public class EC extends Robot {
 
     static FastIterableLocSet enemyECsFound;
     static FastLocIntMap rushingECtoTurnMap;
+    static FastIntLocMap idToFriendlyECLocMap;
 
     static int savingForRushSemaphore;
 
@@ -162,6 +164,9 @@ public class EC extends Robot {
         rushingECtoTurnMap = new FastLocIntMap();
         savingForRushSemaphore = 100;
         recentSlanderer = null;
+        idToFriendlyECLocMap = new FastIntLocMap();
+
+        friendlyECs.remove(rc.getLocation());
 
         /*if (rc.getRoundNum() <= 1) {
             int encodedInfForUnknownEC = Comms.encodeInf(200);
@@ -263,8 +268,11 @@ public class EC extends Robot {
             currentState = State.SURVIVAL;
         }
 
+        processChildrenFlags(); 
+        processLocalFlags();
+
         goToAcceleratedSlanderersState = true;
-        processChildrenFlags(); //goToAcceleratedSlanderer gets set to false if there is an enemy within 2 sensor radiuses of the base
+        //goToAcceleratedSlanderer gets set to false if there is an enemy within 2 sensor radiuses of the base
         if(enemySensable.length > 0 || currInfluence > Util.buildSlandererThreshold) { //also set to false if we sense an enemy in our base or we have enough influence
             goToAcceleratedSlanderersState = false;
         }
@@ -656,6 +664,7 @@ public class EC extends Robot {
         MapLocation tempMapLoc;
         int neededInf;
         int currReqInf;
+        int friendId;
         for(int j = idSet.size - 1; j >= 0; j--) {
             id = ids[j];
             if(rc.canGetFlag(id)) {
@@ -705,13 +714,37 @@ public class EC extends Robot {
                         if (currentState == State.CLEANUP) {
                             currentState = stateStack.pop();
                         }
+
+                        Debug.println(Debug.info, "Found enemy EC at : " + tempMapLoc);
+                        friendlyECs.remove(tempMapLoc);
                         break;
                     case FRIENDLY_EC:
-                        currDxDy = Comms.getDxDy(flag);
-                        rushFlag = new RushFlag(0, currDxDy[0] - Util.dOffset, currDxDy[1] - Util.dOffset, 0, rc.getTeam());
-                        tempMapLoc = new MapLocation(rc.getLocation().x + rushFlag.dx, rc.getLocation().y + rushFlag.dy);
-                        ECflags.remove(rushFlag);
-                        if (enemyECsFound.contains(tempMapLoc)) enemyECsFound.remove(tempMapLoc);
+                        Comms.FriendlyECType type = Comms.getFriendlyECType(flag);
+                        Debug.println(Debug.info, "Friendly EC msg type: " + type);
+                        Debug.println(Debug.info, "ID of robot giving info: " + id);
+                        switch(type) {
+                            case HOME_READ_LOC:
+                                currDxDy = Comms.getFriendlyDxDy(flag);
+                                rushFlag = new RushFlag(0, currDxDy[0] - Util.dOffset, currDxDy[1] - Util.dOffset, 0, rc.getTeam());
+                                tempMapLoc = new MapLocation(rc.getLocation().x + rushFlag.dx, rc.getLocation().y + rushFlag.dy);
+                                ECflags.remove(rushFlag);
+                                if (enemyECsFound.contains(tempMapLoc)) enemyECsFound.remove(tempMapLoc);
+
+                                Debug.println(Debug.info, "Found friendly EC at : " + tempMapLoc);
+                                idToFriendlyECLocMap.remove(id);
+                                idToFriendlyECLocMap.add(id, tempMapLoc);
+                                break;
+                            case HOME_READ_ID:
+                                if(idToFriendlyECLocMap.contains(id)) {
+                                    friendId = Comms.getFriendlyID(flag);
+                                    tempMapLoc = idToFriendlyECLocMap.getLoc(id);
+                                    friendlyECs.add(tempMapLoc, friendId);
+                                    idToFriendlyECLocMap.remove(id);
+
+                                    Debug.println(Debug.info, "Found friendly EC at : " + tempMapLoc + ", id: " + friendId);
+                                }
+                                break;
+                        }
                         break;
                     case ENEMY_FOUND:
                         int[] enemyDxDy = Comms.getDxDy(flag);
@@ -736,6 +769,67 @@ public class EC extends Robot {
         }
 
         cleanUpCount++;
+    }
+
+    public void processLocalFlags() throws GameActionException {
+        Debug.println(Debug.info, "Process local flags");
+        RobotInfo robot;
+        int id, friendId;;
+        MapLocation tempMapLoc;
+        int[] currDxDy;
+        for(int i = friendlySensable.length - 1; i >= 0; i--) {
+            robot = friendlySensable[i];
+            id = robot.getID();
+            if(rc.canGetFlag(id)) {
+                int flag = rc.getFlag(id);
+                Comms.InformationCategory flagIC = Comms.getIC(flag);
+                switch(flagIC) {
+                    case FRIENDLY_EC:
+                        Comms.FriendlyECType type = Comms.getFriendlyECType(flag);
+                        Debug.println(Debug.info, "Friendly EC msg type: " + type);
+                        Debug.println(Debug.info, "ID of robot giving info: " + id);
+                        switch(type) {
+                            case OTHER_READ_LOC:
+                                currDxDy = Comms.getFriendlyDxDy(flag);
+                                tempMapLoc = new MapLocation(robot.getLocation().x + currDxDy[0] - Util.dOffset,
+                                                            robot.getLocation().y + currDxDy[1] - Util.dOffset);
+                                Debug.println(Debug.info, "Found friendly EC at : " + tempMapLoc);
+                                idToFriendlyECLocMap.remove(id);
+                                idToFriendlyECLocMap.add(id, tempMapLoc);
+                                break;
+                            case OTHER_READ_ID:
+                                if(idToFriendlyECLocMap.contains(id)) {
+                                    friendId = Comms.getFriendlyID(flag);
+                                    tempMapLoc = idToFriendlyECLocMap.getLoc(id);
+                                    friendlyECs.add(tempMapLoc, friendId);
+                                    idToFriendlyECLocMap.remove(id);
+
+                                    Debug.println(Debug.info, "Found friendly EC at : " + tempMapLoc + ", id: " + friendId);
+                                }
+                                break;
+                        }
+                        break;
+                }
+            }
+        }
+    }
+
+    // TODO: Figure out what the heck to do here
+    public void processFriendlyECFlags() {
+        MapLocation[] keys = friendlyECs.getKeys();
+        MapLocation key;
+        int id;
+        for(int i = keys.length - 1; i >= 0; i--) {
+            key = keys[i];
+            id = friendlyECs.getVal(key);
+
+            if(rc.canGetFlag(id)) {
+                Debug.setIndicatorDot(Debug.info, key, 200, 200, 200);
+                Debug.println(Debug.info, "EC at: " + key + ", id: " + id);
+            } else {
+                friendlyECs.remove(key);
+            }
+        }
     }
 
     public boolean tryStartCleanup() throws GameActionException {
