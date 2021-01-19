@@ -9,6 +9,7 @@ import musketeerplayerqual.fast.FastIterableLocSet;
 import musketeerplayerqual.fast.FastLocIntMap;
 import musketeerplayerqual.fast.FastIntLocMap;
 import musketeerplayerqual.fast.FastQueue;
+import musketeerplayerqual.fast.FastIntIntMap;
 
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
@@ -93,12 +94,10 @@ public class EC extends Robot {
     static FastIterableIntSet idSet;
     static FastIterableIntSet protectorIdSet;
     static int[] ids;
-    static int[] protectorIds;
     static PriorityQueue<RushFlag> ECflags;
     static ArrayDeque<State> stateStack;
     static FastQueue<Integer> flagQueue;
 
-    static int numProtectors;
     static int protectorsSpawnedInARow;
     static boolean canGoBackToBuildingProtectors;
     static boolean haveSeenEnemy;
@@ -129,6 +128,9 @@ public class EC extends Robot {
     static FastIterableLocSet enemyECsFound;
     static FastLocIntMap rushingECtoTurnMap;
     static FastIntLocMap idToFriendlyECLocMap;
+    static FastIntIntMap roundToSlandererID;
+    static FastIntIntMap slandererIDToRound;
+
 
     static int savingForRushSemaphore;
 
@@ -139,8 +141,9 @@ public class EC extends Robot {
         idSet = new FastIterableIntSet(1000);
         ids = idSet.ints;
 
-        protectorIdSet = new FastIterableIntSet(100);
-        protectorIds = protectorIdSet.ints;
+        protectorIdSet = new FastIterableIntSet(1000);
+        roundToSlandererID = new FastIntIntMap(1000);
+        slandererIDToRound = new FastIntIntMap(1000);
 
         ECflags = new PriorityQueue<RushFlag>();
         stateStack = new ArrayDeque<State>();
@@ -151,7 +154,6 @@ public class EC extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
 
         cleanUpCount = 0;
-        numProtectors = 0;
         lastRush = Integer.MIN_VALUE;
         canGoBackToBuildingProtectors = true;
         spawnKillLock = 10;
@@ -237,12 +239,15 @@ public class EC extends Robot {
                         numMucks++;
                         Debug.println(Debug.info, "Num Mucks being updated, new value: " + numMucks);
                     }
+                    if(robot.getType() == RobotType.SLANDERER) {
+                        roundToSlandererID.add(currRoundNum + Util.slandererLifetime, robot.getID());
+                        slandererIDToRound.add(robot.getID(), currRoundNum + Util.slandererLifetime);
+                    }
                     Debug.println(Debug.info, "built robot: " + robot.getID());
                     idSet.add(robot.getID());
 
                     Comms.InformationCategory IC = Comms.getIC(nextFlag);
-                    if ((IC == Comms.InformationCategory.TARGET_ROBOT && 
-                        Comms.getSubRobotType(nextFlag) == SubRobotType.POL_PROTECTOR)) {
+                    if(IC == Comms.InformationCategory.TARGET_ROBOT && Comms.getSubRobotType(nextFlag) == Comms.SubRobotType.POL_PROTECTOR) {
                         protectorIdSet.add(robot.getID());
                     }
                 } else {
@@ -378,6 +383,7 @@ public class EC extends Robot {
         Debug.println(Debug.info, "num of ec's found: " + ECflags.size());
         Debug.println(Debug.info, "num ids found: " + idSet.size);
         Debug.println(Debug.info, "num protectors currently: " + protectorIdSet.size);
+        Debug.println(Debug.info, "num slanderers currently: " + slandererIDToRound.size);
         Debug.println(Debug.info, "State stack size: " + stateStack.size() + ", state: " + currentState);
         Debug.println(Debug.info, "Muckraker near: " + muckrakerNear);
         Debug.println(Debug.info, "Wall locations: north: " + wallLocations[0] + "; east: " + wallLocations[1] + "; south: " + wallLocations[2] + "; west: " + wallLocations[3]);
@@ -748,6 +754,14 @@ public class EC extends Robot {
         for(int j = idSet.size - 1; j >= 0; j--) {
             id = ids[j];
             if(rc.canGetFlag(id)) {
+
+                if(roundToSlandererID.contains(currRoundNum)) {
+                    int Slandererid = roundToSlandererID.getVal(currRoundNum);
+                    roundToSlandererID.remove(currRoundNum);
+                    slandererIDToRound.remove(Slandererid);
+                    protectorIdSet.add(Slandererid);
+                }
+
                 int flag = rc.getFlag(id);
                 Comms.InformationCategory flagIC = Comms.getIC(flag);
                 int[] currDxDy;
@@ -879,9 +893,15 @@ public class EC extends Robot {
                         }
                         break;
                 }
+
             } else {
                 idSet.remove(id);
                 protectorIdSet.remove(id);
+                if(slandererIDToRound.contains(id)) {
+                    int roundNum = slandererIDToRound.getVal(id);
+                    slandererIDToRound.remove(id);
+                    roundToSlandererID.remove(roundNum);
+                }
             }
         }
 
