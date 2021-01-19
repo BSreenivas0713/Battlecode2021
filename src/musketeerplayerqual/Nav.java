@@ -28,7 +28,7 @@ public class Nav {
 
 
     static Direction lastExploreDir;
-    static final int EXPLORE_BOREDOM = 10;
+    static final int EXPLORE_BOREDOM = 20;
     static int boredom;
 
     static void init(RobotController r) {
@@ -445,21 +445,13 @@ public class Nav {
         return src.directionTo(minLoc);
     }
     
-    public static void updateLocationForDescent(Direction dir) throws GameActionException {
+    public static Direction updateLocationForDescent(Direction dir) throws GameActionException {
         MapLocation currLoc = rc.getLocation();
-        for(int z = 0; z < Util.pathfindingDistances.length; z++) {
-            int numMovesAhead = Math.max((int) (Util.pathfindingDistances[z] * Math.sqrt(rc.getType().sensorRadiusSquared)), 1);
-            MapLocation possibleDest = new MapLocation(rc.getLocation().x + dir.dx*numMovesAhead, rc.getLocation().y + dir.dy*numMovesAhead);
-            if(rc.onTheMap(possibleDest)) {
-                Debug.print(Debug.info, "Location in direction " + dir + " on the map while looking " + numMovesAhead + " ahead. Coordinate: " + possibleDest);
-                setDest(possibleDest);
-                Debug.setIndicatorLine(Debug.info, rc.getLocation(), possibleDest, 255, 150, 50);
-                break;
-            }
-            else {
-                Debug.print(Debug.info, "Location in direction " + dir + " not on the map while looking " + z + " ahead. Coordinate: " + possibleDest);
-            }
-        }
+        MapLocation possibleDest = new MapLocation(rc.getLocation().x + dir.dx*Util.pathfindingDistanceMult*Util.PoliticianSensorRadius, rc.getLocation().y + dir.dy*Util.pathfindingDistanceMult*Util.PoliticianSensorRadius);
+        Debug.print(Debug.info, "Location in direction " + dir  + " Coordinate: " + possibleDest);
+        setDest(possibleDest);
+        Debug.setIndicatorLine(Debug.info, rc.getLocation(), possibleDest, 255, 150, 50);
+        return gradientDescent();
     }
 
 	public static Direction explore() throws GameActionException {
@@ -468,12 +460,16 @@ public class Nav {
             return null;
         
 		if(lastExploreDir == null) {
-            lastExploreDir = rc.getLocation().directionTo(Robot.home).opposite();
-            // updateLocationForDescent(lastExploreDir);
+            Debug.println(Debug.info, "changing last Explore Dir");
+            Direction oppositeFromHome = rc.getLocation().directionTo(Robot.home).opposite();
+            Direction []oppositeFromHomeDirs = {oppositeFromHome, oppositeFromHome.rotateLeft(), oppositeFromHome.rotateRight()};
+            lastExploreDir = oppositeFromHomeDirs[(int)(Math.random() * 3)];
 			boredom = 0;
+            return updateLocationForDescent(lastExploreDir);
         }
         
 		if(boredom >= EXPLORE_BOREDOM) {
+            Debug.println(Debug.info, "changing last Explore Dir because of boredom");
             boredom = 0;
             // Direction[] newDirChoices = {
             //     lastExploreDir.rotateLeft().rotateLeft(),
@@ -486,11 +482,12 @@ public class Nav {
                 lastExploreDir,
                 lastExploreDir.rotateRight(),};
 			lastExploreDir = newDirChoices[(int) (Math.random() * newDirChoices.length)];
-            // updateLocationForDescent(lastExploreDir);
+            return updateLocationForDescent(lastExploreDir);
 		}
         boredom++;
         
 		if(!rc.onTheMap(rc.getLocation().add(lastExploreDir))) {
+            Debug.println(Debug.info, "changing last Explore Dir because of a wall");
             // lastExploreDir = lastExploreDir.opposite();
             Direction tempExploreDir = null;
             if((int) (Math.random() * 2) == 0) {
@@ -506,10 +503,10 @@ public class Nav {
                 }
             lastExploreDir = tempExploreDir;
             }
-            // updateLocationForDescent(lastExploreDir);
+            return updateLocationForDescent(lastExploreDir);
         }
-        
-        return lastExploreDir;
+        Debug.println(Debug.info, "Exploring regularly. Direction before descent: " + lastExploreDir);
+        return updateLocationForDescent(lastExploreDir);
 	}
     
 	public static Direction explorePathfinding() throws GameActionException {

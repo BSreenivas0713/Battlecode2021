@@ -8,6 +8,8 @@ import musketeerplayerqual.fast.FastIterableIntSet;
 import musketeerplayerqual.fast.FastIterableLocSet;
 import musketeerplayerqual.fast.FastLocIntMap;
 import musketeerplayerqual.fast.FastIntLocMap;
+import musketeerplayerqual.fast.FastQueue;
+import musketeerplayerqual.fast.FastIntIntMap;
 
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
@@ -82,20 +84,20 @@ public class EC extends Robot {
     static int influence;
     static int cleanUpCount;
     static int currRoundNum;
-    static int numMucks = 0;
+    static int numMucks;
     static int currInfluence;
     static boolean noAdjacentEC;
+    static boolean builtRobot;
 
     static boolean muckrackerNear;
     
     static FastIterableIntSet idSet;
     static FastIterableIntSet protectorIdSet;
     static int[] ids;
-    static int[] protectorIds;
     static PriorityQueue<RushFlag> ECflags;
     static ArrayDeque<State> stateStack;
+    static FastQueue<Integer> flagQueue;
 
-    static int numProtectors;
     static int protectorsSpawnedInARow;
     static boolean canGoBackToBuildingProtectors;
     static boolean haveSeenEnemy;
@@ -125,6 +127,9 @@ public class EC extends Robot {
     static FastIterableLocSet enemyECsFound;
     static FastLocIntMap rushingECtoTurnMap;
     static FastIntLocMap idToFriendlyECLocMap;
+    static FastIntIntMap roundToSlandererID;
+    static FastIntIntMap slandererIDToRound;
+
 
     static MapLocation recentSlanderer;
 
@@ -133,17 +138,18 @@ public class EC extends Robot {
         idSet = new FastIterableIntSet(1000);
         ids = idSet.ints;
 
-        protectorIdSet = new FastIterableIntSet(100);
-        protectorIds = protectorIdSet.ints;
+        protectorIdSet = new FastIterableIntSet(1000);
+        roundToSlandererID = new FastIntIntMap(1000);
+        slandererIDToRound = new FastIntIntMap(1000);
 
         ECflags = new PriorityQueue<RushFlag>();
         stateStack = new ArrayDeque<State>();
+        flagQueue = new FastQueue<>(100);
         currentState = State.INIT;
 
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
 
         cleanUpCount = 0;
-        numProtectors = 0;
         lastRush = Integer.MIN_VALUE;
         canGoBackToBuildingProtectors = true;
         spawnKillLock = 10;
@@ -154,6 +160,7 @@ public class EC extends Robot {
         wonLastBid = false;
         lastVoteCount = 0;
         chillingCount = 0;
+        numMucks = 0;
         enemyECsFound = new FastIterableLocSet(20);
         savingForSlanderer = false;
         readyForSlanderer = false;
@@ -210,39 +217,44 @@ public class EC extends Robot {
         
         Direction[] orderedDirs = Util.getOrderedDirections(pref);
 
-        for(Direction dir : orderedDirs) {
-            boolean isScout = Comms.getIC(nextFlag) == Comms.InformationCategory.TARGET_ROBOT &&
-                            Comms.getSubRobotType(nextFlag) == Comms.SubRobotType.MUC_SCOUT;
-            boolean scoutCheck = true;
-            Direction scoutDirection = Comms.getScoutDirection(nextFlag);
-            if(isScout && dir != scoutDirection && rc.onTheMap(rc.getLocation().add(scoutDirection))) { //Try and spawn in the direction that the scout wants to go
-                scoutCheck = false;
-            } 
+        boolean isScout = Comms.getIC(nextFlag) == Comms.InformationCategory.TARGET_ROBOT &&
+                        Comms.getSubRobotType(nextFlag) == Comms.SubRobotType.MUC_SCOUT;
 
-            if (rc.canBuildRobot(toBuild, dir, influence) && scoutCheck) {
+        if(isScout) {
+            Direction scoutDirection = Comms.getScoutDirection(nextFlag);
+            orderedDirs = Util.getOrderedDirections(scoutDirection);
+        }
+
+        for(Direction dir : orderedDirs) {
+            if (rc.canBuildRobot(toBuild, dir, influence)) {
                 rc.buildRobot(toBuild, dir, influence);
                 RobotInfo robot = rc.senseRobotAtLocation(home.add(dir));
                 if(robot != null) {
                     if(robot.getType() == RobotType.MUCKRAKER) {
-                        numMucks ++;
+                        numMucks++;
                         Debug.println(Debug.info, "Num Mucks being updated, new value: " + numMucks);
+                    }
+                    if(robot.getType() == RobotType.SLANDERER) {
+                        roundToSlandererID.add(currRoundNum + Util.slandererLifetime, robot.getID());
+                        slandererIDToRound.add(robot.getID(), currRoundNum + Util.slandererLifetime);
                     }
                     Debug.println(Debug.info, "built robot: " + robot.getID());
                     idSet.add(robot.getID());
 
                     Comms.InformationCategory IC = Comms.getIC(nextFlag);
-                    if ((IC == Comms.InformationCategory.TARGET_ROBOT && 
-                        Comms.getSubRobotType(nextFlag) == SubRobotType.POL_PROTECTOR)) {
+                    if(IC == Comms.InformationCategory.TARGET_ROBOT && Comms.getSubRobotType(nextFlag) == Comms.SubRobotType.POL_PROTECTOR) {
                         protectorIdSet.add(robot.getID());
                     }
                 } else {
                     System.out.println("CRITICAL: EC didn't find the robot it just built");
                 }
                 robotCounter += 1;
-                return true;
+                builtRobot = true;
+                return builtRobot;
             }
         }
-        return false;
+        builtRobot = false;
+        return builtRobot;
     }
 
     public void takeTurn() throws GameActionException {
@@ -258,6 +270,7 @@ public class EC extends Robot {
 
         processChildrenFlags(); 
         processLocalFlags();
+        processFriendlyECFlags();
 
         goToAcceleratedSlanderersState = true;
         //goToAcceleratedSlanderer gets set to false if there is an enemy within 2 sensor radiuses of the base
@@ -327,13 +340,15 @@ public class EC extends Robot {
                 currentState = State.SAVING_FOR_RUSH;
             }
         }
-        
+
+        builtRobot = false;
 
         Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + currInfluence);
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
         Debug.println(Debug.info, "num of ec's found: " + ECflags.size());
         Debug.println(Debug.info, "num ids found: " + idSet.size);
         Debug.println(Debug.info, "num protectors currently: " + protectorIdSet.size);
+        Debug.println(Debug.info, "num slanderers currently: " + slandererIDToRound.size);
         Debug.println(Debug.info, "State stack size: " + stateStack.size() + ", state: " + currentState);
         Debug.println(Debug.info, "Muckraker near: " + muckrackerNear);
         Debug.println(Debug.info, "Wall locations: north: " + wallLocations[0] + "; east: " + wallLocations[1] + "; south: " + wallLocations[2] + "; west: " + wallLocations[3]);
@@ -381,12 +396,12 @@ public class EC extends Robot {
                     switch(chillingCount % 3) {
                         case 0: case 2: 
                             toBuild = RobotType.MUCKRAKER;
-                            influence = Integer.max(1, currInfluence / 500);
+                            influence = getMuckrakerInfluence();
                             makeMuckraker();
                             break;
                         case 1: 
                             toBuild = RobotType.POLITICIAN;
-                            influence = Math.max(15, currInfluence / 50);
+                            influence = getPoliticianInfluence();
                             signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                             break;
                     }
@@ -399,7 +414,7 @@ public class EC extends Robot {
                     switch(chillingCount % 4) {
                         case 0: case 1:
                             toBuild = RobotType.POLITICIAN;
-                            influence = Math.max(15, currInfluence / 50);
+                            influence = getPoliticianInfluence();
                             signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 1 of the else case of CHILLING");
@@ -408,7 +423,7 @@ public class EC extends Robot {
                             break;
                         case 2: 
                             toBuild = RobotType.MUCKRAKER;
-                            influence = Integer.max(1, currInfluence / 500);
+                            influence = getMuckrakerInfluence();
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 2 of the else case of CHILLING");
                                 chillingCount ++;
@@ -417,7 +432,7 @@ public class EC extends Robot {
                         case 3: 
                             int currBestSlandererInfluence = Util.getBestSlandererInfluence(currInfluence);
                             toBuild = RobotType.MUCKRAKER;
-                            influence = Integer.max(1, currInfluence / 500);
+                            influence = getMuckrakerInfluence();
                             makeMuckraker();
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 3 of the else case of CHILLING");
@@ -437,7 +452,7 @@ public class EC extends Robot {
                 switch(builtInAcceleratedCount % 3) {
                     case 0: case 1:
                         toBuild = RobotType.POLITICIAN;
-                        influence = Math.max(15, currInfluence / 50);
+                        influence = getPoliticianInfluence();
                         signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                         break;
                     case 2:
@@ -454,7 +469,7 @@ public class EC extends Robot {
                         }
                         else {
                             toBuild = RobotType.MUCKRAKER;
-                            influence = Integer.max(1, currInfluence / 500);
+                            influence = getMuckrakerInfluence();
                             makeMuckraker();
                         }
                         break;
@@ -487,7 +502,7 @@ public class EC extends Robot {
                 }
                 
                 toBuild = RobotType.MUCKRAKER;
-                influence = Integer.max(1, currInfluence / 500);
+                influence = getMuckrakerInfluence();
                 
                 // if(robotCounter % 2 == 0 || prevState != currentState) {
                 //     toBuild = RobotType.MUCKRAKER;
@@ -524,7 +539,7 @@ public class EC extends Robot {
                     nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK);
                     Debug.println(Debug.info, "Making hunter mucker with no destination.");
                     toBuild = RobotType.MUCKRAKER;
-                    influence = Integer.max(1, currInfluence / 500);
+                    influence = getMuckrakerInfluence();
                 }
 
                 if(toBuild != null) {
@@ -656,9 +671,15 @@ public class EC extends Robot {
             currentState = State.BUILDING_SLANDERERS;
         }
     }*/
-    public int PoliticianInfluence() throws GameActionException{
+
+    public int getPoliticianInfluence() throws GameActionException{
         return Math.max(15, currInfluence / 50);
     }
+
+    public int getMuckrakerInfluence() throws GameActionException{
+        return Math.max(1, currInfluence / 500);
+    }
+
     public void tryStartBuildingSpawnKill() throws GameActionException {
         Debug.println(Debug.info, "spawn kill lock: " + spawnKillLock);
         if (rc.getEmpowerFactor(rc.getTeam(),0) > Util.spawnKillThreshold && spawnKillLock >= 10) {
@@ -689,6 +710,14 @@ public class EC extends Robot {
         for(int j = idSet.size - 1; j >= 0; j--) {
             id = ids[j];
             if(rc.canGetFlag(id)) {
+
+                if(roundToSlandererID.contains(currRoundNum)) {
+                    int Slandererid = roundToSlandererID.getVal(currRoundNum);
+                    roundToSlandererID.remove(currRoundNum);
+                    slandererIDToRound.remove(Slandererid);
+                    protectorIdSet.add(Slandererid);
+                }
+
                 int flag = rc.getFlag(id);
                 Comms.InformationCategory flagIC = Comms.getIC(flag);
                 int[] currDxDy;
@@ -805,9 +834,15 @@ public class EC extends Robot {
                         }
                         break;
                 }
+
             } else {
                 idSet.remove(id);
                 protectorIdSet.remove(id);
+                if(slandererIDToRound.contains(id)) {
+                    int roundNum = slandererIDToRound.getVal(id);
+                    slandererIDToRound.remove(id);
+                    roundToSlandererID.remove(roundNum);
+                }
             }
         }
 
