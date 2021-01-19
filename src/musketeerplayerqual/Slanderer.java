@@ -122,6 +122,7 @@ public class Slanderer extends Robot {
                                 if (temp < minDistSquared) {
                                     minDistSquared = temp;
                                     closestEnemy = robot;
+                                    closestEnemyType = Comms.EnemyType.UNKNOWN;
                                 }
                             }
                             break;
