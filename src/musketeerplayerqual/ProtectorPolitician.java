@@ -158,8 +158,7 @@ public class ProtectorPolitician extends Robot {
             tryMove +=1;
         }
 
-        if(propagateFlags());
-        else if(broadcastECLocation());
+        if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

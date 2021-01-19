@@ -50,35 +50,12 @@ public class LatticeRusher extends Robot {
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
             MapLocation loc = robot.getLocation();
-            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
-                enemyLocation.isWithinDistanceSquared(loc, 8)) {
-                int dist = currLoc.distanceSquaredTo(loc);
-                if(dist < minEnemyDistSquared) {
-                    minEnemyDistSquared = dist;
-                    closestEnemy = loc;
-                    if ((int) (robot.getInfluence() / 75) > (rc.getInfluence() - 10)) {
-                        tooSmall = true;
-                        Debug.println(Debug.info, "Base seems to be too big to overtake, telling other troops to chill");
-                        int dx = enemyLocation.x - currLoc.x;
-                        int dy = enemyLocation.y - currLoc.y;
-                        int encodedInf = Comms.encodeInf(robot.getInfluence());
-
-                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_CHILL_CALL, encodedInf, dx + Util.dOffset, dy + Util.dOffset);
-                        setFlag(newFlag);
-                        needToChill = true;
-                        closestEnemy = loc;
-                        minEnemyDistSquared = dist;
-                        possibleNewHome = loc;
-                    }
-                }
-            } else {
-                int temp = currLoc.distanceSquaredTo(robot.getLocation());
-                if (temp > maxEnemyAttackableDistSquared) {
-                    maxEnemyAttackableDistSquared = temp;
-                }
-                if(robot.getType() == RobotType.MUCKRAKER) {
-                    numMuckAttackable++;
-                }
+            int temp = currLoc.distanceSquaredTo(robot.getLocation());
+            if (temp > maxEnemyAttackableDistSquared) {
+                maxEnemyAttackableDistSquared = temp;
+            }
+            if(robot.getType() == RobotType.MUCKRAKER) {
+                numMuckAttackable++;
             }
         }
 
@@ -91,44 +68,6 @@ public class LatticeRusher extends Robot {
                 if(dist < minEnemyDistSquared) {
                     minEnemyDistSquared = dist;
                     closestEnemy = loc;
-                }
-            }
-        }
-
-        if (minEnemyDistSquared == Integer.MAX_VALUE) {
-            for(int i = friendlySensable.length - 1; i >= 0; i--) {
-                robot = friendlySensable[i];
-                MapLocation loc = robot.getLocation();
-                if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 8)) {
-                    int dist = currLoc.distanceSquaredTo(loc);
-                    if(closestEnemy == null && dist < minEnemyDistSquared) {
-                        Debug.println(Debug.info, "Base seems to be converted to our side, baseConverted set to true, telling other troops to chill");
-                        int dx = enemyLocation.x - currLoc.x;
-                        int dy = enemyLocation.y - currLoc.y;
-
-                        int newFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_CHILL_CALL, dx + Util.dOffset, dy + Util.dOffset);
-                        setFlag(newFlag);
-                        needToChill = true;
-                        baseConverted = true;
-                        closestEnemy = loc;
-                        minEnemyDistSquared = dist;
-                        possibleNewHome = loc;
-                    }
-                }
-
-                if(rc.canGetFlag(robot.getID())) {
-                    int flag = rc.getFlag(robot.getID());
-                    if (Comms.getIC(flag) == Comms.InformationCategory.ENEMY_EC_CHILL_CALL) {
-                        int possibleBaseInfluence = Comms.getInf(flag);
-                        if((rc.getInfluence() - 10) < (int) (possibleBaseInfluence / 20)) {
-                            needToChill = true;
-                            Debug.println(Debug.info, "Recieved chill call, needToChill is getting set to true.");
-                        }
-                    }
-
-                    if(Comms.isSubRobotType(flag, Comms.SubRobotType.SLANDERER)) {
-                        slandererNearby = true;
-                    }
                 }
             }
         }

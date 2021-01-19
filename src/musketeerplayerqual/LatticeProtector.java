@@ -140,31 +140,6 @@ public class LatticeProtector extends Robot {
             robot = friendlySensable[i];
             if(rc.canGetFlag(robot.getID())) {
                 int robotFlag = rc.getFlag(robot.getID());
-                switch(Comms.getIC(robotFlag)) {
-                case ENEMY_EC_ATTACK_CALL:
-                    Debug.println(Debug.info, "Found Propogated flag(Attack). Acting on it. ");
-                    MapLocation robotLoc = robot.getLocation();
-                    int []DxDyFromRobot = Comms.getDxDy(robotFlag);
-                    enemyLoc = new MapLocation(DxDyFromRobot[0] + robotLoc.x - Util.dOffset, DxDyFromRobot[1] + robotLoc.y - Util.dOffset);
-                    int neededInf = Comms.getInf(robotFlag);
-                    Debug.println(Debug.info, "Current Influence: " + rc.getInfluence() + "; Required Influence for tower: " + neededInf);
-                    if((rc.getInfluence() - 10) >= (int) ((neededInf) / 10) && neededInf > maxInfSeen && rc.getInfluence() > 100) {
-                        Debug.println(Debug.info, "TurnIntoRusher is getting set to True");
-                        turnIntoRusher = true;
-                        maxInfSeen = neededInf;
-                    }
-                    else {
-                        Debug.println(Debug.info, "TurnIntoRusher is getting set to False");
-                        turnIntoRusher = false;
-                    }
-                    Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
-
-                    break;
-                default: 
-                    break;
-                }
-
-
                 if(Comms.isSubRobotType(robotFlag, Comms.SubRobotType.POL_PROTECTOR)) {
                     ProtectorNearby = true;
                     int currDistToProtector = robot.getLocation().distanceSquaredTo(rc.getLocation());
@@ -338,8 +313,7 @@ public class LatticeProtector extends Robot {
             tryMove +=1;
         }
 
-        if(propagateFlags());
-        else if(broadcastECLocation());
+        if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

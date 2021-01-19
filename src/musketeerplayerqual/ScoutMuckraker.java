@@ -70,8 +70,7 @@ public class ScoutMuckraker extends Robot {
             changeTo = new ExplorerMuckracker(rc, home);
         }
 
-        if(propagateFlags());
-        else if(broadcastECLocation());
+        if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }

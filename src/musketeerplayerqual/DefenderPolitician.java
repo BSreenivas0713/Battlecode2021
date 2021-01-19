@@ -111,8 +111,7 @@ public class DefenderPolitician extends Robot {
             tryMoveDest(toMove);
         }
         
-        if(propagateFlags());
-        else if(broadcastECLocation());
+        if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation()));
     }
 }
