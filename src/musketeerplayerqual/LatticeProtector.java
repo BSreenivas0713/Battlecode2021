@@ -110,7 +110,7 @@ public class LatticeProtector extends Robot {
 
         int closestProtectorDist = Integer.MAX_VALUE;
         MapLocation closestProtectorLoc = null;
-        boolean ProtectorNearby = false;
+        boolean protectorNearby = false;
         MapLocation enemyLoc = null;
         boolean turnIntoRusher = false;
         int maxInfSeen = -1;
@@ -123,8 +123,10 @@ public class LatticeProtector extends Robot {
             robot = friendlySensable[i];
             if(rc.canGetFlag(robot.getID())) {
                 int robotFlag = rc.getFlag(robot.getID());
-                if(Comms.isSubRobotType(robotFlag, Comms.SubRobotType.POL_PROTECTOR)) {
-                    ProtectorNearby = true;
+                Comms.InformationCategory IC = Comms.getIC(robotFlag);
+                if(Comms.isSubRobotType(robotFlag, Comms.SubRobotType.POL_PROTECTOR) ||
+                    (robot.getType() == RobotType.POLITICIAN && IC == Comms.InformationCategory.FOLLOWING)) {
+                    protectorNearby = true;
                     int currDistToProtector = robot.getLocation().distanceSquaredTo(rc.getLocation());
                     if (currDistToProtector < closestProtectorDist) {
                         closestProtectorDist = currDistToProtector;
@@ -195,6 +197,10 @@ public class LatticeProtector extends Robot {
                     } else {
                         Debug.println(Debug.info, "I was not included in this rush");
                     }
+                    break;
+                case TEST:
+                    Debug.println(Debug.info, "EC is in between building ");
+                    break;
             }
         } else {
             Debug.println(Debug.info, "Can't get home flag: " + homeID);
@@ -255,7 +261,7 @@ public class LatticeProtector extends Robot {
             }
         }
         //Tries to lattice
-        else if(ProtectorNearby) {
+        else if(protectorNearby) {
             MapLocation averageProtector = new MapLocation(totalProtectorX / numProtectors, totalProtectorY / numProtectors);
             // main_direction = currLoc.directionTo(averageProtector).opposite();
             main_direction = currLoc.directionTo(closestProtectorLoc).opposite();
