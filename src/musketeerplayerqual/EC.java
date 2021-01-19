@@ -603,7 +603,7 @@ public class EC extends Robot {
                 break;
         }
 
-        // If we aren't ready, then we just built a bot and can use nextFlag safely
+        // If we just built a bot, then we can use nextFlag safely
         // if(/*!flagQueue.isEmpty() && */!builtRobot) {
         //     // nextFlag = flagQueue.poll();
         //     nextFlag = Comms.getFlag(Comms.InformationCategory.TEST);
