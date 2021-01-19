@@ -960,8 +960,8 @@ public class EC extends Robot {
             case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11:
                 toBuild = RobotType.MUCKRAKER;
                 influence = Integer.max(1, currInfluence / 500);
-                if(robotCounter <= 8) {
-                    signalScoutMuckraker(Comms.SubRobotType.MUC_SCOUT, Util.directions[robotCounter-1]);
+                if(robotCounter <= 10) {
+                    signalScoutMuckraker(Comms.SubRobotType.MUC_SCOUT, Util.directions[robotCounter-3]);
                 }
                 break;
             case 1: case 2: case 13: case 14: case 16: case 17: case 19: case 20: case 22: case 23: case 25: case 26: case 28: case 29:
