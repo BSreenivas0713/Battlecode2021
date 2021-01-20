@@ -218,7 +218,7 @@ public class EC extends Robot {
     }
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
-        Debug.println(Debug.info, "building robot type: " + toBuild + " influence: " + influence);
+        Debug.println(Debug.info, "Trying to build robot of type: " + toBuild + " influence: " + influence);
         DirectionPreference pref = DirectionPreference.RANDOM;
         if(currentState == State.BUILDING_SPAWNKILLS) {
             pref = DirectionPreference.ORTHOGONAL;
@@ -239,15 +239,18 @@ public class EC extends Robot {
                 rc.buildRobot(toBuild, dir, influence);
                 RobotInfo robot = rc.senseRobotAtLocation(home.add(dir));
                 if(robot != null) {
-                    if(robot.getType() == RobotType.MUCKRAKER) {
-                        numMucks++;
-                        Debug.println(Debug.info, "Num Mucks being updated, new value: " + numMucks);
+                    switch(robot.getType()) {
+                        case MUCKRAKER:
+                            numMucks++;
+                            Debug.println(Debug.info, "Num Mucks being updated, new value: " + numMucks);
+                            break;
+                        case SLANDERER:
+                            roundToSlandererID.add(currRoundNum + Util.slandererLifetime, robot.getID());
+                            slandererIDToRound.add(robot.getID(), currRoundNum + Util.slandererLifetime);
+                            break;
                     }
-                    if(robot.getType() == RobotType.SLANDERER) {
-                        roundToSlandererID.add(currRoundNum + Util.slandererLifetime, robot.getID());
-                        slandererIDToRound.add(robot.getID(), currRoundNum + Util.slandererLifetime);
-                    }
-                    Debug.println(Debug.info, "built robot: " + robot.getID());
+
+                    Debug.println(Debug.info, "Built robot: " + robot.getID());
                     idSet.add(robot.getID());
 
                     Comms.InformationCategory IC = Comms.getIC(nextFlag);
@@ -497,19 +500,10 @@ public class EC extends Robot {
                     break;
                 }
                 int[] currDxDy = {targetEC.dx, targetEC.dy};
-                if (numMucks % 2 == 0) {
-                    if(targetEC.team != Team.NEUTRAL) {
-                        nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, currDxDy[0] + Util.dOffset, currDxDy[1] + Util.dOffset);
-                        Debug.println(Debug.info, "Making hunter mucker with destination " + currDxDy[0] + ", " + currDxDy[1] + ".");
-                    }
-                    else {
-                        nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK);
-                        Debug.println(Debug.info, "Making hunter mucker with no desitation");
-                    }
-                }
                 
                 toBuild = RobotType.MUCKRAKER;
-                influence = Math.max(1, currInfluence / 500);
+                influence = getMuckrakerInfluence();
+                makeMuckraker();
                 
                 // if(robotCounter % 2 == 0 || prevState != currentState) {
                 //     toBuild = RobotType.MUCKRAKER;
@@ -701,7 +695,11 @@ public class EC extends Robot {
     }
 
     public int getMuckrakerInfluence() throws GameActionException {
-        return Math.max(1, currInfluence / 500);
+        if (numMucks % Util.buffMukFrequency == 0) {
+            return Math.min(currInfluence / 10, 400);
+        } else {
+            return Math.max(1, currInfluence / 500);
+        }
     }
 
     public void tryStartBuildingSpawnKill() throws GameActionException {
@@ -1054,7 +1052,7 @@ public class EC extends Robot {
 
     public void makeMuckraker() throws GameActionException {
         RushFlag targetEC = ECflags.peek();
-        if (numMucks % 2 == 0) {           
+        if (numMucks % 2 == 0 && numMucks % Util.buffMukFrequency != 0) {         
             if (targetEC != null && targetEC.team != Team.NEUTRAL) {
                 int[] currDxDy = {targetEC.dx, targetEC.dy};
                 nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.dx + Util.dOffset, targetEC.dy + Util.dOffset);
