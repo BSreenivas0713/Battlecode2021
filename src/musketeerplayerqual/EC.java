@@ -268,10 +268,7 @@ public class EC extends Robot {
             spawnKillLock++;
         }
 
-        if (!noAdjacentEC) {
-            stateStack.push(currentState);
-            currentState = State.STUCKY_MUCKY;
-        } else if (currRoundNum > 1250 && rc.getTeamVotes() > 750) {
+        if (currRoundNum > 1250 && rc.getTeamVotes() > 750) {
             currentState = State.SURVIVAL;
         }
 
@@ -346,7 +343,7 @@ public class EC extends Robot {
                 Debug.println(Debug.info, "set state from INIT to CHILLING");
                 currentState = State.CHILLING;
             }
-            else if(almostReadyToRush()) {
+            else if(almostReadyToRush() || !noAdjacentEC) {
                 stateStack.push(State.CHILLING);
                 currentState = State.SAVING_FOR_RUSH;
             }
@@ -585,9 +582,6 @@ public class EC extends Robot {
                     spawnKillLock = 0;
                     currentState = stateStack.pop();
                 }
-                break;
-            case STUCKY_MUCKY:
-                
                 break;
             default:
                 System.out.println("CRITICAL: Maxwell screwed up stateStack");
