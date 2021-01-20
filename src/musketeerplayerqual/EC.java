@@ -412,11 +412,7 @@ public class EC extends Robot {
                         /// case 0:
                         case 0: case 2:
                             toBuild = RobotType.MUCKRAKER;
-                            if (numMucks % Util.buffMukFrequency == 0) {
-                                influence = Integer.min(currInfluence / 10, Util.buffMukFrequency);
-                            } else {
-                                influence = getMuckrakerInfluence();
-                            }
+                            influence = getMuckrakerInfluence();
                             makeMuckraker();
                             break;
                         // case 1: case 2:
@@ -453,11 +449,7 @@ public class EC extends Robot {
                         case 3: 
                             int currBestSlandererInfluence = Util.getBestSlandererInfluence(currInfluence);
                             toBuild = RobotType.MUCKRAKER;
-                            if (numMucks % Util.buffMukFrequency == 0) {
-                                influence = Integer.min(currInfluence / 10, Util.buffMukFrequency);
-                            } else {
-                                influence = getMuckrakerInfluence();
-                            }
+                            influence = getMuckrakerInfluence();
                             makeMuckraker();
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 3 of the else case of CHILLING");
@@ -487,11 +479,7 @@ public class EC extends Robot {
                         }
                         else {
                             toBuild = RobotType.MUCKRAKER;
-                            if (numMucks % Util.buffMukFrequency == 0) {
-                                influence = Integer.min(currInfluence / 10, Util.buffMukFrequency);
-                            } else {
-                                influence = getMuckrakerInfluence();
-                            }
+                            influence = getMuckrakerInfluence();
                             makeMuckraker();
                         }
                         break;
@@ -514,11 +502,7 @@ public class EC extends Robot {
                 int[] currDxDy = {targetEC.dx, targetEC.dy};
                 
                 toBuild = RobotType.MUCKRAKER;
-                if (numMucks % Util.buffMukFrequency == 0) {
-                    influence = Integer.min(currInfluence / 10, Util.buffMukFrequency);
-                } else {
-                    influence = getMuckrakerInfluence();
-                }
+                influence = getMuckrakerInfluence();
                 makeMuckraker();
                 
                 // if(robotCounter % 2 == 0 || prevState != currentState) {
