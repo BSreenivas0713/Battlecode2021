@@ -663,7 +663,7 @@ public class EC extends Robot {
                 MapLocation EnemyECLoc = robot.getLocation();
                 int neededInf =  robot.getInfluence();
                 int currReqInf = (int)  neededInf * 4 + 10;
-                if(currRoundNum <=150) {
+                if(currRoundNum <= 150) {
                     currReqInf = (int) neededInf * 2 + 10;
                 }
                 int actualDX = EnemyECLoc.x - rc.getLocation().x;
