@@ -415,11 +415,7 @@ public class EC extends Robot {
                         case 0: case 2: 
                             toBuild = RobotType.MUCKRAKER;
                             if (numMucks % Util.buffMukFrequency == 0) {
-                                if (currInfluence > 10 * Util.maxBuffMuk) {
-                                    influence = Util.maxBuffMuk;
-                                } else {
-                                    influence = currInfluence / 10;
-                                }
+                                influence = Integer.min(currInfluence / 10, Util.buffMukFrequency);
                             } else {
                                 influence = getMuckrakerInfluence();
                             }
@@ -459,11 +455,7 @@ public class EC extends Robot {
                             int currBestSlandererInfluence = Util.getBestSlandererInfluence(currInfluence);
                             toBuild = RobotType.MUCKRAKER;
                             if (numMucks % Util.buffMukFrequency == 0) {
-                                if (currInfluence > 10 * Util.maxBuffMuk) {
-                                    influence = Util.maxBuffMuk;
-                                } else {
-                                    influence = currInfluence / 10;
-                                }
+                                influence = Integer.min(currInfluence / 10, Util.buffMukFrequency);
                             } else {
                                 influence = getMuckrakerInfluence();
                             }
@@ -504,11 +496,7 @@ public class EC extends Robot {
                         else {
                             toBuild = RobotType.MUCKRAKER;
                             if (numMucks % Util.buffMukFrequency == 0) {
-                                if (currInfluence > 10 * Util.maxBuffMuk) {
-                                    influence = Util.maxBuffMuk;
-                                } else {
-                                    influence = currInfluence / 10;
-                                }
+                                influence = Integer.min(currInfluence / 10, Util.buffMukFrequency);
                             } else {
                                 influence = getMuckrakerInfluence();
                             }
@@ -535,11 +523,7 @@ public class EC extends Robot {
                 
                 toBuild = RobotType.MUCKRAKER;
                 if (numMucks % Util.buffMukFrequency == 0) {
-                    if (currInfluence > 10 * Util.maxBuffMuk) {
-                        influence = Util.maxBuffMuk;
-                    } else {
-                        influence = currInfluence / 10;
-                    }
+                    influence = Integer.min(currInfluence / 10, Util.buffMukFrequency);
                 } else {
                     influence = getMuckrakerInfluence();
                 }
