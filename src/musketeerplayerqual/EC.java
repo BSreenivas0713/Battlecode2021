@@ -351,10 +351,6 @@ public class EC extends Robot {
                 Debug.println(Debug.info, "set state from INIT to CHILLING");
                 currentState = State.CHILLING;
             }
-            else if(almostReadyToRush()) {
-                stateStack.push(State.CHILLING);
-                currentState = State.SAVING_FOR_RUSH;
-            }
         }
 
         builtRobot = false;
