@@ -76,17 +76,6 @@ public class Robot {
         if(resetFlagOnNewTurn)
             nextFlag = defaultFlag;
         
-        MapLocation[] keys = friendlyECs.getKeys();
-        int[] ids = friendlyECs.getInts();
-        MapLocation key;
-        int id;
-        for(int i = keys.length - 1; i >= 0; i--) {
-            key = keys[i];
-            id = friendlyECs.getVal(key);
-
-            Debug.setIndicatorDot(Debug.info, key, 200, 200, 200);
-            Debug.println(Debug.info, "EC at: " + key + ", id: " + id + " - " + ids[i]);
-        }
         Debug.setIndicatorDot(Debug.info, home, 255, 255, 255);
     }
 

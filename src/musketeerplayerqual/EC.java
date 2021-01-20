@@ -273,9 +273,9 @@ public class EC extends Robot {
 
         muckrakerNear = checkIfMuckrakerNear();
 
-        processChildrenFlags(); 
-        processLocalFlags();
         processFriendlyECFlags();
+        processLocalFlags();
+        processChildrenFlags();
 
         goToAcceleratedSlanderersState = true;
         //goToAcceleratedSlanderer gets set to false if there is an enemy within 2 sensor radiuses of the base
@@ -375,7 +375,7 @@ public class EC extends Robot {
             case SURVIVAL:
                 toBuild = RobotType.MUCKRAKER;
                 signalRobotType(SubRobotType.MUC_SURVIVAL);
-                influence = Integer.max(1, currInfluence / 500);
+                influence = getMuckrakerInfluence();
                 buildRobot(toBuild, influence);
                 break;
             case CHILLING: 
@@ -648,7 +648,8 @@ public class EC extends Robot {
     } 
 
     public void initializeGlobals() throws GameActionException {
-        super.initializeGlobals();
+        enemySensable = rc.senseNearbyRobots(sensorRadius, enemy);
+        friendlySensable = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
 
         toBuild = null;
         influence = 0;
@@ -657,7 +658,7 @@ public class EC extends Robot {
         closestWall = findClosestWall();
 
         // Reset slanderer every 3 rounds
-        if(rc.getRoundNum() % 3 == 0) {
+        if(currRoundNum % 3 == 0) {
             recentSlanderer = null;
         }
 
@@ -665,7 +666,7 @@ public class EC extends Robot {
         MapLocation key;
         for(int i = keys.length - 1; i >= 0; i--) {
             key = keys[i];
-            if(rc.getRoundNum() > rushingECtoTurnMap.getVal(key) + Util.rushCooldown) {
+            if(currRoundNum > rushingECtoTurnMap.getVal(key) + Util.rushCooldown) {
                 rushingECtoTurnMap.remove(key);
             }
         }
@@ -693,11 +694,11 @@ public class EC extends Robot {
         }
     }*/
 
-    public int getPoliticianInfluence() throws GameActionException{
+    public int getPoliticianInfluence() throws GameActionException {
         return Math.max(15, currInfluence / 50);
     }
 
-    public int getMuckrakerInfluence() throws GameActionException{
+    public int getMuckrakerInfluence() throws GameActionException {
         return Math.max(1, currInfluence / 500);
     }
 
@@ -748,6 +749,10 @@ public class EC extends Robot {
         }
 
         for(int j = idSet.size - 1; j >= 0; j--) {
+            if(Clock.getBytecodesLeft() < 1500) {
+                Debug.println(Debug.info, "Bytecode limit close, Breaking from loop");
+                break;
+            }
             id = ids[j];
             if(rc.canGetFlag(id)) {
                 flag = rc.getFlag(id);
@@ -900,7 +905,7 @@ public class EC extends Robot {
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
             robot = friendlySensable[i];
             id = robot.getID();
-            if(rc.canGetFlag(id)) {
+            if(!idSet.contains(id) && rc.canGetFlag(id)) {
                 flag = rc.getFlag(id);
                 switch(Comms.getIC(flag)) {
                     case FRIENDLY_EC:
@@ -909,8 +914,10 @@ public class EC extends Robot {
                                 currDxDy = Comms.getFriendlyDxDy(flag);
                                 tempMapLoc = new MapLocation(robot.getLocation().x + currDxDy[0] - Util.dOffset,
                                                             robot.getLocation().y + currDxDy[1] - Util.dOffset);
-                                idToFriendlyECLocMap.remove(id);
-                                idToFriendlyECLocMap.add(id, tempMapLoc);
+                                if(!friendlyECs.contains(tempMapLoc)) {
+                                    idToFriendlyECLocMap.remove(id);
+                                    idToFriendlyECLocMap.add(id, tempMapLoc);
+                                }
                                 break;
                             case OTHER_READ_ID:
                                 if(idToFriendlyECLocMap.contains(id)) {
@@ -929,13 +936,14 @@ public class EC extends Robot {
         }
     }
 
-    // TODO: Figure out what the heck to do here
     public void processFriendlyECFlags() throws GameActionException{
         MapLocation[] keys = friendlyECs.getKeys();
         MapLocation key;
         int id;
         int ECflag;
         MapLocation rushLoc;
+        int[] friendlyDxDy;
+        int rushDx, rushDy;
         for(int i = keys.length - 1; i >= 0; i--) {
             key = keys[i];
             id = friendlyECs.getVal(key);
@@ -944,10 +952,10 @@ public class EC extends Robot {
                 ECflag = rc.getFlag(id);
                 switch (Comms.getIC(ECflag)) {
                     case ENEMY_EC:
-                        int[] friendlyDxDy = Comms.getDxDy(ECflag);
+                        friendlyDxDy = Comms.getDxDy(ECflag);
                         rushLoc = new MapLocation(friendlyDxDy[0] + key.x - Util.dOffset, friendlyDxDy[1] + key.y - Util.dOffset);
-                        int rushDx = rushLoc.x - home.x + Util.dOffset;
-                        int rushDy = rushLoc.y - home.y + Util.dOffset;
+                        rushDx = rushLoc.x - home.x + Util.dOffset;
+                        rushDy = rushLoc.y - home.y + Util.dOffset;
                         if (flagQueueCooldown >= 10) {
                             flagQueueCooldown = 0;
                             flagQueue.add(Comms.getFlagRush(InformationCategory.ENEMY_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
