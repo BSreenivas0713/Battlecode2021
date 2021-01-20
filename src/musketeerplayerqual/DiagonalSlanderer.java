@@ -37,10 +37,6 @@ public class DiagonalSlanderer extends Robot {
 
         MapLocation curr = rc.getLocation();
 
-        if(main_direction == null) {
-            main_direction = Util.randomDirection();
-        }
-
         RobotInfo robot;
         RobotInfo closestEnemy = null;
         Comms.EnemyType closestEnemyType = null;
@@ -68,6 +64,8 @@ public class DiagonalSlanderer extends Robot {
         MapLocation spawnKillDude = null;
         Direction otherSlaFleeingDir = null;
         MapLocation loc = null;
+        MapLocation enemyLoc = null;
+        int[] enemyDxDyFromRobot;
         int id;
         int flag;
         int dist;
@@ -97,9 +95,9 @@ public class DiagonalSlanderer extends Robot {
                             break;
                         default:
                             if(!foundOwnEnemy) {
-                                int[] enemyDxDyFromRobot = Comms.getDxDy(flag);
+                                enemyDxDyFromRobot = Comms.getDxDy(flag);
     
-                                MapLocation enemyLoc = new MapLocation(enemyDxDyFromRobot[0] + loc.x - Util.dOffset, 
+                                enemyLoc = new MapLocation(enemyDxDyFromRobot[0] + loc.x - Util.dOffset, 
                                                                         enemyDxDyFromRobot[1] + loc.y - Util.dOffset);
     
                                 temp = rc.getLocation().distanceSquaredTo(enemyLoc);
@@ -163,10 +161,13 @@ public class DiagonalSlanderer extends Robot {
             } else {
                 return;
             }
+        } else {
+            main_direction = Direction.CENTER;
         }
-        while (rc.isReady() && !tryMoveDest(main_direction)) {
-            main_direction = Util.randomDirection();
-        }
+
+        if(main_direction != Direction.CENTER)
+            tryMoveDest(main_direction);
+        
         MapLocation target = rc.adjacentLocation(main_direction);
 
         Debug.setIndicatorLine(Debug.pathfinding, curr, target, 100, 100, 255);
@@ -176,9 +177,6 @@ public class DiagonalSlanderer extends Robot {
         //     resetFlagOnNewTurn = true;
         // }
 
-        // This means that the first half of an EC-ID/EC-ID broadcast finished.
-        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
-        else if(broadcastECLocation());
-        else if(foundOwnEnemy && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
+        if(foundOwnEnemy && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
     }
 }
