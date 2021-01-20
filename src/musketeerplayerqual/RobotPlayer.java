@@ -88,6 +88,7 @@ public strictfp class RobotPlayer {
                     int botFlag = rc.getFlag(robot.getID());
                     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
                     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
+                        Debug.println(Debug.info, "Flag for creation: " + botFlag);
                         switch (flagIC) {
                             case ENEMY_EC_MUK:
                                 int[] dxdy = Comms.getDxDy(botFlag);
