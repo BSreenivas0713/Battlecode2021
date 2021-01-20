@@ -139,7 +139,7 @@ public class HunterMuckracker extends Robot {
             enemiesFound++;
 
             temp = currLoc.distanceSquaredTo(tempLoc);
-            if (robot.getType() != RobotType.MUCKRAKER && temp < closestEnemyDist) {
+            if (temp < closestEnemyDist) {
                 closestEnemyDist = temp;
                 closestEnemy = robot;
                 if(robot.getType() == RobotType.MUCKRAKER) {
