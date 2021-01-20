@@ -406,13 +406,6 @@ public class EC extends Robot {
                         savingForSlanderer = false;
                         chillingCount = 0;
                     }
-
-                    if(recentSlanderer != null) {
-                        int dx = recentSlanderer.x - home.x;
-                        int dy = recentSlanderer.y - home.y;
-                        nextFlag = Comms.getFlagRush(Comms.InformationCategory.ENEMY_FOUND, (int)(2 * Math.random()), Comms.EnemyType.SLA, 
-                                                dx + Util.dOffset, dy + Util.dOffset);
-                    }
                 }
                 else if (savingForSlanderer) {
                     switch(chillingCount % 3) {
@@ -481,13 +474,6 @@ public class EC extends Robot {
                         if(Util.getBestSlandererInfluence(currInfluence ) > 100) {
                             toBuild = RobotType.SLANDERER;
                             influence = Util.getBestSlandererInfluence(currInfluence);
-                    
-                            if(recentSlanderer != null) {
-                                int dx = recentSlanderer.x - home.x;
-                                int dy = recentSlanderer.y - home.y;
-                                nextFlag = Comms.getFlagRush(Comms.InformationCategory.ENEMY_FOUND, (int)(2 * Math.random()), Comms.EnemyType.SLA, 
-                                                        dx + Util.dOffset, dy + Util.dOffset);
-                            }
                         }
                         else {
                             toBuild = RobotType.MUCKRAKER;
@@ -907,6 +893,14 @@ public class EC extends Robot {
                     roundToSlandererID.remove(roundNum);
                 }
             }
+        }
+        
+
+        if(recentSlanderer != null && currRoundNum % 3 == 0) {
+            int dx = recentSlanderer.x - home.x;
+            int dy = recentSlanderer.y - home.y;
+            flagQueue.push(Comms.getFlagRush(Comms.InformationCategory.ENEMY_FOUND, (int)(2 * Math.random()), Comms.EnemyType.SLA, 
+                                            dx + Util.dOffset, dy + Util.dOffset));
         }
 
         cleanUpCount++;
