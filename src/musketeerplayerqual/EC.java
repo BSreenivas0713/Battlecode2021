@@ -384,7 +384,8 @@ public class EC extends Robot {
                 buildRobot(toBuild, influence);
                 break;
             case CHILLING: 
-                if(savingForSlanderer && Util.getBestSlandererInfluence(currInfluence) > 100) {
+                if(savingForSlanderer && Util.getBestSlandererInfluence(currInfluence) > 100 &&
+                    protectorIdSet.size > 2 * slandererIDToRound.size) {
                     readyForSlanderer = true;
                 }
 
@@ -405,12 +406,14 @@ public class EC extends Robot {
                 }
                 else if (savingForSlanderer) {
                     switch(chillingCount % 3) {
-                        case 0: case 2: 
+                        /// case 0:
+                        case 0: case 2:
                             toBuild = RobotType.MUCKRAKER;
                             influence = getMuckrakerInfluence();
                             makeMuckraker();
                             break;
-                        case 1: 
+                        // case 1: case 2:
+                        case 1:
                             toBuild = RobotType.POLITICIAN;
                             influence = getPoliticianInfluence();
                             signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
@@ -506,7 +509,7 @@ public class EC extends Robot {
                 }
                 
                 toBuild = RobotType.MUCKRAKER;
-                influence = getMuckrakerInfluence();
+                influence = Math.max(1, currInfluence / 500);
                 
                 // if(robotCounter % 2 == 0 || prevState != currentState) {
                 //     toBuild = RobotType.MUCKRAKER;
@@ -893,9 +896,9 @@ public class EC extends Robot {
         
 
         if(recentSlanderer != null && currRoundNum % 3 == 0) {
-            int dx = recentSlanderer.x - home.x;
-            int dy = recentSlanderer.y - home.y;
-            flagQueue.push(Comms.getFlagRush(Comms.InformationCategory.ENEMY_FOUND, (int)(2 * Math.random()), Comms.EnemyType.SLA, 
+            dx = recentSlanderer.x - home.x;
+            dy = recentSlanderer.y - home.y;
+            flagQueue.add(Comms.getFlagRush(Comms.InformationCategory.ENEMY_FOUND, (int)(2 * Math.random()), Comms.EnemyType.SLA, 
                                             dx + Util.dOffset, dy + Util.dOffset));
         }
 
