@@ -43,9 +43,7 @@ public class DiagonalSlanderer extends Robot {
         double minDistSquared = Integer.MAX_VALUE;
         double temp;
 
-        System.out.println("Entering the enemy sensable loop.");
         for(int i = enemySensable.length - 1; i >= 0; i--) {
-            System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
             robot = enemySensable[i];
             temp = curr.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
@@ -71,9 +69,7 @@ public class DiagonalSlanderer extends Robot {
         int id;
         int flag;
         int dist;
-        System.out.println("Entering the friendly sensable loop.");
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
-            System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
             robot = friendlySensable[i];
             loc = robot.getLocation();
             id = robot.getID();
@@ -121,7 +117,6 @@ public class DiagonalSlanderer extends Robot {
         }
         MapLocation latticeLoc;
 
-        System.out.println("Entering movement. Bytecodes left: " + Clock.getBytecodesLeft());
         if(closestEnemy != null && curr.isWithinDistanceSquared(closestEnemy.getLocation(), Util.minDistFromEnemy)) {
             main_direction = curr.directionTo(closestEnemy.getLocation()).opposite();
             // flag = Comms.getFlag(Comms.InformationCategory.SLA_FLEEING, main_direction.ordinal());
@@ -174,7 +169,6 @@ public class DiagonalSlanderer extends Robot {
         MapLocation target = rc.adjacentLocation(main_direction);
 
         Debug.setIndicatorLine(Debug.pathfinding, curr, target, 100, 100, 255);
-        System.out.println("Broadcasting now... Bytecodes left: " + Clock.getBytecodesLeft());
         // if(avgEnemyDir != null && rc.getRoundNum() > avgEnemyDirTurn + Util.turnsEnemyBroadcastValid) {
         //     avgEnemyDir = null;
         //     resetFlagOnNewTurn = true;
