@@ -434,6 +434,7 @@ public class EC extends Robot {
                         case 2: 
                             toBuild = RobotType.MUCKRAKER;
                             influence = getMuckrakerInfluence();
+                            makeMuckraker();
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 2 of the else case of CHILLING");
                                 chillingCount ++;
@@ -537,6 +538,7 @@ public class EC extends Robot {
                     Debug.println(Debug.info, "Making hunter mucker with no destination.");
                     toBuild = RobotType.MUCKRAKER;
                     influence = getMuckrakerInfluence();
+                    makeMuckraker();
                 }
 
                 if(toBuild != null) {
@@ -1125,11 +1127,16 @@ public class EC extends Robot {
 
     public void makeMuckraker() throws GameActionException {
         RushFlag targetEC = ECflags.peek();
-        if (numMucks % 2 == 0) {
+        if (numMucks % 2 == 0 || influence > 1) {
             if (targetEC != null && targetEC.team != Team.NEUTRAL) {
                 int[] currDxDy = {targetEC.dx, targetEC.dy};
                 nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.dx + Util.dOffset, targetEC.dy + Util.dOffset);
-                Debug.println(Debug.info, "Making hunter mucker with destination " + targetEC.dx + ", " + targetEC.dy + ".");
+                if (influence > 1) {
+                    Debug.println(Debug.info, "This is a buff muck of influence: " + influence + "; destination " + targetEC.dx + ", " + targetEC.dy + ".");
+                }
+                else {
+                    Debug.println(Debug.info, "Making hunter mucker with destination " + targetEC.dx + ", " + targetEC.dy + ".");
+                }
             } else {
                 nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK);
                 Debug.println(Debug.info, "Making hunter mucker with no destination.");
