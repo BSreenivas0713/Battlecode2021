@@ -18,6 +18,7 @@ public class LatticeProtector extends Robot {
     static MapLocation lastSeenSlanderer;
     static int turnLastSeenSlanderer;
     static Direction wallDirection = null;
+    static boolean explorer = false;
 
     
     public LatticeProtector(RobotController r) {
@@ -26,11 +27,13 @@ public class LatticeProtector extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         lastSeenSlanderer = null;
         turnLastSeenSlanderer = 0;
+        explorer = false;
     }
 
     public LatticeProtector(RobotController r, Direction nearestWall) {
         this(r);
         wallDirection = nearestWall;
+        explorer = false;
     }
     
     public LatticeProtector(RobotController r, MapLocation h, int hID) {
@@ -301,11 +304,14 @@ public class LatticeProtector extends Robot {
         // }
         // else rotate towards ec
         else {
-            Debug.println(Debug.info, "I see no slanderers, and cannot lattice. Rotating towards ec");
-            main_direction = Util.rotateOppositeSpinDirection(spinDirection, currLoc.directionTo(home));
-            // Debug.println(Debug.info, "starting to explore");
-            // main_direction = Nav.explore();
-            // Debug.println(Debug.info, "I see nobody, chilling out");
+            if(!explorer) {
+                Debug.println(Debug.info, "I see no slanderers, and cannot lattice. Rotating towards ec");
+                main_direction = Util.rotateOppositeSpinDirection(spinDirection, currLoc.directionTo(home));
+            }
+            else {
+                main_direction = Nav.explore();
+                Debug.println(Debug.info, "I see nobody, chilling out");
+            }
         }
 
         MapLocation target = currLoc.add(main_direction);
