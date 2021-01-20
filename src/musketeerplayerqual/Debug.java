@@ -3,7 +3,7 @@ package musketeerplayerqual;
 import battlecode.common.*;
 
 public class Debug {
-    static final boolean verbose = false;
+    static final boolean verbose = true;
     public static final boolean info = true;
     public static final boolean pathfinding = true;
     private static final boolean indicators = true;
@@ -18,6 +18,10 @@ public class Debug {
         if(verbose && cond) {
             System.out.println(s);
         }
+    }
+
+    static void println(String s) {
+        Debug.println(Debug.info, s);
     }
     
     static void print(boolean cond, String s) {
