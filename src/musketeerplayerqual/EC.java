@@ -392,7 +392,6 @@ public class EC extends Robot {
         switch(currentState) {
             case INIT: 
                 firstRounds();
-                buildRobot(toBuild, influence);
                 break;
             case SURVIVAL:
                 toBuild = RobotType.MUCKRAKER;
@@ -712,8 +711,8 @@ public class EC extends Robot {
     }
 
     public int getMuckrakerInfluence() throws GameActionException {
-        if (numMucks % Util.buffMukFrequency == 0) {
-            return Math.min(currInfluence / 10, 400);
+        if (numMucks > 50 && numMucks % Util.buffMukFrequency == 0) {
+            return Math.max(50, Math.min(currInfluence / 10, 400));
         } else {
             return Math.max(1, currInfluence / 500);
         }
@@ -1109,12 +1108,12 @@ public class EC extends Robot {
             }
             return true;*/
         }
-        return false;   
+        return false;
     }
 
     public void makeMuckraker() throws GameActionException {
         RushFlag targetEC = ECflags.peek();
-        if (numMucks % 2 == 0 && numMucks % Util.buffMukFrequency != 0) {         
+        if (numMucks % 2 == 0) {
             if (targetEC != null && targetEC.team != Team.NEUTRAL) {
                 int[] currDxDy = {targetEC.dx, targetEC.dy};
                 nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.dx + Util.dOffset, targetEC.dy + Util.dOffset);
@@ -1245,15 +1244,7 @@ public class EC extends Robot {
         switch(robotCounter) {
             case 0: case 12: case 15: case 18: case 21: case 24: case 27: 
                 toBuild = RobotType.SLANDERER;
-                if(robotCounter == 0) {
-                    influence = 130;
-                }
-                else {
-                    influence = Util.getBestSlandererInfluence(currInfluence);
-                    if(influence == -1) {
-                        Debug.println(Debug.info, "Slanderer cost too low");
-                    }
-                }
+                influence = Math.max(130, Util.getBestSlandererInfluence(currInfluence));
                 break;
             case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11:
                 toBuild = RobotType.MUCKRAKER;
@@ -1267,6 +1258,12 @@ public class EC extends Robot {
                 influence = 15;
                 signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                 break;
+        }
+
+        if(!buildRobot(toBuild, influence)) {
+            toBuild = RobotType.MUCKRAKER;
+            influence = 1;
+            buildRobot(toBuild, influence);
         }
     }
 }
