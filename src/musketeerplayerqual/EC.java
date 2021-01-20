@@ -15,15 +15,9 @@ import java.util.ArrayDeque;
 import java.util.PriorityQueue;
 /* 
 TODO: 
-No 1 priority: within first 100 rounds, currReqInf is 1.4*neutral EC influence (if EC is neutral)
-have tower to tower communication(slanderers tell protectors about enemies)
-muckraker to muckraker communication(what base to attack, what base has been converted to ours)
-have some protectors go in the direction of the slanderers DO NOT FORGET ABOUT THIS
-have more muckrakers at the beginning so we explore quicker/dont auto lose on small maps
-Muckrakers should report slanderers to the EC
 
-not sure how protectors should figure out who slanderers are since they basically never have the slanderer flag
-Right now ECs do not propogate flags
+Should we call next flag before or after build robot succeeds??? it is not consistent in this code. I think it should be after
+
 */
 public class EC extends Robot {
     static enum State {
@@ -36,7 +30,8 @@ public class EC extends Robot {
         ACCELERATED_SLANDERERS,
         INIT,
         SURVIVAL,
-        STUCKY_MUCKY;
+        STUCKY_MUCKY,
+        RUSHING_MUCKS,
     };
 
     static class RushFlag implements Comparable<RushFlag> {
@@ -110,6 +105,8 @@ public class EC extends Robot {
     static boolean savingForSlanderer;
     static boolean readyForSlanderer;
 
+    static boolean firstScoutDeathReported;
+
     static boolean goToAcceleratedSlanderersState;
     static int builtInAcceleratedCount;
 
@@ -133,7 +130,8 @@ public class EC extends Robot {
     static FastIntLocMap idToFriendlyECLocMap;
     static FastIntIntMap roundToSlandererID;
     static FastIntIntMap slandererIDToRound;
-
+    static MapLocation firstScoutDeath;
+    static FastIntLocMap scoutIDToEnemyLocs;
 
     static MapLocation recentSlanderer;
 
@@ -174,12 +172,15 @@ public class EC extends Robot {
         rushingECtoTurnMap = new FastLocIntMap();
         recentSlanderer = null;
         idToFriendlyECLocMap = new FastIntLocMap();
+        firstScoutDeathReported = false;
 
         friendlyECs.remove(rc.getLocation());
         initialMucksDirection = 0;
         closestWall = null;
         flagQueueCooldown = 0;
         nearbyECs = new FastIterableLocSet(12);
+        firstScoutDeath = null;
+        scoutIDToEnemyLocs = new FastIntLocMap();
 
         /*if (rc.getRoundNum() <= 1) {
             int encodedInfForUnknownEC = Comms.encodeInf(200);
@@ -225,13 +226,13 @@ public class EC extends Robot {
         }
         
         Direction[] orderedDirs = Util.getOrderedDirections(pref);
-
+        //TODO: Actually use isScout smh
         boolean isScout = Comms.getIC(nextFlag) == Comms.InformationCategory.TARGET_ROBOT &&
                         Comms.getSubRobotType(nextFlag) == Comms.SubRobotType.MUC_SCOUT;
 
         if(isScout) {
             Direction scoutDirection = Comms.getScoutDirection(nextFlag);
-            orderedDirs = Util.getOrderedDirections(scoutDirection);
+            orderedDirs = Util.getOrderedDirections(scoutDirection);            
         }
 
         for(Direction dir : orderedDirs) {
@@ -243,13 +244,18 @@ public class EC extends Robot {
                         case MUCKRAKER:
                             numMucks++;
                             Debug.println(Debug.info, "Num Mucks being updated, new value: " + numMucks);
+                            if(isScout) {
+                                scoutIDToEnemyLocs.add(robot.getID(), new MapLocation(0,0));
+                                Debug.println("Scout added to Scout ID map");
+                            }
                             break;
                         case SLANDERER:
                             roundToSlandererID.add(currRoundNum + Util.slandererLifetime, robot.getID());
                             slandererIDToRound.add(robot.getID(), currRoundNum + Util.slandererLifetime);
                             break;
+                        default:
+                            break;
                     }
-
                     Debug.println(Debug.info, "Built robot: " + robot.getID());
                     idSet.add(robot.getID());
 
@@ -310,7 +316,15 @@ public class EC extends Robot {
                             }
                             currentState = State.RUSHING;
                         }
-                    } else {
+                    }
+                    else if (readyToSendBufMuck()) {
+                        if(currentState != State.RUSHING_MUCKS) {
+                            stateStack.push(currentState);
+                            currentState = State.RUSHING_MUCKS;
+                        }
+                    }
+                    
+                    else {
                         // Second priority is removing blockage
                         tryStartRemovingBlockage();
                         // Third priority is building protectors.
@@ -489,6 +503,9 @@ public class EC extends Robot {
                 if(buildRobot(toBuild, influence)) {
                     builtInAcceleratedCount ++;
                 }
+                break;
+            case RUSHING_MUCKS:
+                tryRushMuck();
                 break;
             case RUSHING:
                 trySendARush();
@@ -755,6 +772,14 @@ public class EC extends Robot {
             }
             id = ids[j];
             if(rc.canGetFlag(id)) {
+
+                if(roundToSlandererID.contains(currRoundNum)) {
+                    int Slandererid = roundToSlandererID.getVal(currRoundNum);
+                    roundToSlandererID.remove(currRoundNum);
+                    slandererIDToRound.remove(Slandererid);
+                    protectorIdSet.add(Slandererid);
+                }
+                
                 flag = rc.getFlag(id);
                 switch (Comms.getIC(flag)) {
                     case NEUTRAL_EC:
@@ -833,12 +858,22 @@ public class EC extends Robot {
                         }
                         break;
                     case ENEMY_FOUND:
+
+
                         enemyDxDy = Comms.getDxDy(flag);
                         enemyLocX = enemyDxDy[0] + home.x - Util.dOffset;
                         enemyLocY = enemyDxDy[1] + home.y - Util.dOffset;
+                        
+
 
                         tempMapLoc = new MapLocation(enemyLocX, enemyLocY);
-                        if (rc.getLocation().isWithinDistanceSquared(tempMapLoc, sensorRadius * 4)) {
+                        if(scoutIDToEnemyLocs.contains(id)) {
+                            Debug.println("Changing scoutID Map because scout has seen an enemy, Scout ID: " + id);
+                            Debug.setIndicatorLine(Debug.info,home, tempMapLoc,128,0,128);
+                            scoutIDToEnemyLocs.remove(id);
+                            scoutIDToEnemyLocs.add(id, tempMapLoc);
+                        }
+                        if (rc.getLocation().isWithinDistanceSquared(tempMapLoc, rc.getType().sensorRadiusSquared * 4)) {
                             goToAcceleratedSlanderersState = false;
                         }
 
@@ -888,6 +923,18 @@ public class EC extends Robot {
                     roundNum = slandererIDToRound.getVal(id);
                     slandererIDToRound.remove(id);
                     roundToSlandererID.remove(roundNum);
+                }
+                if (firstScoutDeath == null && scoutIDToEnemyLocs.contains(id) && !firstScoutDeathReported) {
+                    if(scoutIDToEnemyLocs.getLoc(id).equals(new MapLocation(0,0))) {
+                        Debug.println("scout dead after not finding anything");
+                    }
+                    else {
+                        Debug.println("Scout actually found an enemy");
+                        firstScoutDeath = scoutIDToEnemyLocs.getLoc(id);
+                        Debug.println("first Scout Death reported: " + firstScoutDeath + "; id: " + id);
+                    }
+                    Debug.setIndicatorLine(Debug.info,home, firstScoutDeath,255,192,203);
+
                 }
             }
         }
@@ -1009,7 +1056,22 @@ public class EC extends Robot {
             currentState = State.REMOVING_BLOCKAGE;
         }
     }
+    public boolean tryRushMuck() throws GameActionException {
+        Debug.println("building buff Muck");
 
+        toBuild = RobotType.MUCKRAKER;
+        influence = 100;
+        if(influence >= currInfluence) {
+            currentState = stateStack.pop();
+            return false;
+        }
+        if(buildRobot(toBuild, influence)) {
+            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, firstScoutDeath.x - home.x + Util.dOffset, firstScoutDeath.y - home.y + Util.dOffset);
+            firstScoutDeath = null;
+            firstScoutDeathReported = true;
+        }
+        return true;
+    }
     public boolean trySendARush() throws GameActionException {
         Debug.println(Debug.info, "building rush bots");
 
@@ -1086,6 +1148,13 @@ public class EC extends Robot {
             MapLocation enemyLocation = home.translate(targetEC.dx, targetEC.dy);
             Debug.setIndicatorLine(Debug.info, home, enemyLocation, 100, 255, 100);
             if(requiredInfluence < currInfluence) return true;
+        }
+        return false;
+    }
+    public boolean readyToSendBufMuck() {
+        if(firstScoutDeath != null && currInfluence > 100) {
+            Debug.setIndicatorLine(Debug.info, home, firstScoutDeath,128,0,128);
+            return true;
         }
         return false;
     }
