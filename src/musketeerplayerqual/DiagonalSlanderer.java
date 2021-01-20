@@ -80,10 +80,6 @@ public class DiagonalSlanderer extends Robot {
             loc = robot.getLocation();
             id = robot.getID();
             
-            if (Comms.isSubRobotType(flag, POL_SPAWNKILL)) {
-                spawnKillDude = loc;
-            }
-            
             if(rc.canGetFlag(id)) {
                 flag = rc.getFlag(id);
                 dist = loc.distanceSquaredTo(curr);
@@ -91,6 +87,9 @@ public class DiagonalSlanderer extends Robot {
                 if (Comms.isSubRobotType(flag, subRobotType) && dist < closestSlandDist) {
                     closestSlanderer = robot;
                     closestSlandDist = dist;
+                }
+                else if (Comms.isSubRobotType(flag, Comms.SubRobotType.POL_SPAWNKILL)) {
+                    spawnKillDude = loc;
                 }
 
                 if(Comms.getIC(flag) == Comms.InformationCategory.CLOSEST_ENEMY_OR_FLEEING) {
@@ -182,7 +181,6 @@ public class DiagonalSlanderer extends Robot {
 
         // This means that the first half of an EC-ID/EC-ID broadcast finished.
         if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
-        else if(broadcastECLocation());
         else if(foundOwnEnemy && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
     }
 }
