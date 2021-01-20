@@ -191,9 +191,7 @@ public class Slanderer extends Robot {
         }
 
         MapLocation target = rc.adjacentLocation(main_direction);
-        while (!tryMoveDest(main_direction) && rc.isReady()) {
-            main_direction = Util.randomDirection();
-        }
+        tryMoveDest(main_direction);
 
         Debug.setIndicatorLine(Debug.pathfinding, curr, target, 100, 100, 255);
         

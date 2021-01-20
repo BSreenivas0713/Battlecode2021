@@ -82,8 +82,9 @@ public class CleanupPolitician extends Robot {
             main_direction = rc.getLocation().directionTo(powerful.getLocation());
         }
 
-        while (!tryMove(main_direction) && rc.isReady()){
-            main_direction = Util.randomDirection();
+        Direction[] orderedDirs = Util.getOrderedDirections(main_direction);
+        for(Direction dir : orderedDirs) {
+            tryMove(dir);
         }
 
         // This means that the first half of an EC-ID/EC-ID broadcast finished.

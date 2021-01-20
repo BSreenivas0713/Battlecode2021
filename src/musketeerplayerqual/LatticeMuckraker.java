@@ -154,8 +154,9 @@ public class LatticeMuckraker extends Robot {
             }
             else {
                 main_direction = currLoc.directionTo(home).opposite();
-                while (!tryMove(main_direction) && rc.isReady()){
-                    main_direction = Util.randomDirection();
+                Direction[] orderedDirs = Util.getOrderedDirections(main_direction);
+                for(Direction dir : orderedDirs) {
+                    tryMove(dir);
                 }
             }
         }
