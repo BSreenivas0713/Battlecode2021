@@ -19,6 +19,10 @@ public class Debug {
             System.out.println(s);
         }
     }
+
+    static void println(String s) {
+        Debug.println(Debug.info, s);
+    }
     
     static void print(boolean cond, String s) {
         if(verbose && cond) {
