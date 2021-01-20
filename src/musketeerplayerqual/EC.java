@@ -414,7 +414,15 @@ public class EC extends Robot {
                     switch(chillingCount % 3) {
                         case 0: case 2: 
                             toBuild = RobotType.MUCKRAKER;
-                            influence = getMuckrakerInfluence();
+                            if (numMucks % Util.buffMukFrequency == 0) {
+                                if (currInfluence > 10 * Util.maxBuffMuk) {
+                                    influence = Util.maxBuffMuk;
+                                } else {
+                                    influence = currInfluence / 10;
+                                }
+                            } else {
+                                influence = getMuckrakerInfluence();
+                            }
                             makeMuckraker();
                             break;
                         case 1: 
@@ -450,7 +458,15 @@ public class EC extends Robot {
                         case 3: 
                             int currBestSlandererInfluence = Util.getBestSlandererInfluence(currInfluence);
                             toBuild = RobotType.MUCKRAKER;
-                            influence = getMuckrakerInfluence();
+                            if (numMucks % Util.buffMukFrequency == 0) {
+                                if (currInfluence > 10 * Util.maxBuffMuk) {
+                                    influence = Util.maxBuffMuk;
+                                } else {
+                                    influence = currInfluence / 10;
+                                }
+                            } else {
+                                influence = getMuckrakerInfluence();
+                            }
                             makeMuckraker();
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 3 of the else case of CHILLING");
@@ -487,7 +503,15 @@ public class EC extends Robot {
                         }
                         else {
                             toBuild = RobotType.MUCKRAKER;
-                            influence = getMuckrakerInfluence();
+                            if (numMucks % Util.buffMukFrequency == 0) {
+                                if (currInfluence > 10 * Util.maxBuffMuk) {
+                                    influence = Util.maxBuffMuk;
+                                } else {
+                                    influence = currInfluence / 10;
+                                }
+                            } else {
+                                influence = getMuckrakerInfluence();
+                            }
                             makeMuckraker();
                         }
                         break;
@@ -508,19 +532,18 @@ public class EC extends Robot {
                     break;
                 }
                 int[] currDxDy = {targetEC.dx, targetEC.dy};
-                if (numMucks % 2 == 0) {
-                    if(targetEC.team != Team.NEUTRAL) {
-                        nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, currDxDy[0] + Util.dOffset, currDxDy[1] + Util.dOffset);
-                        Debug.println(Debug.info, "Making hunter mucker with destination " + currDxDy[0] + ", " + currDxDy[1] + ".");
-                    }
-                    else {
-                        nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK);
-                        Debug.println(Debug.info, "Making hunter mucker with no desitation");
-                    }
-                }
                 
                 toBuild = RobotType.MUCKRAKER;
-                influence = getMuckrakerInfluence();
+                if (numMucks % Util.buffMukFrequency == 0) {
+                    if (currInfluence > 10 * Util.maxBuffMuk) {
+                        influence = Util.maxBuffMuk;
+                    } else {
+                        influence = currInfluence / 10;
+                    }
+                } else {
+                    influence = getMuckrakerInfluence();
+                }
+                makeMuckraker();
                 
                 // if(robotCounter % 2 == 0 || prevState != currentState) {
                 //     toBuild = RobotType.MUCKRAKER;
@@ -1057,7 +1080,7 @@ public class EC extends Robot {
 
     public void makeMuckraker() throws GameActionException {
         RushFlag targetEC = ECflags.peek();
-        if (numMucks % 2 == 0) {           
+        if (numMucks % 2 == 0 && numMucks % Util.buffMukFrequency != 0) {         
             if (targetEC != null && targetEC.team != Team.NEUTRAL) {
                 int[] currDxDy = {targetEC.dx, targetEC.dy};
                 nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, targetEC.dx + Util.dOffset, targetEC.dy + Util.dOffset);
