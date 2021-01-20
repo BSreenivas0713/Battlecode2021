@@ -220,9 +220,6 @@ public class LatticeProtector extends Robot {
                         Debug.println(Debug.info, "I was not included in this rush");
                     }
                     break;
-                case TEST:
-                    Debug.println(Debug.info, "EC is in between building ");
-                    break;
             }
         } else {
             Debug.println(Debug.info, "Can't get home flag: " + homeID);

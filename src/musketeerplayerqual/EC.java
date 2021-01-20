@@ -218,7 +218,7 @@ public class EC extends Robot {
     }
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
-        Debug.println(Debug.info, "building robot type: " + toBuild + " influence: " + influence);
+        Debug.println(Debug.info, "Trying to build robot of type: " + toBuild + " influence: " + influence);
         DirectionPreference pref = DirectionPreference.RANDOM;
         if(currentState == State.BUILDING_SPAWNKILLS) {
             pref = DirectionPreference.ORTHOGONAL;
@@ -239,15 +239,18 @@ public class EC extends Robot {
                 rc.buildRobot(toBuild, dir, influence);
                 RobotInfo robot = rc.senseRobotAtLocation(home.add(dir));
                 if(robot != null) {
-                    if(robot.getType() == RobotType.MUCKRAKER) {
-                        numMucks++;
-                        Debug.println(Debug.info, "Num Mucks being updated, new value: " + numMucks);
+                    switch(robot.getType()) {
+                        case MUCKRAKER:
+                            numMucks++;
+                            Debug.println(Debug.info, "Num Mucks being updated, new value: " + numMucks);
+                            break;
+                        case SLANDERER:
+                            roundToSlandererID.add(currRoundNum + Util.slandererLifetime, robot.getID());
+                            slandererIDToRound.add(robot.getID(), currRoundNum + Util.slandererLifetime);
+                            break;
                     }
-                    if(robot.getType() == RobotType.SLANDERER) {
-                        roundToSlandererID.add(currRoundNum + Util.slandererLifetime, robot.getID());
-                        slandererIDToRound.add(robot.getID(), currRoundNum + Util.slandererLifetime);
-                    }
-                    Debug.println(Debug.info, "built robot: " + robot.getID());
+
+                    Debug.println(Debug.info, "Built robot: " + robot.getID());
                     idSet.add(robot.getID());
 
                     Comms.InformationCategory IC = Comms.getIC(nextFlag);
@@ -384,7 +387,8 @@ public class EC extends Robot {
                 buildRobot(toBuild, influence);
                 break;
             case CHILLING: 
-                if(savingForSlanderer && Util.getBestSlandererInfluence(currInfluence) > 100) {
+                if(savingForSlanderer && Util.getBestSlandererInfluence(currInfluence) > 100 &&
+                    protectorIdSet.size > 2 * slandererIDToRound.size) {
                     readyForSlanderer = true;
                 }
 
@@ -402,17 +406,11 @@ public class EC extends Robot {
                         savingForSlanderer = false;
                         chillingCount = 0;
                     }
-
-                    if(recentSlanderer != null) {
-                        int dx = recentSlanderer.x - home.x;
-                        int dy = recentSlanderer.y - home.y;
-                        nextFlag = Comms.getFlagRush(Comms.InformationCategory.ENEMY_FOUND, (int)(2 * Math.random()), Comms.EnemyType.SLA, 
-                                                dx + Util.dOffset, dy + Util.dOffset);
-                    }
                 }
                 else if (savingForSlanderer) {
                     switch(chillingCount % 3) {
-                        case 0: case 2: 
+                        /// case 0:
+                        case 0: case 2:
                             toBuild = RobotType.MUCKRAKER;
                             if (numMucks % Util.buffMukFrequency == 0) {
                                 influence = Integer.min(currInfluence / 10, Util.buffMukFrequency);
@@ -421,7 +419,8 @@ public class EC extends Robot {
                             }
                             makeMuckraker();
                             break;
-                        case 1: 
+                        // case 1: case 2:
+                        case 1:
                             toBuild = RobotType.POLITICIAN;
                             influence = getPoliticianInfluence();
                             signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
@@ -485,13 +484,6 @@ public class EC extends Robot {
                         if(Util.getBestSlandererInfluence(currInfluence ) > 100) {
                             toBuild = RobotType.SLANDERER;
                             influence = Util.getBestSlandererInfluence(currInfluence);
-                    
-                            if(recentSlanderer != null) {
-                                int dx = recentSlanderer.x - home.x;
-                                int dy = recentSlanderer.y - home.y;
-                                nextFlag = Comms.getFlagRush(Comms.InformationCategory.ENEMY_FOUND, (int)(2 * Math.random()), Comms.EnemyType.SLA, 
-                                                        dx + Util.dOffset, dy + Util.dOffset);
-                            }
                         }
                         else {
                             toBuild = RobotType.MUCKRAKER;
@@ -719,7 +711,11 @@ public class EC extends Robot {
     }
 
     public int getMuckrakerInfluence() throws GameActionException {
-        return Math.max(1, currInfluence / 500);
+        if (numMucks % Util.buffMukFrequency == 0) {
+            return Math.min(currInfluence / 10, 400);
+        } else {
+            return Math.max(1, currInfluence / 500);
+        }
     }
 
     public void tryStartBuildingSpawnKill() throws GameActionException {
@@ -910,6 +906,14 @@ public class EC extends Robot {
                     roundToSlandererID.remove(roundNum);
                 }
             }
+        }
+        
+
+        if(recentSlanderer != null && currRoundNum % 3 == 0) {
+            dx = recentSlanderer.x - home.x;
+            dy = recentSlanderer.y - home.y;
+            flagQueue.add(Comms.getFlagRush(Comms.InformationCategory.ENEMY_FOUND, (int)(2 * Math.random()), Comms.EnemyType.SLA, 
+                                            dx + Util.dOffset, dy + Util.dOffset));
         }
 
         cleanUpCount++;
