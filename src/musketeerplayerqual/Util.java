@@ -96,6 +96,9 @@ public class Util {
     static final int MuckAttackCooldown = 50;
 
     static final int rushCooldown = 20;
+
+    static final int buffMukFrequency = 25;
+    static final int maxBuffMuk = 400;
     
     /**
      * Returns a random Direction.
