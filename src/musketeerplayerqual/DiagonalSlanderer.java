@@ -7,6 +7,7 @@ import musketeerplayerqual.Debug.*;
 
 public class DiagonalSlanderer extends Robot {
     static Direction main_direction;
+    static int ecRadius = RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared;
     
     public DiagonalSlanderer(RobotController r) {
         super(r);
@@ -61,56 +62,62 @@ public class DiagonalSlanderer extends Robot {
                 }
             }
         }
+
+        boolean foundOwnEnemy = closestEnemy != null;
         
         RobotInfo closestSlanderer = null;
         int closestSlandDist = Integer.MAX_VALUE;
         MapLocation spawnKillDude = null;
         Direction otherSlaFleeingDir = null;
+        MapLocation loc = null;
+        int id;
         int flag;
         int dist;
         System.out.println("Entering the friendly sensable loop.");
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
             System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
             robot = friendlySensable[i];
-            MapLocation tempLoc = robot.getLocation();
+            loc = robot.getLocation();
+            id = robot.getID();
             
-            if(rc.canGetFlag(robot.getID())) {
-                flag = rc.getFlag(robot.getID());
-                dist = tempLoc.distanceSquaredTo(curr);
+            if (Comms.isSubRobotType(flag, POL_SPAWNKILL)) {
+                spawnKillDude = loc;
+            }
+            
+            if(rc.canGetFlag(id)) {
+                flag = rc.getFlag(id);
+                dist = loc.distanceSquaredTo(curr);
                 
                 if (Comms.isSubRobotType(flag, subRobotType) && dist < closestSlandDist) {
                     closestSlanderer = robot;
                     closestSlandDist = dist;
                 }
 
-                if (Comms.isSubRobotType(flag, Comms.SubRobotType.POL_SPAWNKILL)) {
-                    spawnKillDude = tempLoc;
-                }
-                // if(Comms.getIC(flag) == Comms.InformationCategory.SLA_FLEEING) {
-                //     otherSlaFleeingDir = Comms.getDirection(flag);
-                // }
-
-                if (Comms.getIC(flag) == Comms.InformationCategory.CLOSEST_ENEMY_OR_FLEEING) {
-                    if (Comms.getSubCEOF(flag) == Comms.ClosestEnemyOrFleeing.FLEEING) {
-                        otherSlaFleeingDir = Comms.getDirection(flag);
-                    } else {
-                        MapLocation robotLoc = robot.getLocation();
-                        int[] enemyDxDyFromRobot = Comms.getDxDy(flag);
-
-                        MapLocation enemyLoc = new MapLocation(enemyDxDyFromRobot[0] + robotLoc.x - Util.dOffset, 
-                                                                enemyDxDyFromRobot[1] + robotLoc.y - Util.dOffset);
-
-                        temp = rc.getLocation().distanceSquaredTo(enemyLoc);
-                        if (temp < minDistSquared) {
-                            minDistSquared = temp;
-                            closestEnemy = robot;
-                            closestEnemyType = Comms.EnemyType.UNKNOWN;
-                        }
+                if(Comms.getIC(flag) == Comms.InformationCategory.CLOSEST_ENEMY_OR_FLEEING) {
+                    switch(Comms.getSubCEOF(flag)) {
+                        case FLEEING:
+                            otherSlaFleeingDir = Comms.getDirection(flag);
+                            break;
+                        default:
+                            if(!foundOwnEnemy) {
+                                int[] enemyDxDyFromRobot = Comms.getDxDy(flag);
+    
+                                MapLocation enemyLoc = new MapLocation(enemyDxDyFromRobot[0] + loc.x - Util.dOffset, 
+                                                                        enemyDxDyFromRobot[1] + loc.y - Util.dOffset);
+    
+                                temp = rc.getLocation().distanceSquaredTo(enemyLoc);
+                                if (temp < minDistSquared) {
+                                    minDistSquared = temp;
+                                    closestEnemy = robot;
+                                    closestEnemyType = Comms.EnemyType.UNKNOWN;
+                                }
+                            }
+                            break;
                     }
                 }
             }
         }
-        int ecRadius = RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared;
+        
         boolean moveBack = false;
         if (!curr.isWithinDistanceSquared(home, ecRadius)) {
             moveBack = true;
@@ -176,6 +183,6 @@ public class DiagonalSlanderer extends Robot {
         // This means that the first half of an EC-ID/EC-ID broadcast finished.
         if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
         else if(broadcastECLocation());
-        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
+        else if(foundOwnEnemy && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
     }
 }
