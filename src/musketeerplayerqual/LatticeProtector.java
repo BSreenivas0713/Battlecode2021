@@ -46,6 +46,10 @@ public class LatticeProtector extends Robot {
         Debug.println(Debug.info, "I am a lattice protector politician; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
+        if (rc.getRoundNum() >= 1495 && rc.canEmpower(actionRadius)) {
+            rc.empower(actionRadius);
+        }
+
         MapLocation currLoc = rc.getLocation();
 
         /* Creating all the variables that we need to do the step by step decision making for later*/
