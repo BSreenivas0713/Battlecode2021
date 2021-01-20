@@ -36,6 +36,7 @@ public class EC extends Robot {
         ACCELERATED_SLANDERERS,
         INIT,
         SURVIVAL,
+        STUCKY_MUCKY;
     };
 
     static class RushFlag implements Comparable<RushFlag> {
@@ -127,6 +128,7 @@ public class EC extends Robot {
     static int flagQueueCooldown;
 
     static FastIterableLocSet enemyECsFound;
+    static FastIterableLocSet nearbyECs;
     static FastLocIntMap rushingECtoTurnMap;
     static FastIntLocMap idToFriendlyECLocMap;
     static FastIntIntMap roundToSlandererID;
@@ -177,6 +179,7 @@ public class EC extends Robot {
         initialMucksDirection = 0;
         closestWall = null;
         flagQueueCooldown = 0;
+        nearbyECs = new FastIterableLocSet(12);
 
         /*if (rc.getRoundNum() <= 1) {
             int encodedInfForUnknownEC = Comms.encodeInf(200);
@@ -186,27 +189,30 @@ public class EC extends Robot {
             Debug.println(Debug.info, "Added thingy to ECflags.");
         }*/
 
-        for (RobotInfo robot : rc.senseNearbyRobots(sensorRadius, enemy)) {
+        for (RobotInfo robot : rc.senseNearbyRobots(sensorRadius)) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
-                noAdjacentEC = false;
-                RushFlag rushFlag;
-                MapLocation EnemyECLoc = robot.getLocation();
-                int neededInf =  robot.getInfluence();
-                int currReqInf = (int)  neededInf * 4 + 10;
-                if(currRoundNum <=150) {
-                    currReqInf = (int) neededInf * 2 + 10;
-                }
-                int actualDX = rc.getLocation().x - EnemyECLoc.x;
-                int actualDY = rc.getLocation().y - EnemyECLoc.y;
-                int encodedInf = Comms.encodeInf(robot.getInfluence());
-                int flag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC, encodedInf, actualDX + Util.dOffset, actualDY + Util.dOffset);
-                Debug.println(Debug.info, "ADJACENT INFO:: neededInf: " + neededInf + "; actualDX: " + actualDX + "; actualDY: " + actualDY);
-                rushFlag = new RushFlag(currReqInf, actualDX, actualDY, flag, rc.getTeam().opponent());
-                ECflags.remove(rushFlag);
-                if (!enemyECsFound.contains(EnemyECLoc)) {
-                    enemyECsFound.add(EnemyECLoc);
-                }
-                ECflags.add(rushFlag);
+                if (robot.getTeam() == enemy) {
+                    noAdjacentEC = false;
+                    RushFlag rushFlag;
+                    MapLocation EnemyECLoc = robot.getLocation();
+                    int neededInf =  robot.getInfluence();
+                    int currReqInf = (int)  neededInf * 4 + 10;
+                    if(currRoundNum <=150) {
+                        currReqInf = (int) neededInf * 2 + 10;
+                    }
+                    int actualDX = EnemyECLoc.x - rc.getLocation().x;
+                    int actualDY = EnemyECLoc.y - rc.getLocation().y;
+                    int encodedInf = Comms.encodeInf(robot.getInfluence());
+                    int flag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC, encodedInf, actualDX + Util.dOffset, actualDY + Util.dOffset);
+                    Debug.println(Debug.info, "ADJACENT INFO:: neededInf: " + neededInf + "; actualDX: " + actualDX + "; actualDY: " + actualDY);
+                    rushFlag = new RushFlag(currReqInf, actualDX, actualDY, flag, rc.getTeam().opponent());
+                    ECflags.remove(rushFlag);
+                    if (!enemyECsFound.contains(EnemyECLoc)) {
+                        enemyECsFound.add(EnemyECLoc);
+                    }
+                    ECflags.add(rushFlag);
+                } 
+                nearbyECs.add(robot.getLocation());
             }
         }
     }
@@ -267,7 +273,10 @@ public class EC extends Robot {
             spawnKillLock++;
         }
 
-        if (currRoundNum > 1250 && rc.getTeamVotes() > 750) {
+        if (!noAdjacentEC && currentState != State.SAVING_FOR_RUSH && currentState != State.RUSHING) {
+            stateStack.push(State.CHILLING);
+            currentState = State.SAVING_FOR_RUSH;
+        } else if (currRoundNum > 1250 && rc.getTeamVotes() > 750) {
             currentState = State.SURVIVAL;
         }
 
@@ -668,6 +677,14 @@ public class EC extends Robot {
             key = keys[i];
             if(currRoundNum > rushingECtoTurnMap.getVal(key) + Util.rushCooldown) {
                 rushingECtoTurnMap.remove(key);
+            }
+        }
+        noAdjacentEC = true;
+        nearbyECs.updateIterable();
+        for (int i = nearbyECs.size - 1; i >= 0; i--) {
+            RobotInfo robot = rc.senseRobotAtLocation(nearbyECs.locs[i]);
+            if (robot.getTeam() == enemy) {
+                noAdjacentEC = false;
             }
         }
     }
