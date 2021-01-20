@@ -191,30 +191,10 @@ public class EC extends Robot {
 
         for (RobotInfo robot : rc.senseNearbyRobots(sensorRadius)) {
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
-                if (robot.getTeam() == enemy) {
-                    noAdjacentEC = false;
-                    RushFlag rushFlag;
-                    MapLocation EnemyECLoc = robot.getLocation();
-                    int neededInf =  robot.getInfluence();
-                    int currReqInf = (int)  neededInf * 4 + 10;
-                    if(currRoundNum <=150) {
-                        currReqInf = (int) neededInf * 2 + 10;
-                    }
-                    int actualDX = EnemyECLoc.x - rc.getLocation().x;
-                    int actualDY = EnemyECLoc.y - rc.getLocation().y;
-                    int encodedInf = Comms.encodeInf(robot.getInfluence());
-                    int flag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC, encodedInf, actualDX + Util.dOffset, actualDY + Util.dOffset);
-                    Debug.println(Debug.info, "ADJACENT INFO:: neededInf: " + neededInf + "; actualDX: " + actualDX + "; actualDY: " + actualDY);
-                    rushFlag = new RushFlag(currReqInf, actualDX, actualDY, flag, rc.getTeam().opponent());
-                    ECflags.remove(rushFlag);
-                    if (!enemyECsFound.contains(EnemyECLoc)) {
-                        enemyECsFound.add(EnemyECLoc);
-                    }
-                    ECflags.add(rushFlag);
-                } 
                 nearbyECs.add(robot.getLocation());
             }
         }
+        nearbyECs.updateIterable();
     }
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
@@ -659,11 +639,43 @@ public class EC extends Robot {
             }
         }
         noAdjacentEC = true;
-        nearbyECs.updateIterable();
         for (int i = nearbyECs.size - 1; i >= 0; i--) {
             RobotInfo robot = rc.senseRobotAtLocation(nearbyECs.locs[i]);
             if (robot.getTeam() == enemy) {
                 noAdjacentEC = false;
+                RushFlag rushFlag;
+                MapLocation EnemyECLoc = robot.getLocation();
+                int neededInf =  robot.getInfluence();
+                int currReqInf = (int)  neededInf * 4 + 10;
+                if(currRoundNum <=150) {
+                    currReqInf = (int) neededInf * 2 + 10;
+                }
+                int actualDX = EnemyECLoc.x - rc.getLocation().x;
+                int actualDY = EnemyECLoc.y - rc.getLocation().y;
+                int encodedInf = Comms.encodeInf(robot.getInfluence());
+                int flag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC, encodedInf, actualDX + Util.dOffset, actualDY + Util.dOffset);
+                rushFlag = new RushFlag(currReqInf, actualDX, actualDY, flag, rc.getTeam().opponent());
+                Debug.println(Debug.info, "ADJACENT INFO:: neededInf: " + neededInf + "; actualDX: " + actualDX + "; actualDY: " + actualDY);
+                
+                ECflags.remove(rushFlag);
+                if (!enemyECsFound.contains(EnemyECLoc)) {
+                    enemyECsFound.add(EnemyECLoc);
+                }
+                ECflags.add(rushFlag);
+            } else if (robot.getTeam() == Team.NEUTRAL) {
+                RushFlag rushFlag;
+                MapLocation NeutralECLoc = robot.getLocation();
+                int neededInf =  robot.getInfluence();
+                int currReqInf = (int) neededInf * 2 + 10;
+                int actualDX = NeutralECLoc.x - rc.getLocation().x;
+                int actualDY = NeutralECLoc.y - rc.getLocation().y;
+                int encodedInf = Comms.encodeInf(robot.getInfluence());
+                int flag = Comms.getFlag(Comms.InformationCategory.NEUTRAL_EC, encodedInf, actualDX + Util.dOffset, actualDY + Util.dOffset);
+                rushFlag = new RushFlag(currReqInf, actualDX, actualDY, flag, Team.NEUTRAL);
+                Debug.println(Debug.info, "ADJACENT INFO:: neededInf: " + neededInf + "; actualDX: " + actualDX + "; actualDY: " + actualDY);
+                
+                ECflags.remove(rushFlag);
+                ECflags.add(rushFlag);
             }
         }
     }
@@ -695,7 +707,7 @@ public class EC extends Robot {
     }
 
     public int getMuckrakerInfluence() throws GameActionException {
-        if (numMucks % Util.buffMukFrequency == 0) {
+        if (numMucks % Util.buffMukFrequency == 0 && numMucks != 0) {
             return Math.min(currInfluence / 10, 400);
         } else {
             return Math.max(1, currInfluence / 500);
