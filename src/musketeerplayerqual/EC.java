@@ -1073,7 +1073,7 @@ public class EC extends Robot {
         Debug.println("building buff Muck");
 
         toBuild = RobotType.MUCKRAKER;
-        influence = 100;
+        influence = 150;
         if(influence >= currInfluence) {
             currentState = stateStack.pop();
             return false;
@@ -1170,7 +1170,7 @@ public class EC extends Robot {
         return false;
     }
     public boolean readyToSendBufMuck() {
-        if(firstScoutDeath != null && currInfluence > 100) {
+        if(firstScoutDeath != null && currInfluence > 150) {
             Debug.setIndicatorLine(Debug.info, home, firstScoutDeath,128,0,128);
             return true;
         }
@@ -1261,7 +1261,7 @@ public class EC extends Robot {
     
     public void firstRounds() throws GameActionException {
         switch(robotCounter) {
-            case 0: case 12: case 15: case 18: case 21: case 24: case 27: 
+            case 0: case 12: case 14: case 16: case 18: case 21: case 24: case 26: case 28: 
                 toBuild = RobotType.SLANDERER;
                 influence = Math.max(130, Util.getBestSlandererInfluence(currInfluence));
                 break;
@@ -1272,7 +1272,7 @@ public class EC extends Robot {
                     signalRobotAndDirection(Comms.SubRobotType.MUC_SCOUT, Util.directions[numMucks]);
                 }
                 break;
-            case 1: case 2: case 13: case 14: case 16: case 17: case 19: case 20: case 22: case 23: case 25: case 26: case 28: case 29:
+            case 1: case 2: case 13: case 15: case 17: case 19: case 20: case 22: case 23: case 25: case 27: case 29:
                 toBuild = RobotType.POLITICIAN;
                 influence = 15;
                 signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
