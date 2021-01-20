@@ -45,7 +45,7 @@ public class Util {
         Direction.EAST,
     };
 
-    static final double spawnKillThreshold = 2.5;
+    static final double spawnKillThreshold = 5;
     static final int dOffset = 64;
     static final int dSmallOffset = 8;
 
