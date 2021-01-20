@@ -17,6 +17,8 @@ public class Robot {
     static boolean resetFlagOnNewTurn = true;
     static MapLocation home;
     static int homeID;
+    static int prevBroadcastRound;
+    static int localOrGlobal;
 
     static int sensorRadius;
     static int actionRadius;
@@ -44,6 +46,8 @@ public class Robot {
         defaultFlag = 0;
         friendlyECs = new FastLocIntMap();
         needToBroadcastHomeEC = false;
+        prevBroadcastRound = -2;
+        localOrGlobal = 0;
 
         if(rc.getType() == RobotType.ENLIGHTENMENT_CENTER) {
             home = rc.getLocation();
@@ -120,57 +124,59 @@ public class Robot {
      * @return true if found an EC and broadcasted
      */
     boolean broadcastECLocation() throws GameActionException {
-        Debug.println(Debug.info, "Trying to broadcast EC locations");
-        boolean res = false;
+        if(rc.getRoundNum() != prevBroadcastRound + 1) {
+            Debug.println(Debug.info, "Trying to broadcast EC locations");
+            boolean res = false;
 
-        RobotInfo robot;
-        // Moved beforehand, so we need to recalculate
-        RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius);
+            RobotInfo robot;
+            // Moved beforehand, so we need to recalculate
+            RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius);
 
-        for(int i = sensable.length - 1; i >= 0; i--) {
-            robot = sensable[i];
-            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
-                if(robot.getTeam() == rc.getTeam()) {
-                    Debug.println(Debug.info, "Found a friendly EC: "+ friendlyECs.size);
-                    if(!friendlyECs.contains(robot.getLocation())) {
-                        MapLocation ecLoc = robot.getLocation();
-                        Debug.println(Debug.info, "Reporting a friendly EC");
+            for(int i = sensable.length - 1; i >= 0; i--) {
+                robot = sensable[i];
+                if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                    if(robot.getTeam() == rc.getTeam()) {
+                        Debug.println(Debug.info, "Found a friendly EC: "+ friendlyECs.size);
+                        if(!friendlyECs.contains(robot.getLocation())) {
+                            MapLocation ecLoc = robot.getLocation();
+                            Debug.println(Debug.info, "Reporting a friendly EC");
+            
+                            int ecDX = ecLoc.x - home.x;
+                            int ecDY = ecLoc.y - home.y;
         
-                        int ecDX = ecLoc.x - home.x;
-                        int ecDY = ecLoc.y - home.y;
-    
-                        int id = robot.getID();
+                            int id = robot.getID();
 
-                        setFlag(Comms.getFlag(InformationCategory.FRIENDLY_EC, FriendlyECType.HOME_READ_LOC, ecDX + Util.dOffset, ecDY + Util.dOffset));
-                        nextFlag = Comms.getFlag(InformationCategory.FRIENDLY_EC, FriendlyECType.HOME_READ_ID, 0, id);
+                            setFlag(Comms.getFlag(InformationCategory.FRIENDLY_EC, FriendlyECType.HOME_READ_LOC, ecDX + Util.dOffset, ecDY + Util.dOffset));
+                            nextFlag = Comms.getFlag(InformationCategory.FRIENDLY_EC, FriendlyECType.HOME_READ_ID, 0, id);
 
-                        needToBroadcastHomeEC = true;
+                            needToBroadcastHomeEC = true;
 
-                        friendlyECs.add(ecLoc, id);
+                            friendlyECs.add(ecLoc, id);
+                            prevBroadcastRound = rc.getRoundNum();
+                            return true;
+                        }
+                    } else {
+                        MapLocation ecLoc = robot.getLocation();
+        
+                        int ecDX = ecLoc.x - home.x + Util.dOffset;
+                        int ecDY = ecLoc.y - home.y + Util.dOffset;
+        
+                        int encodedInf = Comms.encodeInf(robot.getInfluence());
+                        if(robot.getTeam() == enemy) {
+                            Debug.println(Debug.info, "Broadcasting enemy EC location");
+                            setFlag(Comms.getFlag(InformationCategory.ENEMY_EC, encodedInf, ecDX, ecDY));
+                        } else {
+                            Debug.println(Debug.info, "Broadcasting neutral EC location");
+                            setFlag(Comms.getFlag(InformationCategory.NEUTRAL_EC, encodedInf, ecDX, ecDY));
+                        }
 
+                        friendlyECs.remove(ecLoc);
+                        prevBroadcastRound = rc.getRoundNum();
                         return true;
                     }
-                } else {
-                    MapLocation ecLoc = robot.getLocation();
-    
-                    int ecDX = ecLoc.x - home.x + Util.dOffset;
-                    int ecDY = ecLoc.y - home.y + Util.dOffset;
-    
-                    int encodedInf = Comms.encodeInf(robot.getInfluence());
-                    if(robot.getTeam() == enemy) {
-                        Debug.println(Debug.info, "Broadcasting enemy EC location");
-                        setFlag(Comms.getFlag(InformationCategory.ENEMY_EC, encodedInf, ecDX, ecDY));
-                    } else {
-                        Debug.println(Debug.info, "Broadcasting neutral EC location");
-                        setFlag(Comms.getFlag(InformationCategory.NEUTRAL_EC, encodedInf, ecDX, ecDY));
-                    }
-
-                    friendlyECs.remove(ecLoc);
-                    return true;
                 }
             }
         }
-
         return false;
     }
 
@@ -275,7 +281,7 @@ public class Robot {
             
         Debug.setIndicatorDot(Debug.info, enemyLoc, 0, 0, 0);
 
-        if(rc.getRoundNum() % 2 == parityBroadcastEnemy) {
+        if(localOrGlobal % 2 == parityBroadcastEnemy) {
             broadcastEnemyFound(enemyLoc, type);
         } else {
             // Broadcast locally first, and then globally if we can't fit it in the local version.
@@ -283,6 +289,7 @@ public class Robot {
                 broadcastEnemyFound(enemyLoc, type);
             }
         }
+        localOrGlobal++;
         return true;
     }
 

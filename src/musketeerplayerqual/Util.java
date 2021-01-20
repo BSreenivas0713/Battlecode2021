@@ -63,6 +63,8 @@ public class Util {
     static final int cleanupPoliticianInfluence = 34;
     
     static final int buildSlandererThreshold = 20000;
+
+    static final int smallMuckThreshold = 5;
     
     static final int maxSlandererInfluence = 949;
     static final int[] bestSlandererCosts = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 41, 41, 41, 41, 41, 41, 

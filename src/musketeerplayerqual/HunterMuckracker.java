@@ -161,6 +161,9 @@ public class HunterMuckracker extends Robot {
                 if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
                     muckraker_Found_EC = true;
                 }
+                else if(enemyLocation.distanceSquaredTo(robot.getLocation()) <= 3 * sensorRadius){
+                    enemyLocation = robot.getLocation(); //NOTE: intended for buf mucks that will have an enemy location set close to but not in sensor radius of the EC
+                }
             }
         }
 
@@ -231,7 +234,7 @@ public class HunterMuckracker extends Robot {
                     if(rc.getLocation().distanceSquaredTo(enemyLocation) <= actionRadius) {
                         main_direction = rc.getLocation().directionTo(enemyLocation).opposite();
                         Debug.println(Debug.info, "I moving away from the enemy location");
-                    } else if(closest_muk_dist <= 4) {
+                    } else if(closest_muk_dist <= 4 && rc.getInfluence() < Util.smallMuckThreshold) {
                         main_direction = rc.getLocation().directionTo(closest_muk.getLocation()).opposite();
                         Debug.println(Debug.info, "I moving away from another muck");
                     } else {
