@@ -711,7 +711,9 @@ public class EC extends Robot {
     }
     
     public boolean checkIfMuckrakerNear() throws GameActionException {
-        for(RobotInfo robot: rc.senseNearbyRobots(sensorRadius, enemy)) {
+        RobotInfo robot;
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
             if(robot.getType() == RobotType.MUCKRAKER) {
                 return true;
             }
@@ -721,42 +723,47 @@ public class EC extends Robot {
 
     public void processChildrenFlags() throws GameActionException {
         idSet.updateIterable();
-        protectorIdSet.updateIterable();
+        // protectorIdSet.updateIterable();
 
-        int id;
+        int id, slandererID;
         MapLocation tempMapLoc;
         int neededInf;
         int currReqInf;
         int friendId;
+        int flag;
+        int[] currDxDy;
+        int[] enemyDxDy;
+        int[] wallDxDy;
+        int dx, dy;
+        int enemyLocX, enemyLocY;
+        int wallDx, wallDy;
+        RushFlag rushFlag;
+        int roundNum;
+        
+        if(roundToSlandererID.contains(currRoundNum)) {
+            slandererID = roundToSlandererID.getVal(currRoundNum);
+            roundToSlandererID.remove(currRoundNum);
+            slandererIDToRound.remove(slandererID);
+            protectorIdSet.add(slandererID);
+        }
+
         for(int j = idSet.size - 1; j >= 0; j--) {
             id = ids[j];
             if(rc.canGetFlag(id)) {
-
-                if(roundToSlandererID.contains(currRoundNum)) {
-                    int Slandererid = roundToSlandererID.getVal(currRoundNum);
-                    roundToSlandererID.remove(currRoundNum);
-                    slandererIDToRound.remove(Slandererid);
-                    protectorIdSet.add(Slandererid);
-                }
-
-                int flag = rc.getFlag(id);
-                Comms.InformationCategory flagIC = Comms.getIC(flag);
-                int[] currDxDy;
-                RushFlag rushFlag;
-                switch (flagIC) {
+                flag = rc.getFlag(id);
+                switch (Comms.getIC(flag)) {
                     case NEUTRAL_EC:
-                        // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                         currDxDy = Comms.getDxDy(flag);
-                        neededInf = Comms.getInf(flag);
-                        currReqInf = (int) neededInf * 2 + 10;
-                        // if(currRoundNum <= 150) {
-                        //     currReqInf = (int) neededInf * 2 + 10;
-                        // }
-                        rushFlag = new RushFlag(currReqInf, currDxDy[0] - Util.dOffset, currDxDy[1] - Util.dOffset, flag, Team.NEUTRAL);
-                        tempMapLoc = new MapLocation(rc.getLocation().x + rushFlag.dx, rc.getLocation().y + rushFlag.dy);
+
+                        dx = currDxDy[0] - Util.dOffset;
+                        dy = currDxDy[1] - Util.dOffset;
+                        tempMapLoc = new MapLocation(home.x + dx, home.y + dy);
 
                         // Only insert if we aren't rushing this EC
                         if(!rushingECtoTurnMap.contains(tempMapLoc)) {
+                            neededInf = Comms.getInf(flag);
+                            currReqInf = neededInf * 2 + 10;
+                            rushFlag = new RushFlag(currReqInf, dx, dy, flag, Team.NEUTRAL);
                             ECflags.remove(rushFlag);
                             ECflags.add(rushFlag);
                         }
@@ -764,18 +771,20 @@ public class EC extends Robot {
                         Debug.println(Debug.info, "Found neutral EC at : " + tempMapLoc);
                         break;
                     case ENEMY_EC:
-                        // Debug.println(Debug.info, "Current Inluence: " + rc.getInfluence() + ", Tower inf: " + neededInf);
                         currDxDy = Comms.getDxDy(flag);
-                        neededInf =  Comms.getInf(flag);
-                        currReqInf = (int) neededInf * 4 + 10;
-                        if(currRoundNum <=150) {
-                            currReqInf = (int) neededInf * 2 + 10;
-                        }
-                        rushFlag = new RushFlag(currReqInf, currDxDy[0] - Util.dOffset, currDxDy[1] - Util.dOffset, flag, rc.getTeam().opponent());
-                        tempMapLoc = new MapLocation(rc.getLocation().x + rushFlag.dx, rc.getLocation().y + rushFlag.dy);
+
+                        dx = currDxDy[0] - Util.dOffset;
+                        dy = currDxDy[1] - Util.dOffset;
+                        tempMapLoc = new MapLocation(home.x + dx, home.y + dy);
                         
                         // Only insert if we aren't rushing this EC
                         if(!rushingECtoTurnMap.contains(tempMapLoc)) {
+                            neededInf =  Comms.getInf(flag);
+                            currReqInf = neededInf * 4 + 10;
+                            if(currRoundNum <= 150) {
+                                currReqInf = neededInf * 2 + 10;
+                            }
+                            rushFlag = new RushFlag(currReqInf, dx, dy, flag, rc.getTeam().opponent());
                             ECflags.remove(rushFlag);
                             ECflags.add(rushFlag);
                         }
@@ -792,18 +801,14 @@ public class EC extends Robot {
                         friendlyECs.remove(tempMapLoc);
                         break;
                     case FRIENDLY_EC:
-                        Comms.FriendlyECType type = Comms.getFriendlyECType(flag);
-                        Debug.println(Debug.info, "Friendly EC msg type: " + type);
-                        Debug.println(Debug.info, "ID of robot giving info: " + id);
-                        switch(type) {
+                        switch(Comms.getFriendlyECType(flag)) {
                             case HOME_READ_LOC:
                                 currDxDy = Comms.getFriendlyDxDy(flag);
                                 rushFlag = new RushFlag(0, currDxDy[0] - Util.dOffset, currDxDy[1] - Util.dOffset, 0, rc.getTeam());
-                                tempMapLoc = new MapLocation(rc.getLocation().x + rushFlag.dx, rc.getLocation().y + rushFlag.dy);
+                                tempMapLoc = new MapLocation(home.x + rushFlag.dx, home.y + rushFlag.dy);
                                 ECflags.remove(rushFlag);
                                 if (enemyECsFound.contains(tempMapLoc)) enemyECsFound.remove(tempMapLoc);
 
-                                Debug.println(Debug.info, "Found friendly EC at : " + tempMapLoc);
                                 idToFriendlyECLocMap.remove(id);
                                 idToFriendlyECLocMap.add(id, tempMapLoc);
                                 break;
@@ -811,7 +816,10 @@ public class EC extends Robot {
                                 if(idToFriendlyECLocMap.contains(id)) {
                                     friendId = Comms.getFriendlyID(flag);
                                     tempMapLoc = idToFriendlyECLocMap.getLoc(id);
-                                    friendlyECs.add(tempMapLoc, friendId);
+                                    // Uhh todo. Why do I need this check?? Shouldn't be reporting home to itself.
+                                    if(!tempMapLoc.equals(home)) {
+                                        friendlyECs.add(tempMapLoc, friendId);
+                                    }
                                     idToFriendlyECLocMap.remove(id);
 
                                     Debug.println(Debug.info, "Found friendly EC at : " + tempMapLoc + ", id: " + friendId);
@@ -820,62 +828,59 @@ public class EC extends Robot {
                         }
                         break;
                     case ENEMY_FOUND:
-                        int[] enemyDxDy = Comms.getDxDy(flag);
-                        int enemyLocX = enemyDxDy[0] + home.x - Util.dOffset;
-                        int enemyLocY = enemyDxDy[1] + home.y - Util.dOffset;
+                        enemyDxDy = Comms.getDxDy(flag);
+                        enemyLocX = enemyDxDy[0] + home.x - Util.dOffset;
+                        enemyLocY = enemyDxDy[1] + home.y - Util.dOffset;
 
-                        MapLocation enemyLoc = new MapLocation(enemyLocX, enemyLocY);
-                        if (rc.getLocation().isWithinDistanceSquared(enemyLoc, rc.getType().sensorRadiusSquared * 4)) {
+                        tempMapLoc = new MapLocation(enemyLocX, enemyLocY);
+                        if (rc.getLocation().isWithinDistanceSquared(tempMapLoc, sensorRadius * 4)) {
                             goToAcceleratedSlanderersState = false;
                         }
 
-                        Comms.EnemyType enemyType = Comms.getEnemyType(flag);
-                        Debug.println(Debug.info, id + " Found enemy: " + enemyType + " at " + enemyLoc);
-                        switch(enemyType) {
+                        switch(Comms.getEnemyType(flag)) {
                             case SLA:
-                                recentSlanderer = enemyLoc;
-                                Debug.setIndicatorDot(Debug.info, enemyLoc, 50, 150, 50);
+                                recentSlanderer = tempMapLoc;
+                                Debug.setIndicatorDot(Debug.info, tempMapLoc, 50, 150, 50);
                                 break;
                             case MUC:
-                                if (rc.getLocation().isWithinDistanceSquared(enemyLoc, rc.getType().sensorRadiusSquared * 4)) {
+                                if (rc.getLocation().isWithinDistanceSquared(tempMapLoc, sensorRadius * 4)) {
                                     muckrakerNear = true;
                                 }
-                                Debug.setIndicatorDot(Debug.info, enemyLoc, 200, 50, 50);
+                                Debug.setIndicatorDot(Debug.info, tempMapLoc, 200, 50, 50);
                                 break;
                             default:
-                                Debug.setIndicatorDot(Debug.info, enemyLoc, 0, 0, 0);
+                                Debug.setIndicatorDot(Debug.info, tempMapLoc, 0, 0, 0);
                                 break;
                         }
                         break;
                     case REPORTING_WALL:
-                        int[] wallDxDy = Comms.getDxDy(flag);
-                        int wallDx = wallDxDy[0] != 0 ? wallDxDy[0] - Util.dOffset : 0;
-                        int wallDy = wallDxDy[1] != 0 ? wallDxDy[1] - Util.dOffset : 0;
+                        wallDxDy = Comms.getDxDy(flag);
+                        wallDx = wallDxDy[0] != 0 ? wallDxDy[0] - Util.dOffset : 0;
+                        wallDy = wallDxDy[1] != 0 ? wallDxDy[1] - Util.dOffset : 0;
                         if (wallDx < 0) { 
-                            Debug.println(Debug.info, "scout with id: " + id + "found wall to the west at dx: " + wallDx);
+                            Debug.println(Debug.info, "scout with id: " + id + " found wall to the west at dx: " + wallDx);
                             wallLocations[3] = wallDx;
                         } 
                         else if (wallDx > 0) {
-                            Debug.println(Debug.info, "scout with id: " + id + "found wall to the east at dx: " + wallDx);
+                            Debug.println(Debug.info, "scout with id: " + id + " found wall to the east at dx: " + wallDx);
                             wallLocations[1] = wallDx;
                         }
 
                         if (wallDy < 0) {
-                            Debug.println(Debug.info, "scout with id: " + id + "found wall to the south at dx: " + wallDy);
+                            Debug.println(Debug.info, "scout with id: " + id + " found wall to the south at dx: " + wallDy);
                             wallLocations[2] = wallDy;
                         } 
                         else if (wallDy > 0) {
-                            Debug.println(Debug.info, "scout with id: " + id + "found wall to the north at dx: " + wallDy);
+                            Debug.println(Debug.info, "scout with id: " + id + " found wall to the north at dx: " + wallDy);
                             wallLocations[0] = wallDy;
                         }
                         break;
                 }
-
             } else {
                 idSet.remove(id);
                 protectorIdSet.remove(id);
                 if(slandererIDToRound.contains(id)) {
-                    int roundNum = slandererIDToRound.getVal(id);
+                    roundNum = slandererIDToRound.getVal(id);
                     slandererIDToRound.remove(id);
                     roundToSlandererID.remove(roundNum);
                 }
@@ -891,23 +896,19 @@ public class EC extends Robot {
         int id, friendId;;
         MapLocation tempMapLoc;
         int[] currDxDy;
+        int flag;
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
             robot = friendlySensable[i];
             id = robot.getID();
             if(rc.canGetFlag(id)) {
-                int flag = rc.getFlag(id);
-                Comms.InformationCategory flagIC = Comms.getIC(flag);
-                switch(flagIC) {
+                flag = rc.getFlag(id);
+                switch(Comms.getIC(flag)) {
                     case FRIENDLY_EC:
-                        Comms.FriendlyECType type = Comms.getFriendlyECType(flag);
-                        Debug.println(Debug.info, "Friendly EC msg type: " + type);
-                        Debug.println(Debug.info, "ID of robot giving info: " + id);
-                        switch(type) {
+                        switch(Comms.getFriendlyECType(flag)) {
                             case OTHER_READ_LOC:
                                 currDxDy = Comms.getFriendlyDxDy(flag);
                                 tempMapLoc = new MapLocation(robot.getLocation().x + currDxDy[0] - Util.dOffset,
                                                             robot.getLocation().y + currDxDy[1] - Util.dOffset);
-                                Debug.println(Debug.info, "Found friendly EC at : " + tempMapLoc);
                                 idToFriendlyECLocMap.remove(id);
                                 idToFriendlyECLocMap.add(id, tempMapLoc);
                                 break;
