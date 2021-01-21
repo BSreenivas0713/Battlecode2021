@@ -173,6 +173,7 @@ public class HunterMuckracker extends Robot {
         RobotInfo friendlyBase = null;
         int numFollowingClosestEnemy = 0;
         RobotInfo disperseBot = null;
+        boolean inActionRadiusOfFriendly = false;
 
         MapLocation robotLoc;
         int []DxDyFromRobot;
@@ -180,6 +181,15 @@ public class HunterMuckracker extends Robot {
 
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
             robot = friendlySensable[i];
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                if(rc.getLocation().distanceSquaredTo(robot.getLocation()) <= actionRadius) {
+                    inActionRadiusOfFriendly = true;
+                }
+                if(enemyLocation != null && robot.getLocation().equals(enemyLocation)) {
+                    enemyLocation = null;
+                    Debug.println("Base has been captured. EnemyLocation is null");
+                }
+            }
             if(rc.canGetFlag(robot.getID())) {
                 int flag = rc.getFlag(robot.getID());
                 if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_RUSH)) {
@@ -228,7 +238,7 @@ public class HunterMuckracker extends Robot {
                 Debug.println(Debug.info, "Dispersing to avoid rusher.");
             }
             else if (enemyLocation != null) {
-                if(!seenEnemyLocation) {
+                if(!seenEnemyLocation || rc.getInfluence() > Util.bufMuckCooldownThreshold) {
                     seenEnemyLocation = rc.canSenseLocation(enemyLocation);
                 }
 
@@ -250,23 +260,26 @@ public class HunterMuckracker extends Robot {
                     Debug.println(Debug.info, "I am going straight to the base");
                 }
 
-                Direction[] orderedDirs = Nav.greedyDirection(main_direction);
+                Direction[] orderedDirs = Nav.greedyDirection(main_direction, rc);
                 boolean moved = false;
                 for(Direction dir : orderedDirs) {
                     moved = moved || tryMove(dir);
                 }
 
-                if(!moved && rotating) {
+                if(!moved && rotating && rc.isReady()) {
                     Debug.println(Debug.info, "I am switching rotation direction");
                     spinDirection = Util.switchSpinDirection(spinDirection);
                     main_direction = Util.rightOrLeftTurn(spinDirection, enemyLocation.directionTo(currLoc));
                 
-                    orderedDirs = Nav.greedyDirection(main_direction);
+                    orderedDirs = Nav.greedyDirection(main_direction, rc);
                     if(orderedDirs != null) {
                         for(Direction dir : orderedDirs) {
-                            tryMove(dir);
+                            moved = moved || tryMove(dir);
                         }
                     }
+                }
+                if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
+                    tryMoveDest(main_direction);
                 }
 
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation);
@@ -289,8 +302,18 @@ public class HunterMuckracker extends Robot {
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), hunterLoc, 255, 150, 50);
             }
             else {
-                main_direction = Nav.explore();
-                if(main_direction != null) {
+                boolean moved = false;
+                Direction[] orderedDirs = Nav.exploreGreedy(rc);
+                if(orderedDirs != null) {
+                    for(Direction dir : orderedDirs) {
+                        moved = moved || tryMove(dir);
+                    }
+                    orderedDirs = Util.getOrderedDirections(main_direction);
+                    for(Direction dir : orderedDirs) {
+                        moved = moved || tryMove(dir);
+                    }
+                }
+                if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
                     tryMoveDest(main_direction);
                 }
                 Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);

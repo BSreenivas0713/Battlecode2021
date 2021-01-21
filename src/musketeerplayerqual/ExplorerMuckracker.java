@@ -27,6 +27,7 @@ public class ExplorerMuckracker extends Robot {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
+        boolean inActionRadiusOfFriendly = false;
         int sensingRadius = rc.getType().sensorRadiusSquared;
         MapLocation currLoc = rc.getLocation();
 
@@ -129,6 +130,15 @@ public class ExplorerMuckracker extends Robot {
 
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
             robot = friendlySensable[i];
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                if(rc.getLocation().distanceSquaredTo(robot.getLocation()) <= actionRadius) {
+                    inActionRadiusOfFriendly = true;
+                }
+                if(enemyLocation != null && robot.getLocation().equals(enemyLocation)) {
+                    enemyLocation = null;
+                    Debug.println("Base has been captured. EnemyLocation is null");
+                }
+            }
             if(rc.canGetFlag(robot.getID())) {
                 int flag = rc.getFlag(robot.getID());
                 // Move out of the way of rush pols
@@ -224,7 +234,7 @@ public class ExplorerMuckracker extends Robot {
                     Debug.println(Debug.info, "I am going straight to the base");
                 }
 
-                Direction[] orderedDirs = Nav.greedyDirection(main_direction);
+                Direction[] orderedDirs = Nav.greedyDirection(main_direction, rc);
                 boolean moved = false;
                 for(Direction dir : orderedDirs) {
                     moved = moved || tryMove(dir);
@@ -235,27 +245,34 @@ public class ExplorerMuckracker extends Robot {
                     spinDirection = Util.switchSpinDirection(spinDirection);
                     main_direction = Util.rightOrLeftTurn(spinDirection, enemyLocation.directionTo(currLoc));
                 
-                    orderedDirs = Nav.greedyDirection(main_direction);
+                    orderedDirs = Nav.greedyDirection(main_direction, rc);
                     if(orderedDirs != null) {
                         for(Direction dir : orderedDirs) {
-                            tryMove(dir);
+                            moved = moved || tryMove(dir);
                         }
                     }
+                }
+                if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
+                    tryMoveDest(main_direction);
                 }
                 
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
             }
             else {
-                Direction[] orderedDirs = Nav.exploreGreedy();
+                boolean moved = false;
+                Direction[] orderedDirs = Nav.exploreGreedy(rc);
                 if(orderedDirs != null) {
                     for(Direction dir : orderedDirs) {
                         tryMove(dir);
                     }
                     orderedDirs = Util.getOrderedDirections(main_direction);
                     for(Direction dir : orderedDirs) {
-                        tryMove(dir);
+                        moved = moved || tryMove(dir);
                     }
+                }
+                if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
+                    tryMoveDest(main_direction);
                 }
                 Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);
             }
