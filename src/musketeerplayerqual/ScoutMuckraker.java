@@ -26,11 +26,20 @@ public class ScoutMuckraker extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
         MapLocation currLoc = rc.getLocation();
+        
 
         Debug.println(Debug.info, "I am a scout mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "Direction of movement: " + main_direction);
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
-
+        
+        boolean inActionRadiusOfFriendly = false;
+        for(int i = friendlySensable.length - 1; i >=0; i --) {
+            RobotInfo robot = friendlySensable[i];
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && rc.getLocation().distanceSquaredTo(robot.getLocation()) <= actionRadius) {
+                inActionRadiusOfFriendly = true;
+            }
+        }
+        
         RobotInfo robot;
         RobotInfo closestEnemy = null;
         Comms.EnemyType closestEnemyType = null;
@@ -74,10 +83,15 @@ public class ScoutMuckraker extends Robot {
 
         if (rc.onTheMap(currLoc.add(main_direction))) {
             Debug.println(Debug.info, "next loc on map. moving in direction: " + main_direction);
-            Direction[] orderedDirs = Nav.greedyDirection(main_direction);
-            for(Direction dir : orderedDirs) {
-                tryMove(dir);
-            }
+            tryMoveDest(main_direction);
+            // Direction[] orderedDirs = Nav.greedyDirection(main_direction, rc);
+            // boolean moved = false;
+            // for(Direction dir : orderedDirs) {
+            //     moved = moved || tryMove(dir);
+            // }
+            // if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
+            //         tryMoveDest(main_direction);
+            //     }
         }
         else {
             Debug.println(Debug.info, "new location not on the map. switching to explorer");

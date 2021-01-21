@@ -16,9 +16,6 @@ import java.util.PriorityQueue;
 /* 
 TODO: 
 
-if we see an enemy tower, send a buf muck there
-dont send buf mucks without any location at all 
-store location of all buf muck deaths
 
 edit about_to_die to make semathingy based on passability
 get lattice protectors that were slanderers to not be in the back (hard)
@@ -331,10 +328,14 @@ public class EC extends Robot {
         processLocalFlags();
         processChildrenFlags();
         
-        // if(firstScoutDeathReported) {
-        //     RushFlag currentTarget = ECflags.peek();
-        //     nextBufLoc = ECflags.peek().location;
-        // }
+        if(firstScoutDeathReported && !ECflags.isEmpty()) {
+            Debug.println("Updating nextBufLoc");
+            RushFlag currentTarget = ECflags.peek();
+            if(currentTarget.team == enemy) {
+                MapLocation currLoc = rc.getLocation();
+                nextBufLoc = new MapLocation(currLoc.x + currentTarget.dx, currLoc.y + currentTarget.dy);
+            }
+        }
         
 
         goToAcceleratedSlanderersState = true;
@@ -425,7 +426,6 @@ public class EC extends Robot {
 
         builtRobot = false;
 
-        Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + currInfluence);
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
         Debug.println(Debug.info, "num of ec's found: " + ECflags.size());
         Debug.println(Debug.info, "num ids found: " + idSet.size);
@@ -435,6 +435,7 @@ public class EC extends Robot {
         Debug.println(Debug.info, "Muckraker near: " + muckrakerNear);
         Debug.println(Debug.info, "Wall locations: north: " + wallLocations[0] + "; east: " + wallLocations[1] + "; south: " + wallLocations[2] + "; west: " + wallLocations[3]);
         Debug.println(Debug.info, "closest wall direction: " + closestWall);
+        Debug.println(Debug.info, "buf muck rush waiting time: " + buffMuckCooldown);
         if (!flagQueue.isEmpty()) {
             Debug.println(Debug.info, "IC of first elem in flag queue: " + Comms.getIC(flagQueue.peek()));
         }
@@ -980,7 +981,6 @@ public class EC extends Robot {
                         tempMapLoc = new MapLocation(enemyLocX, enemyLocY);
                         if(scoutIDToEnemyLocs.contains(id)) {
                             Debug.println("Changing scoutID Map because scout has seen an enemy, Scout ID: " + id);
-                            Debug.setIndicatorLine(Debug.info,home, tempMapLoc,128,0,128);
                             scoutIDToEnemyLocs.remove(id);
                             scoutIDToEnemyLocs.add(id, tempMapLoc);
                         }
@@ -1044,8 +1044,6 @@ public class EC extends Robot {
                         nextBufLoc = scoutIDToEnemyLocs.getLoc(id);
                         Debug.println("first Scout Death reported: " + nextBufLoc + "; id: " + id);
                     }
-                    Debug.setIndicatorLine(Debug.info,home, nextBufLoc,255,192,203);
-
                 }
             }
         }
@@ -1178,10 +1176,10 @@ public class EC extends Robot {
         }
         if(nextBufLoc != null && buildRobot(toBuild, influence)) { //short circuit if firstScoutDeath == null
             nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, nextBufLoc.x - home.x + Util.dOffset, nextBufLoc.y - home.y + Util.dOffset);
-            nextBufLoc = null;
             firstScoutDeathReported = true;
             buffMuckCooldown = Util.bufMuckCooldownThreshold;
             lastSentBufMuck = nextBufLoc;
+            nextBufLoc = null;
             currentState = stateStack.pop();
             return true;
         }
