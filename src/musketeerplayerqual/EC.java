@@ -16,10 +16,15 @@ import java.util.PriorityQueue;
 /* 
 TODO: 
 
+Make hunters go to their location before checking for other towers to change or location(go closer to the location first)
 
-edit about_to_die to make semathingy based on passability
-get lattice protectors that were slanderers to not be in the back (hard)
-stay above influence of biggest enemy near us
+Make politicians spawn in the right place
+
+Make 1 cost explorer polticians
+
+experiment with a lot of mucks going to the same location
+
+make a new player
 
 */
 public class EC extends Robot {
@@ -171,7 +176,7 @@ public class EC extends Robot {
         lastSuccessfulBlockageRemoval = -1;
         littleBid = 0;
         prevBid = 0;
-        bigBid = 1;
+        bigBid = 4;
         wonLastBid = false;
         lastVoteCount = 0;
         chillingCount = 0;
@@ -398,8 +403,7 @@ public class EC extends Robot {
                     }
                 }
             }
-        /*} else {
-            if (currentState != State.ABOUT_TO_DIE) {
+        /*} else if (currentState != State.ABOUT_TO_DIE) {
                 stateStack.push(currentState);
                 currentState = State.ABOUT_TO_DIE;
             }
@@ -893,7 +897,7 @@ public class EC extends Robot {
         }
 
         for(int j = idSet.size - 1; j >= 0; j--) {
-            if(Clock.getBytecodesLeft() < 1500) {
+            if(Clock.getBytecodesLeft() < 3000) {
                 Debug.println(Debug.info, "Bytecode limit close, Breaking from loop");
                 break;
             }
@@ -1345,7 +1349,7 @@ public class EC extends Robot {
     public int bidBS() throws GameActionException {
         int currVotes = rc.getTeamVotes();
         int res;
-        if (currVotes > 750) {
+        if (currentState == State.INIT || currVotes > 750) {
             return 0;
         } else if (currRoundNum > 1300) {
             return currInfluence / 25;
@@ -1362,15 +1366,17 @@ public class EC extends Robot {
         Debug.println(Debug.info, "L: " + littleBid + ", B: " + bigBid);
         if (wonLastBid) {
             res = Integer.min(Integer.max((prevBid + littleBid) / 2, 2), currInfluence / 25);
-            bigBid = prevBid;
             prevBid = res;
         } else {
-            if (bigBid < currInfluence / 10) bigBid = littleBid * 2;
+            if (bigBid < currInfluence / 10) bigBid *= 2;
             res = Integer.min(Integer.max((prevBid + bigBid) / 2, 2), currInfluence / 25);
-            littleBid = prevBid;
-            prevBid = res;
+            if (prevBid == res) {
+                bigBid /= 2;
+            } else {
+                prevBid = res;
+            }
         }
-        if (bigBid == 0) bigBid++;
+        if (bigBid < 4) bigBid = 4;
         return res;
     }
     
