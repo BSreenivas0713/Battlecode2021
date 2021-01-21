@@ -1,4 +1,4 @@
-package musketeerplayerqual;
+package naivebuffs;
 
 import battlecode.common.*;
 
