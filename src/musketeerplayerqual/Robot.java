@@ -281,13 +281,19 @@ public class Robot {
             
         Debug.setIndicatorDot(Debug.info, enemyLoc, 0, 0, 0);
 
-        if(localOrGlobal % 2 == parityBroadcastEnemy) {
+        boolean isSmallMuck = false;
+
+        if (rc.canSenseLocation(enemyLoc)) {
+            RobotInfo enemyBot = rc.senseRobotAtLocation(enemyLoc);
+            if (enemyBot.getType() == RobotType.MUCKRAKER && enemyBot.getConviction() <= 5) {
+                isSmallMuck = true;
+            }
+        }
+
+        if(localOrGlobal % 2 == parityBroadcastEnemy && !isSmallMuck) {
             broadcastEnemyFound(enemyLoc, type);
         } else {
-            // Broadcast locally first, and then globally if we can't fit it in the local version.
-            if(!broadcastEnemyLocal(enemyLoc)) {
-                broadcastEnemyFound(enemyLoc, type);
-            }
+            broadcastEnemyLocal(enemyLoc);
         }
         localOrGlobal++;
         return true;

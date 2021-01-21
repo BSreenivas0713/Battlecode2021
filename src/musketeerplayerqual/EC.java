@@ -32,6 +32,7 @@ public class EC extends Robot {
         SURVIVAL,
         STUCKY_MUCKY,
         RUSHING_MUCKS,
+        NEW_TOWER_LOW_INFLUENCE
     };
 
     static class RushFlag implements Comparable<RushFlag> {
@@ -147,8 +148,8 @@ public class EC extends Robot {
         ECflags = new PriorityQueue<RushFlag>();
         stateStack = new ArrayDeque<State>();
         flagQueue = new FastQueue<>(100);
-        currentState = State.INIT;
-        prevState = State.INIT;
+        currentState = getInitialState();
+        prevState = getInitialState();
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
 
         cleanUpCount = 0;
@@ -196,6 +197,15 @@ public class EC extends Robot {
             }
         }
         nearbyECs.updateIterable();
+    }
+
+    public State getInitialState() {
+        if (rc.getInfluence() < 100) {
+            return State.NEW_TOWER_LOW_INFLUENCE;
+        }
+        else {
+            return State.INIT;
+        }
     }
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
@@ -282,7 +292,7 @@ public class EC extends Robot {
         }
 
         if (currentState != State.SURVIVAL) {
-            if(currentState != State.INIT) {
+            if(currentState != State.INIT || currentState != State.NEW_TOWER_LOW_INFLUENCE) {
                 // Override everything for a spawn kill. This is fine, as it only takes 1 turn
                 // and at most happens once every 10 turns.
                 tryStartBuildingSpawnKill();
@@ -350,6 +360,11 @@ public class EC extends Robot {
             }
         }
 
+        if (currentState == State.NEW_TOWER_LOW_INFLUENCE && currInfluence > 100) {
+            Debug.println(Debug.info, "switching from new_tower_low_inf to chilling");
+            currentState = State.CHILLING;
+        }
+
         builtRobot = false;
 
         Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + currInfluence);
@@ -372,6 +387,18 @@ public class EC extends Robot {
         switch(currentState) {
             case INIT: 
                 firstRounds();
+                break;
+            case NEW_TOWER_LOW_INFLUENCE:
+                if (Util.getBestSlandererInfluence(currInfluence) != -1 && !muckrakerNear) {
+                    toBuild = RobotType.SLANDERER;
+                    influence = Util.getBestSlandererInfluence(currInfluence);
+                }
+                else {
+                    toBuild = RobotType.MUCKRAKER;
+                    influence = 1;
+                    makeMuckraker();
+                }
+                buildRobot(toBuild, influence);
                 break;
             case SURVIVAL:
                 toBuild = RobotType.MUCKRAKER;
@@ -467,7 +494,7 @@ public class EC extends Robot {
                         signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                         break;
                     case 2:
-                        if(Util.getBestSlandererInfluence(currInfluence ) > 100) {
+                        if(Util.getBestSlandererInfluence(currInfluence) > 100) {
                             toBuild = RobotType.SLANDERER;
                             influence = Util.getBestSlandererInfluence(currInfluence);
                         }
@@ -785,14 +812,6 @@ public class EC extends Robot {
             }
             id = ids[j];
             if(rc.canGetFlag(id)) {
-
-                if(roundToSlandererID.contains(currRoundNum)) {
-                    int Slandererid = roundToSlandererID.getVal(currRoundNum);
-                    roundToSlandererID.remove(currRoundNum);
-                    slandererIDToRound.remove(Slandererid);
-                    protectorIdSet.add(Slandererid);
-                }
-                
                 flag = rc.getFlag(id);
                 switch (Comms.getIC(flag)) {
                     case NEUTRAL_EC:
