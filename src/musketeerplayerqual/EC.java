@@ -1280,7 +1280,7 @@ public class EC extends Robot {
                 break;
         }
 
-        if(!buildRobot(toBuild, influence)) {
+        if (!buildRobot(toBuild, influence)) {
             toBuild = RobotType.MUCKRAKER;
             influence = 1;
             buildRobot(toBuild, influence);

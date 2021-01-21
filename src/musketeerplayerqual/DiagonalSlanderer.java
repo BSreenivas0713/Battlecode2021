@@ -112,10 +112,12 @@ public class DiagonalSlanderer extends Robot {
         }
         
         boolean moveBack = false;
-        if (!curr.isWithinDistanceSquared(home, ecRadius)) {
+        if (!curr.isWithinDistanceSquared(home, ecRadius * 2)) {
             moveBack = true;
         }
         MapLocation latticeLoc;
+
+        if(foundOwnEnemy && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
 
         if(closestEnemy != null && curr.isWithinDistanceSquared(closestEnemy.getLocation(), Util.minDistFromEnemy)) {
             main_direction = curr.directionTo(closestEnemy.getLocation()).opposite();
@@ -173,7 +175,5 @@ public class DiagonalSlanderer extends Robot {
         //     avgEnemyDir = null;
         //     resetFlagOnNewTurn = true;
         // }
-
-        if(foundOwnEnemy && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
     }
 }

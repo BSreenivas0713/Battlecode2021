@@ -160,7 +160,7 @@ public strictfp class RobotPlayer {
                 bot = new LatticeProtector(rc);
                 break;
             case SLANDERER:
-                bot = new Slanderer(rc);
+                bot = new DiagonalSlanderer(rc);
                 break;
             case MUCKRAKER:
                 bot = new ExplorerMuckracker(rc);
