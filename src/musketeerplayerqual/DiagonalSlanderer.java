@@ -116,7 +116,7 @@ public class DiagonalSlanderer extends Robot {
         }
         
         boolean moveBack = false;
-        if (!curr.isWithinDistanceSquared(home, (int) (ecRadius * 1.5))) {
+        if (!curr.isWithinDistanceSquared(home, ecRadius)) {
             moveBack = true;
         }
         MapLocation latticeLoc;
