@@ -263,6 +263,12 @@ public class EC extends Robot {
             numMucks++;
             return true;
         } else {
+            if (toBuild == RobotType.POLITICIAN && robotCounter == 1) {
+                orderedDirs = Util.getOrderedDirections(Direction.NORTHWEST);
+            }
+            else if (toBuild == RobotType.POLITICIAN && robotCounter == 2) {
+                orderedDirs = Util.getOrderedDirections(Direction.WEST);
+            }
             for(Direction dir : orderedDirs) {
                 if (rc.canBuildRobot(toBuild, dir, influence)) {
                     rc.buildRobot(toBuild, dir, influence);
