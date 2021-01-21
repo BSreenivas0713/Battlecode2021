@@ -216,7 +216,7 @@ public class ExplorerMuckracker extends Robot {
                         Debug.println(Debug.info, "I moving away from another muck");
                     } else {
                         rotating = true;
-                        main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc)); //Direction if we only want to rotate around the base
+                        main_direction = Util.rightOrLeftTurn(spinDirection, enemyLocation.directionTo(currLoc)); //Direction if we only want to rotate around the base
                         Debug.println(Debug.info, "I am rotating around the base");
                     }
                 } else {
@@ -228,7 +228,7 @@ public class ExplorerMuckracker extends Robot {
                 while (!tryMoveDest(main_direction) && rc.isReady() && tryMove <= 1 && rotating){
                     Debug.println(Debug.info, "I am switching rotation direction");
                     spinDirection = Util.switchSpinDirection(spinDirection);
-                    main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
+                    main_direction = Util.rightOrLeftTurn(spinDirection, enemyLocation.directionTo(currLoc));
                     tryMove +=1;
                 }
                 
