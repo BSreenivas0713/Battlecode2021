@@ -157,7 +157,7 @@ public class HunterMuckracker extends Robot {
             }
             
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
-                if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
+                if (currLoc.distanceSquaredTo(tempLoc) <= 2 && rc.getConviction() <= 10) {
                     muckraker_Found_EC = true;
                 }
                 else if(enemyLocation != null && enemyLocation.distanceSquaredTo(robot.getLocation()) <= 3 * sensorRadius){
