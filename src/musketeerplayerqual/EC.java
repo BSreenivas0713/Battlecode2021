@@ -20,9 +20,7 @@ if we see an enemy tower, send a buf muck there
 dont send buf mucks without any location at all 
 store location of all buf muck deaths
 
-make politicians bigger (possibly later game)
-
-make muckrakers in the radius 1 spots if about to die
+edit about_to_die to make semathingy based on passability
 get lattice protectors that were slanderers to not be in the back (hard)
 stay above influence of biggest enemy near us
 
