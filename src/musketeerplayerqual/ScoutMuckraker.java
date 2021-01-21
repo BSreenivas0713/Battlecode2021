@@ -30,10 +30,6 @@ public class ScoutMuckraker extends Robot {
         Debug.println(Debug.info, "I am a scout mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "Direction of movement: " + main_direction);
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
-        
-        if(main_direction == null){
-            main_direction = Util.randomDirection();
-        }
 
         RobotInfo robot;
         RobotInfo closestEnemy = null;
@@ -72,7 +68,10 @@ public class ScoutMuckraker extends Robot {
 
         if (rc.onTheMap(currLoc.add(main_direction))) {
             Debug.println(Debug.info, "next loc on map. moving in direction: " + main_direction);
-            tryMoveDest(main_direction);
+            Direction[] orderedDirs = Nav.greedyDirection(main_direction);
+            for(Direction dir : orderedDirs) {
+                tryMove(dir);
+            }
         }
         else {
             Debug.println(Debug.info, "new location not on the map. switching to explorer");

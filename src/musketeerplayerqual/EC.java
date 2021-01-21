@@ -81,6 +81,7 @@ public class EC extends Robot {
     static int cleanUpCount;
     static int currRoundNum;
     static int numMucks;
+    static int numPols;
     static int currInfluence;
     static boolean noAdjacentEC;
     static boolean builtRobot;
@@ -233,6 +234,8 @@ public class EC extends Robot {
                             roundToSlandererID.add(currRoundNum + Util.slandererLifetime, robot.getID());
                             slandererIDToRound.add(robot.getID(), currRoundNum + Util.slandererLifetime);
                             break;
+                        case POLITICIAN:
+                            numPols++;
                         default:
                             break;
                     }
@@ -412,7 +415,7 @@ public class EC extends Robot {
                         case 1:
                             toBuild = RobotType.POLITICIAN;
                             influence = getPoliticianInfluence();
-                            signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
+                            makePolitician();
                             break;
                     }
                     if(buildRobot(toBuild, influence)) {
@@ -425,7 +428,7 @@ public class EC extends Robot {
                         case 0: case 1:
                             toBuild = RobotType.POLITICIAN;
                             influence = getPoliticianInfluence();
-                            signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
+                            makePolitician();
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 1 of the else case of CHILLING");
                                 chillingCount ++;
@@ -464,7 +467,7 @@ public class EC extends Robot {
                     case 0: case 1:
                         toBuild = RobotType.POLITICIAN;
                         influence = getPoliticianInfluence();
-                        signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
+                        makePolitician();
                         break;
                     case 2:
                         if(Util.getBestSlandererInfluence(currInfluence ) > 100) {
@@ -1144,6 +1147,14 @@ public class EC extends Robot {
             }
         }
         return;
+    }
+
+    public void makePolitician() throws GameActionException {
+        if(numPols % Util.explorerPolFrequency == 0) {
+            signalRobotType(Comms.SubRobotType.POL_EXPLORER);
+        } else {
+            signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
+        }
     }
 
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {

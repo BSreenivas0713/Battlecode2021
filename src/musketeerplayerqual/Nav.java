@@ -602,5 +602,116 @@ public class Nav {
         // }
 
         // return gradientDescent();
-	}
+    }
+    
+    public static Direction[] greedyDirection(Direction dir) throws GameActionException {
+        Direction left = dir.rotateLeft();
+        Direction right = dir.rotateRight();
+
+        MapLocation currLoc = rc.getLocation();
+        MapLocation loc = currLoc.add(dir);
+        MapLocation leftLoc = currLoc.add(left);
+        MapLocation rightLoc = currLoc.add(right);
+
+        int numInserted = 0;
+        int numToInsert = 0;
+        if(rc.onTheMap(loc)) {
+            numToInsert++;
+        }
+        if(rc.onTheMap(leftLoc)) {
+            numToInsert++;
+        }
+        if(rc.onTheMap(rightLoc)) {
+            numToInsert++;
+        }
+
+        Direction[] orderedDirs = new Direction[numToInsert];
+        
+        if(rc.onTheMap(loc)) {
+            orderedDirs[numInserted++] = dir;
+        }
+        if(rc.onTheMap(leftLoc)) {
+            orderedDirs[numInserted++] = left;
+        }
+        if(rc.onTheMap(rightLoc)) {
+            orderedDirs[numInserted++] = right;
+        }
+
+        Direction tempDir;
+        int minIndex;
+        double minPassability = Integer.MAX_VALUE;
+        double temp;
+        for(int i = numInserted - 1; i >= 0; i--) {
+            minIndex = i;
+            minPassability = rc.sensePassability(currLoc.add(orderedDirs[minIndex]));
+            for(int j = i - 1; j >= 0; j--) {
+                temp = rc.sensePassability(currLoc.add(orderedDirs[j]));
+                if(temp < minPassability) {
+                    minIndex = j;
+                    minPassability = temp;
+                }
+            }
+            tempDir = orderedDirs[minIndex];
+            orderedDirs[i] = orderedDirs[minIndex];
+            orderedDirs[minIndex] = orderedDirs[i];
+        }
+
+        for(int i = 0; i < orderedDirs.length; i++) {
+            Debug.println("Passability: " + rc.sensePassability(currLoc.add(orderedDirs[i])));
+        }
+
+        return orderedDirs;
+    }
+
+    public static Direction[] exploreGreedy() throws GameActionException {
+        Debug.println(Debug.pathfinding, "Exploring");
+        if(!rc.isReady())
+            return null;
+        
+		if(lastExploreDir == null) {
+            Debug.println(Debug.info, "changing last Explore Dir");
+            Direction oppositeFromHome = rc.getLocation().directionTo(Robot.home).opposite();
+            Direction[] oppositeFromHomeDirs = {oppositeFromHome, oppositeFromHome.rotateLeft(), oppositeFromHome.rotateRight()};
+            lastExploreDir = oppositeFromHomeDirs[(int)(Math.random() * 3)];
+			boredom = 0;
+        }
+        
+		if(boredom >= EXPLORE_BOREDOM) {
+            Debug.println(Debug.info, "changing last Explore Dir because of boredom");
+            boredom = 0;
+            // Direction[] newDirChoices = {
+            //     lastExploreDir.rotateLeft().rotateLeft(),
+            //     lastExploreDir.rotateLeft(),
+            //     lastExploreDir,
+            //     lastExploreDir.rotateRight(),
+            //     lastExploreDir.rotateRight().rotateRight()};
+            Direction[] newDirChoices = {
+                lastExploreDir.rotateLeft(),
+                lastExploreDir,
+                lastExploreDir.rotateRight()};
+			lastExploreDir = newDirChoices[(int) (Math.random() * newDirChoices.length)];
+		}
+        boredom++;
+        
+		if(!rc.onTheMap(rc.getLocation().add(lastExploreDir))) {
+            Debug.println(Debug.info, "changing last Explore Dir because of a wall");
+            // lastExploreDir = lastExploreDir.opposite();
+            Direction tempExploreDir = null;
+            if((int) (Math.random() * 2) == 0) {
+                tempExploreDir = Util.turnLeft90(lastExploreDir);
+                if(!rc.onTheMap(rc.getLocation().add(tempExploreDir))) {
+                    tempExploreDir = Util.turnRight90(lastExploreDir);
+                }
+            }
+            else {
+                tempExploreDir = Util.turnRight90(lastExploreDir);
+                if(!rc.onTheMap(rc.getLocation().add(tempExploreDir))) {
+                    tempExploreDir = Util.turnLeft90(lastExploreDir);
+                }
+            lastExploreDir = tempExploreDir;
+            }
+        }
+
+        return greedyDirection(lastExploreDir);
+    }
 }
