@@ -1078,12 +1078,13 @@ public class EC extends Robot {
             currentState = stateStack.pop();
             return false;
         }
-        if(buildRobot(toBuild, influence)) {
+        if(firstScoutDeath != null && buildRobot(toBuild, influence)) { //short circuit if firstScoutDeath == null
             nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, firstScoutDeath.x - home.x + Util.dOffset, firstScoutDeath.y - home.y + Util.dOffset);
             firstScoutDeath = null;
             firstScoutDeathReported = true;
+            return true;
         }
-        return true;
+        return false;
     }
     public boolean trySendARush() throws GameActionException {
         Debug.println(Debug.info, "building rush bots");

@@ -72,8 +72,7 @@ public class HunterMuckracker extends Robot {
                         int GRmod = Comms.getRushMod(flag);
                         Debug.println(Debug.info, "EC is sending a rush: Read ENEMY_EC flag. Type: " + GRtype + ", mod: " + GRmod);
 
-                        if((GRtype == Comms.GroupRushType.MUC || GRtype == Comms.GroupRushType.MUC_POL) && 
-                            GRmod == rc.getID() % 2) {
+                        if((GRtype == Comms.GroupRushType.MUC || GRtype == Comms.GroupRushType.MUC_POL)) {
                             Debug.println(Debug.info, "Joining the rush");
                             enemyLocation = enemyLoc;
                         } else {
@@ -161,7 +160,7 @@ public class HunterMuckracker extends Robot {
                 if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
                     muckraker_Found_EC = true;
                 }
-                else if(enemyLocation.distanceSquaredTo(robot.getLocation()) <= 3 * sensorRadius){
+                else if(enemyLocation != null && enemyLocation.distanceSquaredTo(robot.getLocation()) <= 3 * sensorRadius){
                     enemyLocation = robot.getLocation(); //NOTE: intended for buf mucks that will have an enemy location set close to but not in sensor radius of the EC
                 }
             }
