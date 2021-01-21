@@ -1,30 +1,25 @@
-package musketeerplayerqual;
+package naivebuffs;
 import battlecode.common.*;
 
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
-import musketeerplayerqual.fast.FastIterableLocSet;
+import naivebuffs.Util.*;
+import naivebuffs.Debug.*;
+import naivebuffs.fast.FastIterableLocSet;
 
-public class HunterMuckracker extends Robot {
+public class ExplorerMuckracker extends Robot {
     static Direction main_direction;
     static MapLocation enemyLocation;
     static boolean seenEnemyLocation;
     static RotationDirection spinDirection = Util.RotationDirection.COUNTERCLOCKWISE;
 
-    public HunterMuckracker(RobotController r, MapLocation enemyLoc) {
+    public ExplorerMuckracker(RobotController r) {
         super(r);
-        subRobotType = Comms.SubRobotType.MUC_HUNTER;
+        subRobotType = Comms.SubRobotType.MUC_EXPLORER;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
-        enemyLocation = enemyLoc;
-        seenEnemyLocation = false;
+        enemyLocation = null;
     }
 
-    public HunterMuckracker(RobotController r) {
-        this(r, null);
-    }
-
-    public HunterMuckracker(RobotController r, MapLocation enemyLoc, MapLocation h, int hID) {
-        this(r, enemyLoc);
+    public ExplorerMuckracker(RobotController r, MapLocation h, int hID) {
+        this(r);
         home = h;
         homeID = hID;
         friendlyECs.add(home, homeID);
@@ -32,17 +27,20 @@ public class HunterMuckracker extends Robot {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
+        int sensingRadius = rc.getType().sensorRadiusSquared;
         MapLocation currLoc = rc.getLocation();
 
-        Debug.println(Debug.info, "I am a hunter Mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
+        Debug.println(Debug.info, "I am an explorer mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
         if(enemyLocation != null) {
             Debug.println(Debug.info, "enemy location: " + enemyLocation);
         }
-
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
+
+        boolean setChillFlag = false;
+        boolean setAttackFlag = false;
 
         if(enemyLocation != null && rc.canSenseLocation(enemyLocation) ) {
             RobotInfo supposedToBeAnEC = rc.senseRobotAtLocation(enemyLocation);
@@ -52,7 +50,7 @@ public class HunterMuckracker extends Robot {
                 
                 int dx = enemyLocation.x - currLoc.x;
                 int dy = enemyLocation.y - currLoc.y;
-
+                
                 enemyLocation = null;
             }
         }
@@ -72,7 +70,8 @@ public class HunterMuckracker extends Robot {
                         int GRmod = Comms.getRushMod(flag);
                         Debug.println(Debug.info, "EC is sending a rush: Read ENEMY_EC flag. Type: " + GRtype + ", mod: " + GRmod);
 
-                        if((GRtype == Comms.GroupRushType.MUC || GRtype == Comms.GroupRushType.MUC_POL)) {
+                        if((GRtype == Comms.GroupRushType.MUC || GRtype == Comms.GroupRushType.MUC_POL) && 
+                            GRmod == rc.getID() % 2) {
                             Debug.println(Debug.info, "Joining the rush");
                             enemyLocation = enemyLoc;
                         } else {
@@ -105,9 +104,9 @@ public class HunterMuckracker extends Robot {
             Debug.println(Debug.info, "Can't get home flag: " + homeID);
         }
 
-        RobotInfo robot;
         RobotInfo powerful = null;
         int bestInfluence = Integer.MIN_VALUE;
+        RobotInfo robot;
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
             int curr = robot.getInfluence();
@@ -116,62 +115,12 @@ public class HunterMuckracker extends Robot {
                 powerful = robot;
             }
         }
-
-
+        
         boolean muckraker_Found_EC = false;
-
-        RobotInfo bestSlanderer = null;
-        bestInfluence = Integer.MIN_VALUE;
-        double minDistSquared = Integer.MAX_VALUE;
-        int totalEnemyX = 0;
-        int totalEnemyY = 0;
-        int enemiesFound = 0;
-        RobotInfo closestEnemy = null;
-        Comms.EnemyType closestEnemyType = null;
-        int closestEnemyDist = Integer.MAX_VALUE;
-        int temp;
-        for(int i = enemySensable.length - 1; i >= 0; i--) {
-            robot = enemySensable[i];
-            MapLocation tempLoc = robot.getLocation();
-            totalEnemyX += tempLoc.x;
-            totalEnemyY += tempLoc.y;
-            enemiesFound++;
-
-            temp = currLoc.distanceSquaredTo(tempLoc);
-            if (temp < closestEnemyDist) {
-                closestEnemyDist = temp;
-                closestEnemy = robot;
-                if(robot.getType() == RobotType.MUCKRAKER) {
-                    closestEnemyType = Comms.EnemyType.MUC;
-                } else {
-                    closestEnemyType = Comms.EnemyType.UNKNOWN;
-                }
-            }
-
-            if (robot.getType() == RobotType.SLANDERER) {
-                int curr = robot.getConviction();
-                if (curr > bestInfluence) {
-                    bestInfluence = curr;
-                    bestSlanderer = robot;
-                }
-            }
-            
-            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER){
-                if (currLoc.distanceSquaredTo(tempLoc) <= 2) {
-                    muckraker_Found_EC = true;
-                }
-                else if(enemyLocation != null && enemyLocation.distanceSquaredTo(robot.getLocation()) <= 3 * sensorRadius){
-                    enemyLocation = robot.getLocation(); //NOTE: intended for buf mucks that will have an enemy location set close to but not in sensor radius of the EC
-                }
-            }
-        }
 
         RobotInfo closest_muk = null;
         int closest_muk_dist = Integer.MAX_VALUE;
-
-        boolean awayFromBase = false;
-        RobotInfo friendlyBase = null;
-        int numFollowingClosestEnemy = 0;
+        boolean spawnKillRunFromHome = false;
         RobotInfo disperseBot = null;
 
         MapLocation robotLoc;
@@ -182,21 +131,12 @@ public class HunterMuckracker extends Robot {
             robot = friendlySensable[i];
             if(rc.canGetFlag(robot.getID())) {
                 int flag = rc.getFlag(robot.getID());
+                // Move out of the way of rush pols
                 if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_RUSH)) {
                     Debug.println(Debug.info, "Found a rusher.");
                     disperseBot = robot;
                 }
-
-                if(closestEnemy != null) {
-                    if(flag == Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID())) {
-                        numFollowingClosestEnemy++;
-                    }
-                }
             }
-        }
-
-        if(closestEnemy != null) {
-            Debug.println(Debug.info, "Num Following Closest Enemy: " + numFollowingClosestEnemy + "; closest Enemy at position: " + closestEnemy.getLocation());
         }
 
         if (powerful != null) {
@@ -205,27 +145,55 @@ public class HunterMuckracker extends Robot {
             }
         }
 
+        RobotInfo bestSlanderer = null;
+        bestInfluence = Integer.MIN_VALUE;
+        RobotInfo closestEnemy = null;
+        Comms.EnemyType closestEnemyType = null;
+        double minDistSquared = Integer.MAX_VALUE;
+
+        for(int i = enemySensable.length - 1; i >= 0; i--) {
+            robot = enemySensable[i];
+            if (robot.getType() == RobotType.SLANDERER) {
+                int curr = robot.getConviction();
+                if (curr > bestInfluence) {
+                    bestInfluence = curr;
+                    bestSlanderer = robot;
+                }
+            }
+
+            double temp = currLoc.distanceSquaredTo(robot.getLocation());
+            if (temp < minDistSquared) {
+                minDistSquared = temp;
+                closestEnemy = robot;
+                if(robot.getType() == RobotType.MUCKRAKER) {
+                    closestEnemyType = Comms.EnemyType.MUC;
+                } else {
+                    closestEnemyType = Comms.EnemyType.UNKNOWN;
+                }
+            }
+        }
+        
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
-        
-        // This means that the first half of an EC-ID/EC-ID broadcast finished.
-        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
-        else if(broadcastECLocation());
-        else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
-        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
 
         if(!muckraker_Found_EC){
             if (bestSlanderer != null) {
                 main_direction = currLoc.directionTo(bestSlanderer.getLocation());
-                tryMoveDest(main_direction);
-                Debug.println(Debug.info, "Prioritizing killing slandies.");
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), bestSlanderer.getLocation(), 255, 150, 50);
+                tryMoveDest(main_direction);
+                Debug.println(Debug.info, "Moving towards a slanderer");
             }
             else if (disperseBot != null) {
                 main_direction = currLoc.directionTo(disperseBot.getLocation()).opposite();
                 tryMoveDest(main_direction);
                 Debug.println(Debug.info, "Dispersing to avoid rusher.");
+            }
+            else if (spawnKillRunFromHome) {
+                main_direction = currLoc.directionTo(home).opposite();
+                tryMoveDest(main_direction);
+                Debug.println(Debug.info, "Moving away from home");
+
             }
             else if (enemyLocation != null) {
                 if(!seenEnemyLocation) {
@@ -237,7 +205,7 @@ public class HunterMuckracker extends Robot {
                     if(rc.getLocation().distanceSquaredTo(enemyLocation) <= actionRadius) {
                         main_direction = rc.getLocation().directionTo(enemyLocation).opposite();
                         Debug.println(Debug.info, "I moving away from the enemy location");
-                    } else if(closest_muk_dist <= 4 && rc.getInfluence() < Util.smallMuckThreshold) {
+                    } else if(closest_muk_dist <= 4) {
                         main_direction = rc.getLocation().directionTo(closest_muk.getLocation()).opposite();
                         Debug.println(Debug.info, "I moving away from another muck");
                     } else {
@@ -257,25 +225,9 @@ public class HunterMuckracker extends Robot {
                     main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
                     tryMove +=1;
                 }
-
+                
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
-            }
-            else if (awayFromBase) {
-                tryMoveDest(currLoc.directionTo(friendlyBase.getLocation()).opposite());
-                Debug.println(Debug.info, "Prioritizing moving away from friendly.");
-            }
-            else if (enemiesFound != 0 && numFollowingClosestEnemy < Util.maxFollowingSingleUnit) {
-                MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
-                setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID()));
-                tryMoveDest(currLoc.directionTo(hunterLoc));
-                if(rc.isReady()) {
-                    Debug.println(Debug.info, "Prioritizing going towards average enemy at " + hunterLoc);
-                }
-                else {
-                    Debug.println(Debug.info, "Sending info about average enemy location(if attack call/chill call not set)");
-                }
-                Debug.setIndicatorLine(Debug.info, rc.getLocation(), hunterLoc, 255, 150, 50);
             }
             else {
                 main_direction = Nav.explore();
@@ -285,5 +237,15 @@ public class HunterMuckracker extends Robot {
                 Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);
             }
         }
+
+        // if(turnCount > Util.explorerMuckrakerLifetime) {
+        //     changeTo = new LatticeMuckraker(rc, home);
+        // }
+        
+        // This means that the first half of an EC-ID/EC-ID broadcast finished.
+        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+        else if(broadcastECLocation());
+        else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
     }
 }

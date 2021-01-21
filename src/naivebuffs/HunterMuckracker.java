@@ -1,9 +1,9 @@
-package musketeerplayerqual;
+package naivebuffs;
 import battlecode.common.*;
 
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
-import musketeerplayerqual.fast.FastIterableLocSet;
+import naivebuffs.Util.*;
+import naivebuffs.Debug.*;
+import naivebuffs.fast.FastIterableLocSet;
 
 public class HunterMuckracker extends Robot {
     static Direction main_direction;
@@ -209,11 +209,7 @@ public class HunterMuckracker extends Robot {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
         
-        // This means that the first half of an EC-ID/EC-ID broadcast finished.
-        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
-        else if(broadcastECLocation());
-        else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
-        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
+        boolean setFollowingFlag = false;
 
         if(!muckraker_Found_EC){
             if (bestSlanderer != null) {
@@ -268,6 +264,7 @@ public class HunterMuckracker extends Robot {
             else if (enemiesFound != 0 && numFollowingClosestEnemy < Util.maxFollowingSingleUnit) {
                 MapLocation hunterLoc = new MapLocation(totalEnemyX / enemiesFound, totalEnemyY / enemiesFound);
                 setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestEnemy.getID()));
+                setFollowingFlag = true;
                 tryMoveDest(currLoc.directionTo(hunterLoc));
                 if(rc.isReady()) {
                     Debug.println(Debug.info, "Prioritizing going towards average enemy at " + hunterLoc);
@@ -284,6 +281,14 @@ public class HunterMuckracker extends Robot {
                 }
                 Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);
             }
+        }
+        
+        if(!setFollowingFlag) {
+            // This means that the first half of an EC-ID/EC-ID broadcast finished.
+            if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+            else if(broadcastECLocation());
+            else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
+            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
         }
     }
 }

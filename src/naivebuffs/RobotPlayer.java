@@ -1,10 +1,10 @@
-package musketeerplayerqual;
+package naivebuffs;
 
 import battlecode.common.*;
 
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Comms.*;
-import musketeerplayerqual.Debug.*;
+import naivebuffs.Util.*;
+import naivebuffs.Comms.*;
+import naivebuffs.Debug.*;
 
 public strictfp class RobotPlayer {
 
@@ -160,7 +160,7 @@ public strictfp class RobotPlayer {
                 bot = new LatticeProtector(rc);
                 break;
             case SLANDERER:
-                bot = new DiagonalSlanderer(rc);
+                bot = new Slanderer(rc);
                 break;
             case MUCKRAKER:
                 bot = new ExplorerMuckracker(rc);
