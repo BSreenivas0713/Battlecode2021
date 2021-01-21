@@ -343,7 +343,7 @@ public class EC extends Robot {
             goToAcceleratedSlanderersState = false;
         }
 
-        if (enemyRushPolInf == 0) {
+        //if (enemyRushPolInf == 0) {
             if (currentState != State.SURVIVAL) {
                 if(currentState != State.INIT || currentState != State.NEW_TOWER_LOW_INFLUENCE) {
                     // Override everything for a spawn kill. This is fine, as it only takes 1 turn
@@ -391,12 +391,12 @@ public class EC extends Robot {
                     }
                 }
             }
-        } else {
+        /*} else {
             if (currentState != State.ABOUT_TO_DIE) {
                 stateStack.push(currentState);
                 currentState = State.ABOUT_TO_DIE;
             }
-        }
+        }*/
         
 
         // At this point, state is either RUSHING, SAVING, BUILDING (spawn kill or protectors),or CLEANUP
