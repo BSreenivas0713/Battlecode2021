@@ -1,30 +1,22 @@
-package musketeerplayerqual;
+package naivebuffs;
 import battlecode.common.*;
 
-import musketeerplayerqual.Comms.*;
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
-import musketeerplayerqual.fast.FastIterableIntSet;
-import musketeerplayerqual.fast.FastIterableLocSet;
-import musketeerplayerqual.fast.FastLocIntMap;
-import musketeerplayerqual.fast.FastIntLocMap;
-import musketeerplayerqual.fast.FastQueue;
-import musketeerplayerqual.fast.FastIntIntMap;
+import naivebuffs.Comms.*;
+import naivebuffs.Util.*;
+import naivebuffs.Debug.*;
+import naivebuffs.fast.FastIterableIntSet;
+import naivebuffs.fast.FastIterableLocSet;
+import naivebuffs.fast.FastLocIntMap;
+import naivebuffs.fast.FastIntLocMap;
+import naivebuffs.fast.FastQueue;
+import naivebuffs.fast.FastIntIntMap;
 
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
 /* 
 TODO: 
 
-1/7 of troops should be explorers 
-slanderes turn into explorerers
-better pathfinding algorithm
-if we see an enemy tower, send a buf muck there
-dont send buf mucks without any location at all 
-store location of all buf muck deaths
-if < 21, only make muckrakers, get rid of over 100 slanderer check
-dont stop making making slanderers unless theres a buff muck within 2 sensing radius of the EC (not one)
-make politicians bigger (possibly later game)
+Should we call next flag before or after build robot succeeds??? it is not consistent in this code. I think it should be after
 
 */
 public class EC extends Robot {
@@ -40,7 +32,6 @@ public class EC extends Robot {
         SURVIVAL,
         STUCKY_MUCKY,
         RUSHING_MUCKS,
-        NEW_TOWER_LOW_INFLUENCE
     };
 
     static class RushFlag implements Comparable<RushFlag> {
@@ -156,8 +147,8 @@ public class EC extends Robot {
         ECflags = new PriorityQueue<RushFlag>();
         stateStack = new ArrayDeque<State>();
         flagQueue = new FastQueue<>(100);
-        currentState = getInitialState();
-        prevState = getInitialState();
+        currentState = State.INIT;
+        prevState = State.INIT;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, Comms.SubRobotType.EC);
 
         cleanUpCount = 0;
@@ -205,15 +196,6 @@ public class EC extends Robot {
             }
         }
         nearbyECs.updateIterable();
-    }
-
-    public State getInitialState() {
-        if (rc.getInfluence() < 100) {
-            return State.NEW_TOWER_LOW_INFLUENCE;
-        }
-        else {
-            return State.INIT;
-        }
     }
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
@@ -300,7 +282,7 @@ public class EC extends Robot {
         }
 
         if (currentState != State.SURVIVAL) {
-            if(currentState != State.INIT || currentState != State.NEW_TOWER_LOW_INFLUENCE) {
+            if(currentState != State.INIT) {
                 // Override everything for a spawn kill. This is fine, as it only takes 1 turn
                 // and at most happens once every 10 turns.
                 tryStartBuildingSpawnKill();
@@ -368,11 +350,6 @@ public class EC extends Robot {
             }
         }
 
-        if (currentState == State.NEW_TOWER_LOW_INFLUENCE && currInfluence > 100) {
-            Debug.println(Debug.info, "switching from new_tower_low_inf to chilling");
-            currentState = State.CHILLING;
-        }
-
         builtRobot = false;
 
         Debug.println(Debug.info, "I am a " + rc.getType() + "; current influence: " + currInfluence);
@@ -395,18 +372,6 @@ public class EC extends Robot {
         switch(currentState) {
             case INIT: 
                 firstRounds();
-                break;
-            case NEW_TOWER_LOW_INFLUENCE:
-                if (Util.getBestSlandererInfluence(currInfluence) != -1 && !muckrakerNear) {
-                    toBuild = RobotType.SLANDERER;
-                    influence = Util.getBestSlandererInfluence(currInfluence);
-                }
-                else {
-                    toBuild = RobotType.MUCKRAKER;
-                    influence = 1;
-                    makeMuckraker();
-                }
-                buildRobot(toBuild, influence);
                 break;
             case SURVIVAL:
                 toBuild = RobotType.MUCKRAKER;
@@ -502,7 +467,7 @@ public class EC extends Robot {
                         signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                         break;
                     case 2:
-                        if(Util.getBestSlandererInfluence(currInfluence) > 100) {
+                        if(Util.getBestSlandererInfluence(currInfluence ) > 100) {
                             toBuild = RobotType.SLANDERER;
                             influence = Util.getBestSlandererInfluence(currInfluence);
                         }
@@ -820,6 +785,14 @@ public class EC extends Robot {
             }
             id = ids[j];
             if(rc.canGetFlag(id)) {
+
+                if(roundToSlandererID.contains(currRoundNum)) {
+                    int Slandererid = roundToSlandererID.getVal(currRoundNum);
+                    roundToSlandererID.remove(currRoundNum);
+                    slandererIDToRound.remove(Slandererid);
+                    protectorIdSet.add(Slandererid);
+                }
+                
                 flag = rc.getFlag(id);
                 switch (Comms.getIC(flag)) {
                     case NEUTRAL_EC:
@@ -1307,7 +1280,7 @@ public class EC extends Robot {
                 break;
         }
 
-        if (!buildRobot(toBuild, influence)) {
+        if(!buildRobot(toBuild, influence)) {
             toBuild = RobotType.MUCKRAKER;
             influence = 1;
             buildRobot(toBuild, influence);
