@@ -1130,6 +1130,7 @@ public class EC extends Robot {
             firstScoutDeathReported = true;
             buffMuckCooldown = Util.bufMuckCooldownThreshold;
             lastSentBufMuck = nextBufLoc;
+            currentState = stateStack.pop();
             return true;
         }
         return false;
