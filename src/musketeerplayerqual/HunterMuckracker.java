@@ -46,7 +46,7 @@ public class HunterMuckracker extends Robot {
 
         if(enemyLocation != null && rc.canSenseLocation(enemyLocation) ) {
             RobotInfo supposedToBeAnEC = rc.senseRobotAtLocation(enemyLocation);
-            if(supposedToBeAnEC == null || supposedToBeAnEC.getType() != RobotType.ENLIGHTENMENT_CENTER) {
+            if(rc.getInfluence() < Util.smallMuckThreshold && (supposedToBeAnEC == null || supposedToBeAnEC.getType() != RobotType.ENLIGHTENMENT_CENTER)) {
                 Debug.println(Debug.info, "Enemy EC not found, setting chill flag, reseting enemyLocation");
                 Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
                 
