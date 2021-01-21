@@ -1,8 +1,8 @@
-package musketeerplayerqual;
+package naivebuffs;
 import battlecode.common.*;
 
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
+import naivebuffs.Util.*;
+import naivebuffs.Debug.*;
 
 public class CleanupPolitician extends Robot {
     static Direction main_direction;
@@ -77,11 +77,6 @@ public class CleanupPolitician extends Robot {
                 }
             }
         }
-
-        // This means that the first half of an EC-ID/EC-ID broadcast finished.
-        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
-        else if(broadcastECLocation());
-        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
         
         if (powerful != null) {
             main_direction = rc.getLocation().directionTo(powerful.getLocation());
@@ -91,5 +86,10 @@ public class CleanupPolitician extends Robot {
         for(Direction dir : orderedDirs) {
             tryMove(dir);
         }
+
+        // This means that the first half of an EC-ID/EC-ID broadcast finished.
+        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+        else if(broadcastECLocation());
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
     }
 }

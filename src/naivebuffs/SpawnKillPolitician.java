@@ -1,9 +1,9 @@
-package musketeerplayerqual;
+package naivebuffs;
 
 import battlecode.common.*;
 
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
+import naivebuffs.Util.*;
+import naivebuffs.Debug.*;
 
 public class SpawnKillPolitician extends Robot {
     static Direction main_direction;
@@ -56,5 +56,10 @@ public class SpawnKillPolitician extends Robot {
         } else {
             changeTo = new LatticeProtector(rc, home, homeID);
         }
+        
+        // This means that the first half of an EC-ID/EC-ID broadcast finished.
+        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+        else if(broadcastECLocation());
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
     }
 }
