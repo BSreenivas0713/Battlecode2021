@@ -109,7 +109,7 @@ public class ExplorerPolitician extends Robot {
             if((distToBase <= sensorRadius || (distToBase <= 4 * sensorRadius && robot.getInfluence() > Util.smallMuckThreshold )) && 
                 robot.getType() == RobotType.MUCKRAKER) {
                 if (temp < MukminDistSquared) {
-                    temp = MukminDistSquared;
+                    MukminDistSquared = (int) temp;
                     enemyNearBase = true;
                     enemyLoc = robot.getLocation();
 
