@@ -148,8 +148,10 @@ public class EC extends Robot {
 
     static int enemyRushPolInf;
     static int dyingSemaphore;
+    static int dyingSemaphoreDefault;
+    static double passabilityOfHome;
 
-    public EC(RobotController r) {
+    public EC(RobotController r) throws GameActionException {
         super(r);
         idSet = new FastIterableIntSet(1000);
         ids = idSet.ints;
@@ -198,7 +200,9 @@ public class EC extends Robot {
         nextBufLoc = null;
         scoutIDToEnemyLocs = new FastIntLocMap();
 
-        dyingSemaphore = 10;
+        passabilityOfHome = rc.sensePassability(home);
+        dyingSemaphoreDefault = (int) (5.0 * (2.0 / passabilityOfHome));
+        dyingSemaphore = dyingSemaphoreDefault;
 
         /*if (rc.getRoundNum() <= 1) {
             int encodedInfForUnknownEC = Comms.encodeInf(200);
@@ -450,7 +454,7 @@ public class EC extends Robot {
                 buildRobot(toBuild, influence);
                 if (dyingSemaphore == 0) {
                     currentState = stateStack.pop();
-                    dyingSemaphore = 10;
+                    dyingSemaphore = dyingSemaphoreDefault;
                 }
                 break;
             case NEW_TOWER_LOW_INFLUENCE:
