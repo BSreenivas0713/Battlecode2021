@@ -604,7 +604,7 @@ public class Nav {
         // return gradientDescent();
     }
     
-    public static Direction[] greedyDirection(Direction dir) throws GameActionException {
+    public static Direction[] greedyDirection(Direction dir, RobotController rc) throws GameActionException {
         Direction left = dir.rotateLeft();
         Direction right = dir.rotateRight();
 
@@ -616,33 +616,49 @@ public class Nav {
         int numInserted = 0;
         int numToInsert = 0;
         if(rc.onTheMap(loc)) {
+            if (rc.senseRobotAtLocation(loc) == null) {
             numToInsert++;
+            }
         }
         if(rc.onTheMap(leftLoc)) {
+            if (rc.senseRobotAtLocation(leftLoc) == null) {
             numToInsert++;
+            }
         }
         if(rc.onTheMap(rightLoc)) {
+            if (rc.senseRobotAtLocation(rightLoc) == null) {
             numToInsert++;
+            }
         }
 
         Direction[] orderedDirs = new Direction[numToInsert];
         
         if(rc.onTheMap(loc)) {
+            if (rc.senseRobotAtLocation(loc) == null) {
             orderedDirs[numInserted++] = dir;
+            }
         }
         if((int)(Math.random() * 2) % 2 == 0) {
-            if(rc.onTheMap(leftLoc)) {
+        if(rc.onTheMap(leftLoc)) {
+            if (rc.senseRobotAtLocation(leftLoc) == null) {
                 orderedDirs[numInserted++] = left;
+                }
             }
             if(rc.onTheMap(rightLoc)) {
+                if (rc.senseRobotAtLocation(rightLoc) == null) {
                 orderedDirs[numInserted++] = right;
+                }
             }
         } else {
             if(rc.onTheMap(rightLoc)) {
+                if (rc.senseRobotAtLocation(rightLoc) == null) {
                 orderedDirs[numInserted++] = right;
+                }
             }
             if(rc.onTheMap(leftLoc)) {
+                if (rc.senseRobotAtLocation(leftLoc) == null) {
                 orderedDirs[numInserted++] = left;
+                }
             }
         }
 
@@ -652,9 +668,10 @@ public class Nav {
         double temp;
         for(int i = 0; i < numInserted - 1; i++) {
             maxIndex = i;
-            maxPass = rc.sensePassability(currLoc.add(orderedDirs[maxIndex]));
+            maxPass = (double) (Math.round((double) (rc.sensePassability(currLoc.add(orderedDirs[maxIndex])) * 100))) / 100;
+            Debug.println("Num Inserted: " + numInserted + "; maxPass:" + maxPass);
             for(int j = i + 1; j < numInserted; j++) {
-                temp = rc.sensePassability(currLoc.add(orderedDirs[j]));
+                temp = (double) (Math.round((double) (rc.sensePassability(currLoc.add(orderedDirs[j])) * 100))) / 100;
                 if(temp > maxPass) {
                     maxIndex = j;
                     maxPass = temp;
@@ -672,7 +689,7 @@ public class Nav {
         return orderedDirs;
     }
 
-    public static Direction[] exploreGreedy() throws GameActionException {
+    public static Direction[] exploreGreedy(RobotController rc) throws GameActionException {
         Debug.println(Debug.pathfinding, "Exploring");
         if(!rc.isReady())
             return null;
@@ -721,6 +738,6 @@ public class Nav {
             }
         }
 
-        return greedyDirection(lastExploreDir);
+        return greedyDirection(lastExploreDir, rc);
     }
 }

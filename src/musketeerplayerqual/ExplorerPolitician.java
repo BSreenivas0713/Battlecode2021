@@ -38,6 +38,7 @@ public class ExplorerPolitician extends Robot {
         MapLocation currLoc = rc.getLocation();
         int maxEnemyDistSquared = Integer.MIN_VALUE;
         MapLocation farthestEnemy = null;
+        boolean inActionRadiusOfFriendly = false;
 
         int ecConviction = Integer.MAX_VALUE;
         int numPoliticians = 0;
@@ -86,12 +87,16 @@ public class ExplorerPolitician extends Robot {
         
         RobotInfo EC = null;
         int min_influence = 0;
+        RobotInfo farthestMukCloseToBase = null;
+        int MukminDistSquared = Integer.MAX_VALUE;
+        MapLocation enemyLoc = null;
+        boolean enemyNearBase = false;
 
         for(int i = enemySensable.length - 1; i >= 0; i--) {
             robot = enemySensable[i];
             int currInfluence = robot.getConviction();
-            
             double temp = currLoc.distanceSquaredTo(robot.getLocation());
+            double distToBase = home.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
                 closestEnemy = robot;
@@ -101,10 +106,26 @@ public class ExplorerPolitician extends Robot {
                     closestEnemyType = Comms.EnemyType.UNKNOWN;
                 }
             }
+            if((distToBase <= sensorRadius || (distToBase <= 4 * sensorRadius && robot.getInfluence() > Util.smallMuckThreshold )) && 
+                robot.getType() == RobotType.MUCKRAKER) {
+                if (temp < MukminDistSquared) {
+                    temp = MukminDistSquared;
+                    enemyNearBase = true;
+                    enemyLoc = robot.getLocation();
+
+                }
+            }
             
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && currInfluence < min_influence) {
                 EC = robot;
                 min_influence = currInfluence;
+            }
+        }
+        for(int i = friendlySensable.length - 1; i >=0; i --) {
+            robot = friendlySensable[i];
+            int enemyDist = rc.getLocation().distanceSquaredTo(robot.getLocation());
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyDist  <= actionRadius) {
+                inActionRadiusOfFriendly = true;
             }
         }
 
@@ -113,19 +134,34 @@ public class ExplorerPolitician extends Robot {
         else if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));   
         
+        if(enemyNearBase) {
+            if(rc.canEmpower(MukminDistSquared)) {
+                Debug.println("enemy too close to base. Even though I am an explorerer, I will empower");
+                rc.empower(MukminDistSquared);
+            }
+            else {
+                Debug.println("moving towards an enemy too close to base even though I am an explorer");
+                Direction toMove = rc.getLocation().directionTo(enemyLoc);
+                tryMoveDest(toMove);
+            }
+        }
         if (EC != null) {
             Direction toMove = rc.getLocation().directionTo(EC.getLocation());
             tryMoveDest(toMove);
         }
 
-        Direction[] orderedDirs = Nav.exploreGreedy();
+        Direction[] orderedDirs = Nav.exploreGreedy(rc);
+        boolean moved = false;
         if(orderedDirs != null) {
             for(Direction dir : orderedDirs) {
-                tryMove(dir);
+                moved = moved || tryMove(dir);
             }
             orderedDirs = Util.getOrderedDirections(main_direction);
             for(Direction dir : orderedDirs) {
-                tryMove(dir);
+                moved = moved || tryMove(dir);
+            }
+            if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
+                    tryMoveDest(main_direction);
             }
         }
     }
