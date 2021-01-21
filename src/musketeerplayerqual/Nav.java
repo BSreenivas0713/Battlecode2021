@@ -620,13 +620,13 @@ public class Nav {
             numToInsert++;
             }
         }
-        if(rc.onTheMap(loc)) {
-            if (rc.senseRobotAtLocation(loc) == null) {
+        if(rc.onTheMap(leftLoc)) {
+            if (rc.senseRobotAtLocation(leftLoc) == null) {
             numToInsert++;
             }
         }
-        if(rc.onTheMap(loc)) {
-            if (rc.senseRobotAtLocation(loc) == null) {
+        if(rc.onTheMap(rightLoc)) {
+            if (rc.senseRobotAtLocation(rightLoc) == null) {
             numToInsert++;
             }
         }
@@ -639,24 +639,24 @@ public class Nav {
             }
         }
         if((int)(Math.random() * 2) % 2 == 0) {
-        if(rc.onTheMap(loc)) {
-            if (rc.senseRobotAtLocation(loc) == null) {
+        if(rc.onTheMap(leftLoc)) {
+            if (rc.senseRobotAtLocation(leftLoc) == null) {
                 orderedDirs[numInserted++] = left;
                 }
             }
-            if(rc.onTheMap(loc)) {
-                if (rc.senseRobotAtLocation(loc) == null) {
+            if(rc.onTheMap(rightLoc)) {
+                if (rc.senseRobotAtLocation(rightLoc) == null) {
                 orderedDirs[numInserted++] = right;
                 }
             }
         } else {
-            if(rc.onTheMap(loc)) {
-                if (rc.senseRobotAtLocation(loc) == null) {
+            if(rc.onTheMap(rightLoc)) {
+                if (rc.senseRobotAtLocation(rightLoc) == null) {
                 orderedDirs[numInserted++] = right;
                 }
             }
-            if(rc.onTheMap(loc)) {
-                if (rc.senseRobotAtLocation(loc) == null) {
+            if(rc.onTheMap(leftLoc)) {
+                if (rc.senseRobotAtLocation(leftLoc) == null) {
                 orderedDirs[numInserted++] = left;
                 }
             }
