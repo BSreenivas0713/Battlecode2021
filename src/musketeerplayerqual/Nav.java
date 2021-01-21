@@ -657,7 +657,7 @@ public class Nav {
         }
 
         for(int i = 0; i < orderedDirs.length; i++) {
-            Debug.println("Passability: " + rc.sensePassability(currLoc.add(orderedDirs[i])));
+            Debug.println("Passability of " + orderedDirs[i] + ": "+ rc.sensePassability(currLoc.add(orderedDirs[i])));
         }
 
         return orderedDirs;

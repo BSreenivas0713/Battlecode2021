@@ -237,12 +237,14 @@ public class ExplorerMuckracker extends Robot {
             }
             else {
                 Direction[] orderedDirs = Nav.exploreGreedy();
-                for(Direction dir : orderedDirs) {
-                    tryMove(dir);
-                }
-                orderedDirs = Util.getOrderedDirections(main_direction);
-                for(Direction dir : orderedDirs) {
-                    tryMove(dir);
+                if(orderedDirs != null) {
+                    for(Direction dir : orderedDirs) {
+                        tryMove(dir);
+                    }
+                    orderedDirs = Util.getOrderedDirections(main_direction);
+                    for(Direction dir : orderedDirs) {
+                        tryMove(dir);
+                    }
                 }
                 Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);
             }
