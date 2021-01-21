@@ -71,7 +71,7 @@ public class ExplorerPolitician extends Robot {
             return;
         }
 
-        if(numPoliticians > 3 && rc.getEmpowerFactor(rc.getTeam(), 0) > 3) {
+        if(numPoliticians > 3 && rc.getEmpowerFactor(rc.getTeam(), 0) > 3 && rc.canEmpower(maxEnemyDistSquared)) {
             Debug.println(Debug.info, "Empowered with radius: " + maxEnemyDistSquared);
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestEnemy, 255, 150, 50);
             rc.empower(maxEnemyDistSquared);
