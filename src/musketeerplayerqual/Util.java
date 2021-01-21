@@ -39,10 +39,10 @@ public class Util {
     };
 
     static final Direction[] diagonalDirs = {
-        Direction.NORTH,
-        Direction.SOUTH,
-        Direction.WEST,
-        Direction.EAST,
+        Direction.NORTHWEST,
+        Direction.NORTHEAST,
+        Direction.SOUTHEAST,
+        Direction.SOUTHWEST,
     };
 
     static final double spawnKillThreshold = 5;
@@ -124,7 +124,7 @@ public class Util {
     }
 
     static Direction randomDiagonalDirection() {
-        return orthogonalDirs[(int) (Math.random() * orthogonalDirs.length)];
+        return diagonalDirs[(int) (Math.random() * diagonalDirs.length)];
     }
 
     static Direction[] getOrderedDirections(DirectionPreference pref) {
@@ -147,7 +147,6 @@ public class Util {
     }
 
     static Direction[] getOrderedDirections(Direction dir) {
-        dir = randomDirection();
         return new Direction[]{dir, dir.rotateLeft(), dir.rotateLeft().rotateLeft(), dir.opposite().rotateRight(), dir.opposite(),
                 dir.opposite().rotateLeft(), dir.rotateRight().rotateRight(), dir.rotateRight()};
     }

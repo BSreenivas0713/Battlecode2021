@@ -16,10 +16,13 @@ import java.util.PriorityQueue;
 /* 
 TODO: 
 
+Make hunters go to their location before checking for other towers to change or location(go closer to the location first)
 
-edit about_to_die to make semathingy based on passability
-get lattice protectors that were slanderers to not be in the back (hard)
-stay above influence of biggest enemy near us
+Make 1 cost explorer polticians
+
+experiment with a lot of mucks going to the same location
+
+make a new player
 
 */
 public class EC extends Robot {
@@ -120,6 +123,7 @@ public class EC extends Robot {
 
     static int lastRush;
     static int spawnKillLock;
+    static MapLocation spawnKillLoc;
     static int lastSuccessfulBlockageRemoval;
 
     static int bigBid;
@@ -168,10 +172,11 @@ public class EC extends Robot {
         lastRush = Integer.MIN_VALUE;
         canGoBackToBuildingProtectors = true;
         spawnKillLock = 10;
+        spawnKillLoc = null;
         lastSuccessfulBlockageRemoval = -1;
         littleBid = 0;
         prevBid = 0;
-        bigBid = 1;
+        bigBid = 4;
         wonLastBid = false;
         lastVoteCount = 0;
         chillingCount = 0;
@@ -229,7 +234,7 @@ public class EC extends Robot {
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
         Debug.println(Debug.info, "Trying to build robot of type: " + toBuild + " influence: " + influence);
         DirectionPreference pref = DirectionPreference.RANDOM;
-        if(currentState == State.BUILDING_SPAWNKILLS) {
+        if(currentState == State.BUILDING_SPAWNKILLS || spawnKillLock < 10) {
             pref = DirectionPreference.ORTHOGONAL;
         }
         
@@ -263,11 +268,21 @@ public class EC extends Robot {
             numMucks++;
             return true;
         } else {
+            if (toBuild == RobotType.POLITICIAN && robotCounter == 1) {
+                orderedDirs = Util.getOrderedDirections(Direction.NORTHWEST);
+            }
+            else if (toBuild == RobotType.POLITICIAN && robotCounter == 2) {
+                orderedDirs = Util.getOrderedDirections(Direction.WEST);
+            }
             for(Direction dir : orderedDirs) {
-                if (rc.canBuildRobot(toBuild, dir, influence)) {
+                if (rc.canBuildRobot(toBuild, dir, influence) 
+                    && (spawnKillLoc == null || !home.add(dir).isAdjacentTo(spawnKillLoc))) {
                     rc.buildRobot(toBuild, dir, influence);
                     RobotInfo robot = rc.senseRobotAtLocation(home.add(dir));
                     if(robot != null) {
+                        if (currentState == State.BUILDING_SPAWNKILLS) {
+                            spawnKillLoc = robot.getLocation();
+                        }
                         switch(robot.getType()) {
                             case MUCKRAKER:
                                 numMucks++;
@@ -306,10 +321,6 @@ public class EC extends Robot {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-
-        if (spawnKillLock < 10) {
-            spawnKillLock++;
-        }
 
         if (!noAdjacentEC && currentState != State.SAVING_FOR_RUSH && currentState != State.RUSHING) {
             stateStack.push(State.CHILLING);
@@ -392,8 +403,7 @@ public class EC extends Robot {
                     }
                 }
             }
-        /*} else {
-            if (currentState != State.ABOUT_TO_DIE) {
+        /*} else if (currentState != State.ABOUT_TO_DIE) {
                 stateStack.push(currentState);
                 currentState = State.ABOUT_TO_DIE;
             }
@@ -747,6 +757,12 @@ public class EC extends Robot {
             recentSlanderer = null;
         }
 
+        if (spawnKillLock < 10) {
+            spawnKillLock++;
+        } else {
+            spawnKillLoc = null;
+        }
+
         MapLocation[] keys = rushingECtoTurnMap.getKeys();
         MapLocation key;
         for(int i = keys.length - 1; i >= 0; i--) {
@@ -887,7 +903,7 @@ public class EC extends Robot {
         }
 
         for(int j = idSet.size - 1; j >= 0; j--) {
-            if(Clock.getBytecodesLeft() < 1500) {
+            if(Clock.getBytecodesLeft() < 3000) {
                 Debug.println(Debug.info, "Bytecode limit close, Breaking from loop");
                 break;
             }
@@ -1345,7 +1361,7 @@ public class EC extends Robot {
     public int bidBS() throws GameActionException {
         int currVotes = rc.getTeamVotes();
         int res;
-        if (currVotes > 750) {
+        if (currentState == State.INIT || currVotes > 750) {
             return 0;
         } else if (currRoundNum > 1300) {
             return currInfluence / 25;
@@ -1362,15 +1378,17 @@ public class EC extends Robot {
         Debug.println(Debug.info, "L: " + littleBid + ", B: " + bigBid);
         if (wonLastBid) {
             res = Integer.min(Integer.max((prevBid + littleBid) / 2, 2), currInfluence / 25);
-            bigBid = prevBid;
             prevBid = res;
         } else {
-            if (bigBid < currInfluence / 10) bigBid = littleBid * 2;
+            if (bigBid < currInfluence / 10) bigBid *= 2;
             res = Integer.min(Integer.max((prevBid + bigBid) / 2, 2), currInfluence / 25);
-            littleBid = prevBid;
-            prevBid = res;
+            if (prevBid == res) {
+                bigBid /= 2;
+            } else {
+                prevBid = res;
+            }
         }
-        if (bigBid == 0) bigBid++;
+        if (bigBid < 4) bigBid = 4;
         return res;
     }
     
