@@ -119,12 +119,14 @@ public class ExplorerPolitician extends Robot {
         }
 
         Direction[] orderedDirs = Nav.exploreGreedy();
-        for(Direction dir : orderedDirs) {
-            tryMove(dir);
-        }
-        orderedDirs = Util.getOrderedDirections(main_direction);
-        for(Direction dir : orderedDirs) {
-            tryMove(dir);
+        if(orderedDirs != null) {
+            for(Direction dir : orderedDirs) {
+                tryMove(dir);
+            }
+            orderedDirs = Util.getOrderedDirections(main_direction);
+            for(Direction dir : orderedDirs) {
+                tryMove(dir);
+            }
         }
     }
 }
