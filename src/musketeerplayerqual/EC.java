@@ -16,10 +16,13 @@ import java.util.PriorityQueue;
 /* 
 TODO: 
 
+Make hunters go to their location before checking for other towers to change or location(go closer to the location first)
 
-edit about_to_die to make semathingy based on passability
-get lattice protectors that were slanderers to not be in the back (hard)
-stay above influence of biggest enemy near us
+Make 1 cost explorer polticians
+
+experiment with a lot of mucks going to the same location
+
+make a new player
 
 */
 public class EC extends Robot {
@@ -265,6 +268,12 @@ public class EC extends Robot {
             numMucks++;
             return true;
         } else {
+            if (toBuild == RobotType.POLITICIAN && robotCounter == 1) {
+                orderedDirs = Util.getOrderedDirections(Direction.NORTHWEST);
+            }
+            else if (toBuild == RobotType.POLITICIAN && robotCounter == 2) {
+                orderedDirs = Util.getOrderedDirections(Direction.WEST);
+            }
             for(Direction dir : orderedDirs) {
                 if (rc.canBuildRobot(toBuild, dir, influence) 
                     && (spawnKillLoc == null || !home.add(dir).isAdjacentTo(spawnKillLoc))) {
