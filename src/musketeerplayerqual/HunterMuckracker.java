@@ -58,6 +58,7 @@ public class HunterMuckracker extends Robot {
                 int dy = enemyLocation.y - currLoc.y;
 
                 enemyLocation = null;
+                seenEnemyLocation = false;
             }
         }
 
@@ -79,6 +80,7 @@ public class HunterMuckracker extends Robot {
                         if((GRtype == Comms.GroupRushType.MUC || GRtype == Comms.GroupRushType.MUC_POL)) {
                             Debug.println(Debug.info, "Joining the rush");
                             enemyLocation = enemyLoc;
+                            seenEnemyLocation = false;
                             turnsSinceClosestDistanceDecreased = 0;
                             closestDistanceToDest = Integer.MAX_VALUE;
                         } else {
@@ -101,6 +103,7 @@ public class HunterMuckracker extends Robot {
                             GRmod == rc.getID() % 2) {
                             Debug.println(Debug.info, "Following the slanderer");
                             enemyLocation = enemyLoc;
+                            seenEnemyLocation = false;
                             turnsSinceClosestDistanceDecreased = 0;
                             closestDistanceToDest = Integer.MAX_VALUE;
                         } else {
@@ -109,15 +112,16 @@ public class HunterMuckracker extends Robot {
                     }
                     break;
                 case DELETE_ENEMY_LOC:
-                if(enemyLocation != null) {
-                    int[] dxdy = Comms.getDxDy(flag);
-                    MapLocation enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
+                    if(enemyLocation != null && !seenEnemyLocation) {
+                        int[] dxdy = Comms.getDxDy(flag);
+                        MapLocation enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
 
-                    if(enemyLocation.equals(enemyLoc)) {
-                        enemyLocation = null;
+                        if(enemyLocation.equals(enemyLoc)) {
+                            enemyLocation = null;
+                            seenEnemyLocation = false;
+                        }
                     }
-                }
-                break;
+                    break;
             }
         } else {
             Debug.println(Debug.info, "Can't get home flag: " + homeID);
@@ -205,6 +209,7 @@ public class HunterMuckracker extends Robot {
                 }
                 if(enemyLocation != null && robot.getLocation().equals(enemyLocation)) {
                     enemyLocation = null;
+                    seenEnemyLocation = false;
                     Debug.println("Base has been captured. EnemyLocation is null");
                 }
             }
@@ -313,6 +318,7 @@ public class HunterMuckracker extends Robot {
                                             enemyLocation.x - home.x + Util.dOffset,
                                             enemyLocation.y - home.y + Util.dOffset));
                         enemyLocation = null;
+                        seenEnemyLocation = false;
                     }
                 }
 
