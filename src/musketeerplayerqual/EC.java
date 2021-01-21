@@ -302,7 +302,11 @@ public class EC extends Robot {
         processFriendlyECFlags();
         processLocalFlags();
         processChildrenFlags();
-
+        
+        // if(firstScoutDeathReported) {
+        //     RushFlag currentTarget = ECflags.peek();
+        //     nextBufLoc = ECflags.peek().location;
+        // }
         
 
         goToAcceleratedSlanderersState = true;
