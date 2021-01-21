@@ -1,9 +1,9 @@
-package musketeerplayerqual;
+package naivebuffs;
 import battlecode.common.*;
 
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
-import musketeerplayerqual.fast.FastIterableLocSet;
+import naivebuffs.Util.*;
+import naivebuffs.Debug.*;
+import naivebuffs.fast.FastIterableLocSet;
 
 public class ScoutMuckraker extends Robot {
     static Direction main_direction;
@@ -30,6 +30,10 @@ public class ScoutMuckraker extends Robot {
         Debug.println(Debug.info, "I am a scout mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "Direction of movement: " + main_direction);
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        
+        if(main_direction == null){
+            main_direction = Util.randomDirection();
+        }
 
         RobotInfo robot;
         RobotInfo closestEnemy = null;
@@ -60,12 +64,6 @@ public class ScoutMuckraker extends Robot {
             }
         }
 
-        // This means that the first half of an EC-ID/EC-ID broadcast finished.
-        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
-        else if(broadcastECLocation());
-        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
-        else if(broadcastWall());
-
         if (powerful != null) {
             if (rc.canExpose(powerful.location)) {
                 rc.expose(powerful.location);
@@ -74,15 +72,18 @@ public class ScoutMuckraker extends Robot {
 
         if (rc.onTheMap(currLoc.add(main_direction))) {
             Debug.println(Debug.info, "next loc on map. moving in direction: " + main_direction);
-            Direction[] orderedDirs = Nav.greedyDirection(main_direction);
-            for(Direction dir : orderedDirs) {
-                tryMove(dir);
-            }
+            tryMoveDest(main_direction);
         }
         else {
             Debug.println(Debug.info, "new location not on the map. switching to explorer");
             changeTo = new ExplorerMuckracker(rc, home, homeID);
             return;
         }
+
+        // This means that the first half of an EC-ID/EC-ID broadcast finished.
+        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+        else if(broadcastECLocation());
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
+        else if(broadcastWall());
     }
 }

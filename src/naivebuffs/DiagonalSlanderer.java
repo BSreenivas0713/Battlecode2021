@@ -1,9 +1,9 @@
-package musketeerplayerqual;
+package naivebuffs;
 
 import battlecode.common.*;
 
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
+import naivebuffs.Util.*;
+import naivebuffs.Debug.*;
 
 public class DiagonalSlanderer extends Robot {
     static Direction main_direction;
@@ -26,11 +26,7 @@ public class DiagonalSlanderer extends Robot {
         super.takeTurn();
         
         if (rc.getType() != RobotType.SLANDERER) {
-            if(rc.getConviction() > 100) {
-                changeTo = new ExplorerPolitician(rc, home, homeID);
-            } else {
-                changeTo = new LatticeProtector(rc, home, homeID);
-            }
+            changeTo = new LatticeProtector(rc, home, homeID);
             return;
         }
 
@@ -116,12 +112,10 @@ public class DiagonalSlanderer extends Robot {
         }
         
         boolean moveBack = false;
-        if (!curr.isWithinDistanceSquared(home, ecRadius * 2)) {
+        if (!curr.isWithinDistanceSquared(home, ecRadius)) {
             moveBack = true;
         }
         MapLocation latticeLoc;
-
-        if(foundOwnEnemy && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
 
         if(closestEnemy != null && curr.isWithinDistanceSquared(closestEnemy.getLocation(), Util.minDistFromEnemy)) {
             main_direction = curr.directionTo(closestEnemy.getLocation()).opposite();
@@ -179,5 +173,7 @@ public class DiagonalSlanderer extends Robot {
         //     avgEnemyDir = null;
         //     resetFlagOnNewTurn = true;
         // }
+
+        if(foundOwnEnemy && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
     }
 }

@@ -1,30 +1,22 @@
-package musketeerplayerqual;
+package naivebuffs;
 import battlecode.common.*;
 
-import musketeerplayerqual.Comms.*;
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
-import musketeerplayerqual.fast.FastIterableIntSet;
-import musketeerplayerqual.fast.FastIterableLocSet;
-import musketeerplayerqual.fast.FastLocIntMap;
-import musketeerplayerqual.fast.FastIntLocMap;
-import musketeerplayerqual.fast.FastQueue;
-import musketeerplayerqual.fast.FastIntIntMap;
+import naivebuffs.Comms.*;
+import naivebuffs.Util.*;
+import naivebuffs.Debug.*;
+import naivebuffs.fast.FastIterableIntSet;
+import naivebuffs.fast.FastIterableLocSet;
+import naivebuffs.fast.FastLocIntMap;
+import naivebuffs.fast.FastIntLocMap;
+import naivebuffs.fast.FastQueue;
+import naivebuffs.fast.FastIntIntMap;
 
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
 /* 
 TODO: 
 
-1/7 of troops should be explorers 
-slanderes turn into explorerers
-better pathfinding algorithm
-if we see an enemy tower, send a buf muck there
-dont send buf mucks without any location at all 
-store location of all buf muck deaths
-if < 21, only make muckrakers, get rid of over 100 slanderer check
-dont stop making making slanderers unless theres a buff muck within 2 sensing radius of the EC (not one)
-make politicians bigger (possibly later game)
+Should we call next flag before or after build robot succeeds??? it is not consistent in this code. I think it should be after
 
 */
 public class EC extends Robot {
@@ -89,7 +81,6 @@ public class EC extends Robot {
     static int cleanUpCount;
     static int currRoundNum;
     static int numMucks;
-    static int numPols;
     static int currInfluence;
     static boolean noAdjacentEC;
     static boolean builtRobot;
@@ -242,8 +233,6 @@ public class EC extends Robot {
                             roundToSlandererID.add(currRoundNum + Util.slandererLifetime, robot.getID());
                             slandererIDToRound.add(robot.getID(), currRoundNum + Util.slandererLifetime);
                             break;
-                        case POLITICIAN:
-                            numPols++;
                         default:
                             break;
                     }
@@ -423,7 +412,7 @@ public class EC extends Robot {
                         case 1:
                             toBuild = RobotType.POLITICIAN;
                             influence = getPoliticianInfluence();
-                            makePolitician();
+                            signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                             break;
                     }
                     if(buildRobot(toBuild, influence)) {
@@ -436,7 +425,7 @@ public class EC extends Robot {
                         case 0: case 1:
                             toBuild = RobotType.POLITICIAN;
                             influence = getPoliticianInfluence();
-                            makePolitician();
+                            signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 1 of the else case of CHILLING");
                                 chillingCount ++;
@@ -475,7 +464,7 @@ public class EC extends Robot {
                     case 0: case 1:
                         toBuild = RobotType.POLITICIAN;
                         influence = getPoliticianInfluence();
-                        makePolitician();
+                        signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                         break;
                     case 2:
                         if(Util.getBestSlandererInfluence(currInfluence ) > 100) {
@@ -1157,14 +1146,6 @@ public class EC extends Robot {
         return;
     }
 
-    public void makePolitician() throws GameActionException {
-        if(numPols % Util.explorerPolFrequency == 0) {
-            signalRobotType(Comms.SubRobotType.POL_EXPLORER);
-        } else {
-            signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
-        }
-    }
-
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {
         nextFlag = Comms.getFlag(Comms.InformationCategory.TARGET_ROBOT, type);
     }
@@ -1299,7 +1280,7 @@ public class EC extends Robot {
                 break;
         }
 
-        if (!buildRobot(toBuild, influence)) {
+        if(!buildRobot(toBuild, influence)) {
             toBuild = RobotType.MUCKRAKER;
             influence = 1;
             buildRobot(toBuild, influence);

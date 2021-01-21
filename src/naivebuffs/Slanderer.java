@@ -1,9 +1,9 @@
-package musketeerplayerqual;
+package naivebuffs;
 
 import battlecode.common.*;
 
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
+import naivebuffs.Util.*;
+import naivebuffs.Debug.*;
 
 public class Slanderer extends Robot {
     static Direction main_direction;
