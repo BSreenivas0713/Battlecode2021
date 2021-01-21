@@ -9,6 +9,8 @@ public class HunterMuckracker extends Robot {
     static Direction main_direction;
     static MapLocation enemyLocation;
     static boolean seenEnemyLocation;
+    static int turnsSinceClosestDistanceDecreased;
+    static int closestDistanceToDest;
     static RotationDirection spinDirection = Util.RotationDirection.COUNTERCLOCKWISE;
 
     public HunterMuckracker(RobotController r, MapLocation enemyLoc) {
@@ -16,6 +18,8 @@ public class HunterMuckracker extends Robot {
         subRobotType = Comms.SubRobotType.MUC_HUNTER;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         enemyLocation = enemyLoc;
+        turnsSinceClosestDistanceDecreased = 0;
+        closestDistanceToDest = Integer.MAX_VALUE;
         seenEnemyLocation = false;
     }
 
@@ -75,6 +79,8 @@ public class HunterMuckracker extends Robot {
                         if((GRtype == Comms.GroupRushType.MUC || GRtype == Comms.GroupRushType.MUC_POL)) {
                             Debug.println(Debug.info, "Joining the rush");
                             enemyLocation = enemyLoc;
+                            turnsSinceClosestDistanceDecreased = 0;
+                            closestDistanceToDest = Integer.MAX_VALUE;
                         } else {
                             Debug.println(Debug.info, "I was not included in this rush");
                         }
@@ -95,11 +101,23 @@ public class HunterMuckracker extends Robot {
                             GRmod == rc.getID() % 2) {
                             Debug.println(Debug.info, "Following the slanderer");
                             enemyLocation = enemyLoc;
+                            turnsSinceClosestDistanceDecreased = 0;
+                            closestDistanceToDest = Integer.MAX_VALUE;
                         } else {
                             Debug.println(Debug.info, "I was not included in this call");
                         }
                     }
                     break;
+                case DELETE_ENEMY_LOC:
+                if(enemyLocation != null) {
+                    int[] dxdy = Comms.getDxDy(flag);
+                    MapLocation enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
+
+                    if(enemyLocation.equals(enemyLoc)) {
+                        enemyLocation = null;
+                    }
+                }
+                break;
             }
         } else {
             Debug.println(Debug.info, "Can't get home flag: " + homeID);
@@ -282,7 +300,23 @@ public class HunterMuckracker extends Robot {
                     tryMoveDest(main_direction);
                 }
 
-                Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation);
+                if(!seenEnemyLocation) {
+                    if(enemyLocation.distanceSquaredTo(rc.getLocation()) < closestDistanceToDest) {
+                        closestDistanceToDest = enemyLocation.distanceSquaredTo(rc.getLocation());
+                        turnsSinceClosestDistanceDecreased = 0;
+                    } else {
+                        turnsSinceClosestDistanceDecreased++;
+                    }
+                    
+                    if(turnsSinceClosestDistanceDecreased > Util.attackCallBoredom) {
+                        setFlag(Comms.getFlag(Comms.InformationCategory.DELETE_ENEMY_LOC,
+                                            enemyLocation.x - home.x + Util.dOffset,
+                                            enemyLocation.y - home.y + Util.dOffset));
+                        enemyLocation = null;
+                    }
+                }
+
+                Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation + ". Boredom: " + turnsSinceClosestDistanceDecreased);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
             }
             else if (awayFromBase) {

@@ -1027,6 +1027,12 @@ public class EC extends Robot {
                             wallLocations[0] = wallDy;
                         }
                         break;
+                    case DELETE_ENEMY_LOC:
+                        if (flagQueueCooldown >= 10) {
+                            flagQueueCooldown = 0;
+                            flagQueue.add(flag);
+                        }
+                        break;
                 }
             } else {
                 idSet.remove(id);

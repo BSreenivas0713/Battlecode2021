@@ -32,6 +32,7 @@ public class Comms {
         CLOSEST_ENEMY_OR_FLEEING,
         REPORTING_WALL,
         MY_LOC,
+        DELETE_ENEMY_LOC,
     }
 
     public enum SubRobotType {
