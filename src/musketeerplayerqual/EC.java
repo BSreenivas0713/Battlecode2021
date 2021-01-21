@@ -16,18 +16,15 @@ import java.util.PriorityQueue;
 /* 
 TODO: 
 
-1/7 of troops should be explorers 
-slanderes turn into explorerers
-better pathfinding algorithm
-
 if we see an enemy tower, send a buf muck there
 dont send buf mucks without any location at all 
 store location of all buf muck deaths
 
-
-if < 21, only make muckrakers, get rid of over 100 slanderer check
-dont stop making making slanderers unless theres a buff muck within 2 sensing radius of the EC (not one)
 make politicians bigger (possibly later game)
+
+make muckrakers in the radius 1 spots if about to die
+get lattice protectors that were slanderers to not be in the back (hard)
+stay above influence of biggest enemy near us
 
 */
 public class EC extends Robot {
