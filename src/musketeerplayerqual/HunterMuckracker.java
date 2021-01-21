@@ -242,7 +242,7 @@ public class HunterMuckracker extends Robot {
                         Debug.println(Debug.info, "I moving away from another muck");
                     } else {
                         rotating = true;
-                        main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc)); //Direction if we only want to rotate around the base
+                        main_direction = Util.rightOrLeftTurn(spinDirection, enemyLocation.directionTo(currLoc)); //Direction if we only want to rotate around the base
                         Debug.println(Debug.info, "I am rotating around the base");
                     }
                 } else {
