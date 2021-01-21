@@ -187,6 +187,8 @@ public class EC extends Robot {
         recentSlanderer = null;
         idToFriendlyECLocMap = new FastIntLocMap();
         firstScoutDeathReported = false;
+        buffMuckCooldown = 0;
+        lastSentBufMuck = null;
 
         friendlyECs.remove(rc.getLocation());
         initialMucksDirection = 0;
@@ -290,6 +292,8 @@ public class EC extends Robot {
         processFriendlyECFlags();
         processLocalFlags();
         processChildrenFlags();
+
+        
 
         goToAcceleratedSlanderersState = true;
         //goToAcceleratedSlanderer gets set to false if there is an enemy within 2 sensor radiuses of the base
@@ -786,7 +790,9 @@ public class EC extends Robot {
         int wallDx, wallDy;
         RushFlag rushFlag;
         int roundNum;
-        
+        if(buffMuckCooldown != 0) {
+            buffMuckCooldown --;
+        }
         if(roundToSlandererID.contains(currRoundNum)) {
             slandererID = roundToSlandererID.getVal(currRoundNum);
             roundToSlandererID.remove(currRoundNum);
@@ -1098,6 +1104,8 @@ public class EC extends Robot {
             nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, nextBufLoc.x - home.x + Util.dOffset, nextBufLoc.y - home.y + Util.dOffset);
             nextBufLoc = null;
             firstScoutDeathReported = true;
+            buffMuckCooldown = Util.bufMuckCooldownThreshold;
+            lastSentBufMuck = nextBufLoc;
             return true;
         }
         return false;
@@ -1195,7 +1203,7 @@ public class EC extends Robot {
         return false;
     }
     public boolean readyToSendBufMuck() {
-        if(nextBufLoc != null && currInfluence > Util.scoutBuffMuckSize) {
+        if(nextBufLoc != null && currInfluence > Util.scoutBuffMuckSize && buffMuckCooldown  == 0 && !nextBufLoc.equals(lastSentBufMuck)) {
             Debug.setIndicatorLine(Debug.info, home, nextBufLoc,128,0,128);
             return true;
         }
