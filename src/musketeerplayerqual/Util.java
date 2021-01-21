@@ -107,6 +107,8 @@ public class Util {
     static final int maxBuffMuk = 400;
 
     static final int explorerPolFrequency = 7;
+
+    static final int attackCallBoredom = 30;
     
     /**
      * Returns a random Direction.
