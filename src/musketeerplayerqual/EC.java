@@ -18,8 +18,6 @@ TODO:
 
 Make hunters go to their location before checking for other towers to change or location(go closer to the location first)
 
-Make politicians spawn in the right place
-
 Make 1 cost explorer polticians
 
 experiment with a lot of mucks going to the same location
