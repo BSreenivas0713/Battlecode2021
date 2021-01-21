@@ -120,6 +120,7 @@ public class EC extends Robot {
 
     static int lastRush;
     static int spawnKillLock;
+    static MapLocation spawnKillLoc;
     static int lastSuccessfulBlockageRemoval;
 
     static int bigBid;
@@ -168,6 +169,7 @@ public class EC extends Robot {
         lastRush = Integer.MIN_VALUE;
         canGoBackToBuildingProtectors = true;
         spawnKillLock = 10;
+        spawnKillLoc = null;
         lastSuccessfulBlockageRemoval = -1;
         littleBid = 0;
         prevBid = 0;
@@ -229,7 +231,7 @@ public class EC extends Robot {
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
         Debug.println(Debug.info, "Trying to build robot of type: " + toBuild + " influence: " + influence);
         DirectionPreference pref = DirectionPreference.RANDOM;
-        if(currentState == State.BUILDING_SPAWNKILLS) {
+        if(currentState == State.BUILDING_SPAWNKILLS || spawnKillLock < 10) {
             pref = DirectionPreference.ORTHOGONAL;
         }
         
@@ -264,10 +266,14 @@ public class EC extends Robot {
             return true;
         } else {
             for(Direction dir : orderedDirs) {
-                if (rc.canBuildRobot(toBuild, dir, influence)) {
+                if (rc.canBuildRobot(toBuild, dir, influence) 
+                    && (spawnKillLoc == null || !home.add(dir).isAdjacentTo(spawnKillLoc))) {
                     rc.buildRobot(toBuild, dir, influence);
                     RobotInfo robot = rc.senseRobotAtLocation(home.add(dir));
                     if(robot != null) {
+                        if (currentState == State.BUILDING_SPAWNKILLS) {
+                            spawnKillLoc = robot.getLocation();
+                        }
                         switch(robot.getType()) {
                             case MUCKRAKER:
                                 numMucks++;
@@ -306,10 +312,6 @@ public class EC extends Robot {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-
-        if (spawnKillLock < 10) {
-            spawnKillLock++;
-        }
 
         if (!noAdjacentEC && currentState != State.SAVING_FOR_RUSH && currentState != State.RUSHING) {
             stateStack.push(State.CHILLING);
@@ -744,6 +746,12 @@ public class EC extends Robot {
         // Reset slanderer every 3 rounds
         if(currRoundNum % 3 == 0) {
             recentSlanderer = null;
+        }
+
+        if (spawnKillLock < 10) {
+            spawnKillLock++;
+        } else {
+            spawnKillLoc = null;
         }
 
         MapLocation[] keys = rushingECtoTurnMap.getKeys();
