@@ -19,9 +19,12 @@ TODO:
 1/7 of troops should be explorers 
 slanderes turn into explorerers
 better pathfinding algorithm
+
 if we see an enemy tower, send a buf muck there
 dont send buf mucks without any location at all 
 store location of all buf muck deaths
+
+
 if < 21, only make muckrakers, get rid of over 100 slanderer check
 dont stop making making slanderers unless theres a buff muck within 2 sensing radius of the EC (not one)
 make politicians bigger (possibly later game)
@@ -90,11 +93,14 @@ public class EC extends Robot {
     static int cleanUpCount;
     static int currRoundNum;
     static int numMucks;
+    static int numPols;
     static int currInfluence;
     static boolean noAdjacentEC;
     static boolean builtRobot;
 
     static boolean muckrakerNear;
+    static int buffMuckCooldown; 
+    static MapLocation lastSentBufMuck;
     
     static FastIterableIntSet idSet;
     static FastIterableIntSet protectorIdSet;
@@ -139,7 +145,7 @@ public class EC extends Robot {
     static FastIntLocMap idToFriendlyECLocMap;
     static FastIntIntMap roundToSlandererID;
     static FastIntIntMap slandererIDToRound;
-    static MapLocation firstScoutDeath;
+    static MapLocation nextBufLoc;
     static FastIntLocMap scoutIDToEnemyLocs;
 
     static MapLocation recentSlanderer;
@@ -188,7 +194,7 @@ public class EC extends Robot {
         closestWall = null;
         flagQueueCooldown = 0;
         nearbyECs = new FastIterableLocSet(12);
-        firstScoutDeath = null;
+        nextBufLoc = null;
         scoutIDToEnemyLocs = new FastIntLocMap();
 
         /*if (rc.getRoundNum() <= 1) {
@@ -242,7 +248,7 @@ public class EC extends Robot {
                         case MUCKRAKER:
                             numMucks++;
                             Debug.println(Debug.info, "Num Mucks being updated, new value: " + numMucks);
-                            if(isScout) {
+                            if(numMucks <= 12) {
                                 scoutIDToEnemyLocs.add(robot.getID(), new MapLocation(0,0));
                                 Debug.println("Scout added to Scout ID map");
                             }
@@ -251,6 +257,8 @@ public class EC extends Robot {
                             roundToSlandererID.add(currRoundNum + Util.slandererLifetime, robot.getID());
                             slandererIDToRound.add(robot.getID(), currRoundNum + Util.slandererLifetime);
                             break;
+                        case POLITICIAN:
+                            numPols++;
                         default:
                             break;
                     }
@@ -447,7 +455,7 @@ public class EC extends Robot {
                         case 1:
                             toBuild = RobotType.POLITICIAN;
                             influence = getPoliticianInfluence();
-                            signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
+                            makePolitician();
                             break;
                     }
                     if(buildRobot(toBuild, influence)) {
@@ -460,7 +468,7 @@ public class EC extends Robot {
                         case 0: case 1:
                             toBuild = RobotType.POLITICIAN;
                             influence = getPoliticianInfluence();
-                            signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
+                            makePolitician();
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 1 of the else case of CHILLING");
                                 chillingCount ++;
@@ -499,7 +507,7 @@ public class EC extends Robot {
                     case 0: case 1:
                         toBuild = RobotType.POLITICIAN;
                         influence = getPoliticianInfluence();
-                        signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
+                        makePolitician();
                         break;
                     case 2:
                         if(Util.getBestSlandererInfluence(currInfluence) > 100) {
@@ -964,16 +972,16 @@ public class EC extends Robot {
                     slandererIDToRound.remove(id);
                     roundToSlandererID.remove(roundNum);
                 }
-                if (firstScoutDeath == null && scoutIDToEnemyLocs.contains(id) && !firstScoutDeathReported) {
+                if (nextBufLoc == null && scoutIDToEnemyLocs.contains(id) && !firstScoutDeathReported) {
                     if(scoutIDToEnemyLocs.getLoc(id).equals(new MapLocation(0,0))) {
                         Debug.println("scout dead after not finding anything");
                     }
                     else {
                         Debug.println("Scout actually found an enemy");
-                        firstScoutDeath = scoutIDToEnemyLocs.getLoc(id);
-                        Debug.println("first Scout Death reported: " + firstScoutDeath + "; id: " + id);
+                        nextBufLoc = scoutIDToEnemyLocs.getLoc(id);
+                        Debug.println("first Scout Death reported: " + nextBufLoc + "; id: " + id);
                     }
-                    Debug.setIndicatorLine(Debug.info,home, firstScoutDeath,255,192,203);
+                    Debug.setIndicatorLine(Debug.info,home, nextBufLoc,255,192,203);
 
                 }
             }
@@ -1105,9 +1113,9 @@ public class EC extends Robot {
             currentState = stateStack.pop();
             return false;
         }
-        if(firstScoutDeath != null && buildRobot(toBuild, influence)) { //short circuit if firstScoutDeath == null
-            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, firstScoutDeath.x - home.x + Util.dOffset, firstScoutDeath.y - home.y + Util.dOffset);
-            firstScoutDeath = null;
+        if(nextBufLoc != null && buildRobot(toBuild, influence)) { //short circuit if firstScoutDeath == null
+            nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, nextBufLoc.x - home.x + Util.dOffset, nextBufLoc.y - home.y + Util.dOffset);
+            nextBufLoc = null;
             firstScoutDeathReported = true;
             return true;
         }
@@ -1173,6 +1181,14 @@ public class EC extends Robot {
         return;
     }
 
+    public void makePolitician() throws GameActionException {
+        if(numPols % Util.explorerPolFrequency == 0) {
+            signalRobotType(Comms.SubRobotType.POL_EXPLORER);
+        } else {
+            signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
+        }
+    }
+
     void signalRobotType(Comms.SubRobotType type) throws GameActionException {
         nextFlag = Comms.getFlag(Comms.InformationCategory.TARGET_ROBOT, type);
     }
@@ -1198,8 +1214,8 @@ public class EC extends Robot {
         return false;
     }
     public boolean readyToSendBufMuck() {
-        if(firstScoutDeath != null && currInfluence > Util.scoutBuffMuckSize) {
-            Debug.setIndicatorLine(Debug.info, home, firstScoutDeath,128,0,128);
+        if(nextBufLoc != null && currInfluence > Util.scoutBuffMuckSize) {
+            Debug.setIndicatorLine(Debug.info, home, nextBufLoc,128,0,128);
             return true;
         }
         return false;

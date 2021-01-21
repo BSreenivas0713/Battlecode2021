@@ -33,11 +33,16 @@ public class ExplorerPolitician extends Robot {
         }
         
         RobotInfo robot;
-        int min_attackable_conviction = (rc.getConviction()-10) / 3;
+        int min_attackable_conviction = (rc.getConviction() - 10) / 3;
         int attackable_conviction = 0;
         MapLocation currLoc = rc.getLocation();
         int maxEnemyDistSquared = Integer.MIN_VALUE;
         MapLocation farthestEnemy = null;
+
+        int ecConviction = Integer.MAX_VALUE;
+        int numPoliticians = 0;
+        int ecRadius = Integer.MAX_VALUE;
+        MapLocation ecLoc = null;
 
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
@@ -47,9 +52,26 @@ public class ExplorerPolitician extends Robot {
                 maxEnemyDistSquared = temp;
                 farthestEnemy = robot.getLocation();
             }
+
+            if(robot.getType() == RobotType.POLITICIAN) {
+                numPoliticians++;
+            }
+
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                ecConviction = robot.getConviction();
+                ecRadius = currLoc.distanceSquaredTo(robot.getLocation());
+                ecLoc = robot.getLocation();
+            }
         }
 
-        if (attackable_conviction >= min_attackable_conviction && rc.canEmpower(maxEnemyDistSquared)) {
+        if (ecConviction < 10 * rc.getEmpowerFactor(rc.getTeam(), 0) * rc.getConviction() && rc.canEmpower(ecRadius)) {
+            Debug.println(Debug.info, "Empowered with radius: " + ecRadius);
+            Debug.setIndicatorLine(Debug.info, rc.getLocation(), ecLoc, 255, 150, 50);
+            rc.empower(ecRadius);
+            return;
+        }
+
+        if(numPoliticians > 3 && rc.getEmpowerFactor(rc.getTeam(), 0) > 3) {
             Debug.println(Debug.info, "Empowered with radius: " + maxEnemyDistSquared);
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestEnemy, 255, 150, 50);
             rc.empower(maxEnemyDistSquared);
@@ -62,16 +84,12 @@ public class ExplorerPolitician extends Robot {
         Comms.EnemyType closestEnemyType = null;
         double minDistSquared = Integer.MAX_VALUE;
         
-        RobotInfo weakest = null;
+        RobotInfo EC = null;
         int min_influence = 0;
 
         for(int i = enemySensable.length - 1; i >= 0; i--) {
             robot = enemySensable[i];
             int currInfluence = robot.getConviction();
-            if (robot.getType() == RobotType.MUCKRAKER && currInfluence > max_influence) {
-                powerful = robot;
-                max_influence = currInfluence;
-            }
             
             double temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
@@ -85,7 +103,7 @@ public class ExplorerPolitician extends Robot {
             }
             
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && currInfluence < min_influence) {
-                weakest = robot;
+                EC = robot;
                 min_influence = currInfluence;
             }
         }
@@ -95,17 +113,16 @@ public class ExplorerPolitician extends Robot {
         else if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));   
         
-        if (powerful != null) {
-            Direction toMove = rc.getLocation().directionTo(powerful.getLocation());
-            tryMoveDest(toMove);
-        }
-        
-        if (weakest != null) {
-            Direction toMove = rc.getLocation().directionTo(weakest.getLocation());
+        if (EC != null) {
+            Direction toMove = rc.getLocation().directionTo(EC.getLocation());
             tryMoveDest(toMove);
         }
 
-        Direction[] orderedDirs = Util.getOrderedDirections(main_direction);
+        Direction[] orderedDirs = Nav.exploreGreedy();
+        for(Direction dir : orderedDirs) {
+            tryMove(dir);
+        }
+        orderedDirs = Util.getOrderedDirections(main_direction);
         for(Direction dir : orderedDirs) {
             tryMove(dir);
         }

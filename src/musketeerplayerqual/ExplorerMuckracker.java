@@ -236,9 +236,13 @@ public class ExplorerMuckracker extends Robot {
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
             }
             else {
-                main_direction = Nav.explore();
-                if(main_direction != null) {
-                    tryMoveDest(main_direction);
+                Direction[] orderedDirs = Nav.exploreGreedy();
+                for(Direction dir : orderedDirs) {
+                    tryMove(dir);
+                }
+                orderedDirs = Util.getOrderedDirections(main_direction);
+                for(Direction dir : orderedDirs) {
+                    tryMove(dir);
                 }
                 Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);
             }

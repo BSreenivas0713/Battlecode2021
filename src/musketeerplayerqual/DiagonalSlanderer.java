@@ -26,7 +26,11 @@ public class DiagonalSlanderer extends Robot {
         super.takeTurn();
         
         if (rc.getType() != RobotType.SLANDERER) {
-            changeTo = new LatticeProtector(rc, home, homeID);
+            if(rc.getConviction() > 100) {
+                changeTo = new ExplorerPolitician(rc, home, homeID);
+            } else {
+                changeTo = new LatticeProtector(rc, home, homeID);
+            }
             return;
         }
 
