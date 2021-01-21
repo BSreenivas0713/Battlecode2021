@@ -64,6 +64,12 @@ public class ScoutMuckraker extends Robot {
             }
         }
 
+        // This means that the first half of an EC-ID/EC-ID broadcast finished.
+        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+        else if(broadcastECLocation());
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
+        else if(broadcastWall());
+
         if (powerful != null) {
             if (rc.canExpose(powerful.location)) {
                 rc.expose(powerful.location);
@@ -79,11 +85,5 @@ public class ScoutMuckraker extends Robot {
             changeTo = new ExplorerMuckracker(rc, home, homeID);
             return;
         }
-
-        // This means that the first half of an EC-ID/EC-ID broadcast finished.
-        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
-        else if(broadcastECLocation());
-        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
-        else if(broadcastWall());
     }
 }

@@ -252,15 +252,17 @@ public class LatticeProtector extends Robot {
         //     return;
         // }
 
-        boolean setFollowingFlag = false;
-
+        // This means that the first half of an EC-ID/EC-ID broadcast finished.
+        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+        else if(broadcastECLocation());
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
+        
         //tries to block a muckraker in its path(if the muckraker is within 2 sensing radiuses of the EC)
         if (closestMuckrakerSensable != null && 
             closestMuckrakerSensable.getLocation().isWithinDistanceSquared(home, (5 * sensorRadius)) &&
             numFollowingClosestMuckraker < Util.maxFollowingSingleUnit) {
             Debug.println(Debug.info, "I am pushing a muckraker away. ID: " + closestMuckrakerSensable.getID());
             setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestMuckrakerSensable.getID()));
-            setFollowingFlag = true;
             Debug.println(Debug.info, "I am pushing a muckraker away");
             MapLocation closestMuckrakerSensableLoc = closestMuckrakerSensable.getLocation();
             Direction muckrakerPathtoBase = closestMuckrakerSensableLoc.directionTo(home);
@@ -335,13 +337,6 @@ public class LatticeProtector extends Robot {
                 main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
             }
             tryMove +=1;
-        }
-
-        if(!setFollowingFlag) {
-            // This means that the first half of an EC-ID/EC-ID broadcast finished.
-            if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
-            else if(broadcastECLocation());
-            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
         }
     }
 }
