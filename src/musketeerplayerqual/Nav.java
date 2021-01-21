@@ -615,34 +615,50 @@ public class Nav {
 
         int numInserted = 0;
         int numToInsert = 0;
-        if(rc.onTheMap(loc) && rc.senseRobotAtLocation(loc) == null) {
+        if(rc.onTheMap(loc)) {
+            if (rc.senseRobotAtLocation(loc) == null) {
             numToInsert++;
+            }
         }
-        if(rc.onTheMap(leftLoc) && rc.senseRobotAtLocation(loc) == null) {
+        if(rc.onTheMap(loc)) {
+            if (rc.senseRobotAtLocation(loc) == null) {
             numToInsert++;
+            }
         }
-        if(rc.onTheMap(rightLoc) && rc.senseRobotAtLocation(loc) == null) {
+        if(rc.onTheMap(loc)) {
+            if (rc.senseRobotAtLocation(loc) == null) {
             numToInsert++;
+            }
         }
 
         Direction[] orderedDirs = new Direction[numToInsert];
         
-        if(rc.onTheMap(loc) && rc.senseRobotAtLocation(loc) == null) {
+        if(rc.onTheMap(loc)) {
+            if (rc.senseRobotAtLocation(loc) == null) {
             orderedDirs[numInserted++] = dir;
+            }
         }
         if((int)(Math.random() * 2) % 2 == 0) {
-            if(rc.onTheMap(leftLoc) && rc.senseRobotAtLocation(loc) == null) {
+        if(rc.onTheMap(loc)) {
+            if (rc.senseRobotAtLocation(loc) == null) {
                 orderedDirs[numInserted++] = left;
+                }
             }
-            if(rc.onTheMap(rightLoc) && rc.senseRobotAtLocation(loc) == null) {
+            if(rc.onTheMap(loc)) {
+                if (rc.senseRobotAtLocation(loc) == null) {
                 orderedDirs[numInserted++] = right;
+                }
             }
         } else {
-            if(rc.onTheMap(rightLoc) && rc.senseRobotAtLocation(loc) == null) {
+            if(rc.onTheMap(loc)) {
+                if (rc.senseRobotAtLocation(loc) == null) {
                 orderedDirs[numInserted++] = right;
+                }
             }
-            if(rc.onTheMap(leftLoc) && rc.senseRobotAtLocation(loc) == null) {
+            if(rc.onTheMap(loc)) {
+                if (rc.senseRobotAtLocation(loc) == null) {
                 orderedDirs[numInserted++] = left;
+                }
             }
         }
 
