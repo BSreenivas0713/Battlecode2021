@@ -1,30 +1,22 @@
-package musketeerplayerqual;
+package naivebuffs;
 import battlecode.common.*;
 
-import musketeerplayerqual.Comms.*;
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
-import musketeerplayerqual.fast.FastIterableIntSet;
-import musketeerplayerqual.fast.FastIterableLocSet;
-import musketeerplayerqual.fast.FastLocIntMap;
-import musketeerplayerqual.fast.FastIntLocMap;
-import musketeerplayerqual.fast.FastQueue;
-import musketeerplayerqual.fast.FastIntIntMap;
+import naivebuffs.Comms.*;
+import naivebuffs.Util.*;
+import naivebuffs.Debug.*;
+import naivebuffs.fast.FastIterableIntSet;
+import naivebuffs.fast.FastIterableLocSet;
+import naivebuffs.fast.FastLocIntMap;
+import naivebuffs.fast.FastIntLocMap;
+import naivebuffs.fast.FastQueue;
+import naivebuffs.fast.FastIntIntMap;
 
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
 /* 
 TODO: 
 
-1/7 of troops should be explorers 
-slanderes turn into explorerers
-better pathfinding algorithm
-if we see an enemy tower, send a buf muck there
-dont send buf mucks without any location at all 
-store location of all buf muck deaths
-if < 21, only make muckrakers, get rid of over 100 slanderer check
-dont stop making making slanderers unless theres a buff muck within 2 sensing radius of the EC (not one)
-make politicians bigger (possibly later game)
+Should we call next flag before or after build robot succeeds??? it is not consistent in this code. I think it should be after
 
 */
 public class EC extends Robot {
