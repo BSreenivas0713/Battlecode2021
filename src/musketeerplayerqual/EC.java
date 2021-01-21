@@ -639,12 +639,12 @@ public class EC extends Robot {
             currWallDist = Math.abs(wallLocations[i]);
             if (currWallDist != 0) {
                 if (currWallDist < firstClosest) {
+                    secondClosest = firstClosest;
+                    secondWall = firstWall;
                     firstClosest = currWallDist;
                     firstWall = dir;
-                    secondClosest = currWallDist;
-                    secondWall = dir;
                 }
-                else if (currWallDist <= secondClosest && dir != firstWall) {
+                else if (currWallDist <= secondClosest) {
                     secondClosest = currWallDist;
                     secondWall = dir;
                 }
@@ -655,7 +655,8 @@ public class EC extends Robot {
             firstClosest >= 20) {
             return null;
         }
-        if (firstClosest == secondClosest) {
+        Debug.println(Debug.info, "First closest wall: " + firstClosest + "; 2nd closest: " + secondClosest);
+        if (Math.abs(firstClosest - secondClosest) <= 15) {
             if ((firstWall == Direction.NORTH && secondWall == Direction.WEST) || 
                 (secondWall == Direction.NORTH && firstWall == Direction.WEST)) {
                 return Direction.NORTHWEST;
