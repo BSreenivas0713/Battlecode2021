@@ -88,6 +88,8 @@ public class Util {
     static final int turnsEnemyBroadcastValid = 5;
     static final int flagCooldown = 10;
 
+    static final int bufMuckCooldownThreshold = 10;
+
     static final int explorerMuckrakerLifetime = 200;
     static final int slandererLifetime = 300;
 
