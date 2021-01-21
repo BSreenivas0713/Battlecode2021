@@ -630,30 +630,39 @@ public class Nav {
         if(rc.onTheMap(loc)) {
             orderedDirs[numInserted++] = dir;
         }
-        if(rc.onTheMap(leftLoc)) {
-            orderedDirs[numInserted++] = left;
-        }
-        if(rc.onTheMap(rightLoc)) {
-            orderedDirs[numInserted++] = right;
+        if((int)(Math.random() * 2) % 2 == 0) {
+            if(rc.onTheMap(leftLoc)) {
+                orderedDirs[numInserted++] = left;
+            }
+            if(rc.onTheMap(rightLoc)) {
+                orderedDirs[numInserted++] = right;
+            }
+        } else {
+            if(rc.onTheMap(rightLoc)) {
+                orderedDirs[numInserted++] = right;
+            }
+            if(rc.onTheMap(leftLoc)) {
+                orderedDirs[numInserted++] = left;
+            }
         }
 
         Direction tempDir;
-        int minIndex;
-        double minPassability = Integer.MAX_VALUE;
+        int maxIndex;
+        double maxPass = Integer.MIN_VALUE;
         double temp;
-        for(int i = numInserted - 1; i >= 0; i--) {
-            minIndex = i;
-            minPassability = rc.sensePassability(currLoc.add(orderedDirs[minIndex]));
-            for(int j = i - 1; j >= 0; j--) {
+        for(int i = 0; i < numInserted - 1; i++) {
+            maxIndex = i;
+            maxPass = rc.sensePassability(currLoc.add(orderedDirs[maxIndex]));
+            for(int j = i + 1; j < numInserted; j++) {
                 temp = rc.sensePassability(currLoc.add(orderedDirs[j]));
-                if(temp < minPassability) {
-                    minIndex = j;
-                    minPassability = temp;
+                if(temp > maxPass) {
+                    maxIndex = j;
+                    maxPass = temp;
                 }
             }
-            tempDir = orderedDirs[minIndex];
-            orderedDirs[i] = orderedDirs[minIndex];
-            orderedDirs[minIndex] = orderedDirs[i];
+            tempDir = orderedDirs[maxIndex];
+            orderedDirs[maxIndex] = orderedDirs[i];
+            orderedDirs[i] = tempDir;
         }
 
         for(int i = 0; i < orderedDirs.length; i++) {

@@ -216,7 +216,7 @@ public class ExplorerMuckracker extends Robot {
                         Debug.println(Debug.info, "I moving away from another muck");
                     } else {
                         rotating = true;
-                        main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc)); //Direction if we only want to rotate around the base
+                        main_direction = Util.rightOrLeftTurn(spinDirection, enemyLocation.directionTo(currLoc)); //Direction if we only want to rotate around the base
                         Debug.println(Debug.info, "I am rotating around the base");
                     }
                 } else {
@@ -224,12 +224,23 @@ public class ExplorerMuckracker extends Robot {
                     Debug.println(Debug.info, "I am going straight to the base");
                 }
 
-                int tryMove = 0;
-                while (!tryMoveDest(main_direction) && rc.isReady() && tryMove <= 1 && rotating){
+                Direction[] orderedDirs = Nav.greedyDirection(main_direction);
+                boolean moved = false;
+                for(Direction dir : orderedDirs) {
+                    moved = moved || tryMove(dir);
+                }
+
+                if(!moved && rotating) {
                     Debug.println(Debug.info, "I am switching rotation direction");
                     spinDirection = Util.switchSpinDirection(spinDirection);
-                    main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
-                    tryMove +=1;
+                    main_direction = Util.rightOrLeftTurn(spinDirection, enemyLocation.directionTo(currLoc));
+                
+                    orderedDirs = Nav.greedyDirection(main_direction);
+                    if(orderedDirs != null) {
+                        for(Direction dir : orderedDirs) {
+                            tryMove(dir);
+                        }
+                    }
                 }
                 
                 Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation);
