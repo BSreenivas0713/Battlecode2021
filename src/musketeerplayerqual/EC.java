@@ -35,7 +35,6 @@ public class EC extends Robot {
         CHILLING,
         ACCELERATED_SLANDERERS,
         INIT,
-        SURVIVAL,
         STUCKY_MUCKY,
         RUSHING_MUCKS,
         NEW_TOWER_LOW_INFLUENCE,
@@ -330,8 +329,6 @@ public class EC extends Robot {
         if (!noAdjacentEC && currentState != State.SAVING_FOR_RUSH && currentState != State.RUSHING) {
             stateStack.push(State.CHILLING);
             currentState = State.SAVING_FOR_RUSH;
-        } else if (currRoundNum > 1250 && rc.getTeamVotes() > 750) {
-            currentState = State.SURVIVAL;
         }
 
         int[] nearStuff = checkIfMuckrakerNear();
@@ -361,48 +358,46 @@ public class EC extends Robot {
         }
 
         if (enemyRushPolInf == 0) {
-            if (currentState != State.SURVIVAL) {
-                if(currentState != State.INIT || currentState != State.NEW_TOWER_LOW_INFLUENCE) {
-                    // Override everything for a spawn kill. This is fine, as it only takes 1 turn
-                    // and at most happens once every 10 turns.
-                    tryStartBuildingSpawnKill();
-        
-                    if (currentState != State.BUILDING_SPAWNKILLS) {
-                        // If we have enough to rush a tower, make that the #1 priority
-                        if (readyToRush()) {
-                            if (currentState != State.RUSHING) {
-                                if (currentState != State.SAVING_FOR_RUSH) {
-                                    stateStack.push(currentState);
-                                }
-                                currentState = State.RUSHING;
-                            }
-                        }
-                        else if (readyToSendBufMuck()) {
-                            if(currentState != State.RUSHING_MUCKS) {
+            if(currentState != State.INIT || currentState != State.NEW_TOWER_LOW_INFLUENCE) {
+                // Override everything for a spawn kill. This is fine, as it only takes 1 turn
+                // and at most happens once every 10 turns.
+                tryStartBuildingSpawnKill();
+    
+                if (currentState != State.BUILDING_SPAWNKILLS) {
+                    // If we have enough to rush a tower, make that the #1 priority
+                    if (readyToRush()) {
+                        if (currentState != State.RUSHING) {
+                            if (currentState != State.SAVING_FOR_RUSH) {
                                 stateStack.push(currentState);
-                                currentState = State.RUSHING_MUCKS;
                             }
+                            currentState = State.RUSHING;
                         }
-                        
-                        else {
-                            // Second priority is removing blockage
-                            tryStartRemovingBlockage();
-                            // Third priority is building protectors.
-                            if (currentState != State.REMOVING_BLOCKAGE) {
-                                // If there's nothing to do, clean up
-                                if (currRoundNum > 500 && tryStartCleanup()) {
-                                    if (currentState != State.CLEANUP) {
-                                        stateStack.push(currentState);
-                                        currentState = State.CLEANUP;
-                                    }
+                    }
+                    else if (readyToSendBufMuck()) {
+                        if(currentState != State.RUSHING_MUCKS) {
+                            stateStack.push(currentState);
+                            currentState = State.RUSHING_MUCKS;
+                        }
+                    }
+                    
+                    else {
+                        // Second priority is removing blockage
+                        tryStartRemovingBlockage();
+                        // Third priority is building protectors.
+                        if (currentState != State.REMOVING_BLOCKAGE) {
+                            // If there's nothing to do, clean up
+                            if (currRoundNum > 500 && tryStartCleanup()) {
+                                if (currentState != State.CLEANUP) {
+                                    stateStack.push(currentState);
+                                    currentState = State.CLEANUP;
                                 }
-                                else if (currentState == State.CHILLING && goToAcceleratedSlanderersState) { //If nothing around, make more slanderers (after you have a defense from the first few rounds)
-                                    currentState = State.ACCELERATED_SLANDERERS;
-                                }             
-                                else if (currentState == State.ACCELERATED_SLANDERERS && !goToAcceleratedSlanderersState) {
-                                    currentState = State.CHILLING;
-                                    builtInAcceleratedCount = 0;
-                                }
+                            }
+                            else if (currentState == State.CHILLING && goToAcceleratedSlanderersState) { //If nothing around, make more slanderers (after you have a defense from the first few rounds)
+                                currentState = State.ACCELERATED_SLANDERERS;
+                            }             
+                            else if (currentState == State.ACCELERATED_SLANDERERS && !goToAcceleratedSlanderersState) {
+                                currentState = State.CHILLING;
+                                builtInAcceleratedCount = 0;
                             }
                         }
                     }
@@ -482,12 +477,6 @@ public class EC extends Robot {
                     influence = 1;
                     makeMuckraker();
                 }
-                buildRobot(toBuild, influence);
-                break;
-            case SURVIVAL:
-                toBuild = RobotType.MUCKRAKER;
-                signalRobotType(SubRobotType.MUC_SURVIVAL);
-                influence = getMuckrakerInfluence();
                 buildRobot(toBuild, influence);
                 break;
             case CHILLING: 
