@@ -203,7 +203,7 @@ public class EC extends Robot {
         scoutIDToEnemyLocs = new FastIntLocMap();
 
         passabilityOfHome = rc.sensePassability(home);
-        dyingSemaphoreDefault = (int) (5.0 * (2.0 / passabilityOfHome));
+        dyingSemaphoreDefault = (int) (4.0 * (2.0 / passabilityOfHome));
         dyingSemaphore = dyingSemaphoreDefault;
 
         /*if (rc.getRoundNum() <= 1) {
@@ -265,6 +265,7 @@ public class EC extends Robot {
             rc.buildRobot(toBuild, dir, influence);
             robotCounter += 1;
             RobotInfo robot = rc.senseRobotAtLocation(home.add(dir));
+            Debug.println(Debug.info, "Built robot: " + robot.getID());
             idSet.add(robot.getID());
             numMucks++;
             builtRobot = true;
