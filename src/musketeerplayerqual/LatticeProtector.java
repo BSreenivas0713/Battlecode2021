@@ -55,7 +55,6 @@ public class LatticeProtector extends Robot {
         } else if (stuckSemaphore == 0 && rc.canEmpower(actionRadius)) {
             rc.empower(actionRadius);
         }
-        System.out.println(stuckSemaphore);
 
         MapLocation currLoc = rc.getLocation();
 
