@@ -290,7 +290,7 @@ public class Robot {
             }
         }
 
-        if(localOrGlobal % 2 == parityBroadcastEnemy && !isSmallMuck) {
+        if(localOrGlobal % 2 == parityBroadcastEnemy && (!isSmallMuck || subRobotType == Comms.SubRobotType.MUC_SCOUT )) {
             broadcastEnemyFound(enemyLoc, type);
         } else {
             broadcastEnemyLocal(enemyLoc);

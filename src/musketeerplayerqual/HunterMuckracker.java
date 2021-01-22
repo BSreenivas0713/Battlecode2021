@@ -9,6 +9,7 @@ public class HunterMuckracker extends Robot {
     static Direction main_direction;
     static MapLocation enemyLocation;
     static boolean seenEnemyLocation;
+    static boolean bufSeenEnemyLocation;
     static int turnsSinceClosestDistanceDecreased;
     static int closestDistanceToDest;
     static RotationDirection spinDirection = Util.RotationDirection.COUNTERCLOCKWISE;
@@ -21,6 +22,7 @@ public class HunterMuckracker extends Robot {
         turnsSinceClosestDistanceDecreased = 0;
         closestDistanceToDest = Integer.MAX_VALUE;
         seenEnemyLocation = false;
+        bufSeenEnemyLocation = false;
     }
 
     public HunterMuckracker(RobotController r) {
@@ -59,6 +61,7 @@ public class HunterMuckracker extends Robot {
 
                 enemyLocation = null;
                 seenEnemyLocation = false;
+                bufSeenEnemyLocation = false;
             }
         }
 
@@ -81,6 +84,7 @@ public class HunterMuckracker extends Robot {
                             Debug.println(Debug.info, "Joining the rush");
                             enemyLocation = enemyLoc;
                             seenEnemyLocation = false;
+                            bufSeenEnemyLocation = false;
                             turnsSinceClosestDistanceDecreased = 0;
                             closestDistanceToDest = Integer.MAX_VALUE;
                         } else {
@@ -104,6 +108,7 @@ public class HunterMuckracker extends Robot {
                             Debug.println(Debug.info, "Following the slanderer");
                             enemyLocation = enemyLoc;
                             seenEnemyLocation = false;
+                            bufSeenEnemyLocation = false;
                             turnsSinceClosestDistanceDecreased = 0;
                             closestDistanceToDest = Integer.MAX_VALUE;
                         } else {
@@ -182,7 +187,7 @@ public class HunterMuckracker extends Robot {
                 if (currLoc.distanceSquaredTo(tempLoc) <= 2 && rc.getConviction() <= 10) {
                     muckraker_Found_EC = true;
                 }
-                else if(enemyLocation != null && enemyLocation.distanceSquaredTo(robot.getLocation()) <= 3 * sensorRadius){
+                else if(enemyLocation != null && bufSeenEnemyLocation){
                     enemyLocation = robot.getLocation(); //NOTE: intended for buf mucks that will have an enemy location set close to but not in sensor radius of the EC
                 }
             }
@@ -263,6 +268,9 @@ public class HunterMuckracker extends Robot {
             else if (enemyLocation != null) {
                 if(!seenEnemyLocation || rc.getInfluence() > Util.bufMuckCooldownThreshold) {
                     seenEnemyLocation = rc.canSenseLocation(enemyLocation);
+                }
+                if(!bufSeenEnemyLocation) {
+                    bufSeenEnemyLocation = rc.canSenseLocation(enemyLocation);
                 }
 
                 boolean rotating = false;

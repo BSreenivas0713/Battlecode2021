@@ -47,13 +47,15 @@ public class ScoutMuckraker extends Robot {
         for(int i = enemySensable.length - 1; i >= 0; i--) {
             robot = enemySensable[i];
             double temp = currLoc.distanceSquaredTo(robot.getLocation());
-            if (temp < minDistSquared) {
-                minDistSquared = temp;
-                closestEnemy = robot;
-                if(robot.getType() == RobotType.MUCKRAKER) {
-                    closestEnemyType = Comms.EnemyType.MUC;
-                } else {
-                    closestEnemyType = Comms.EnemyType.UNKNOWN;
+            if(robot.getType() == RobotType.POLITICIAN || closestEnemy ==  null || closestEnemy.getType() != RobotType.POLITICIAN) {
+                if (temp < minDistSquared) {
+                    minDistSquared = temp;
+                    closestEnemy = robot;
+                    if(robot.getType() == RobotType.MUCKRAKER) {
+                        closestEnemyType = Comms.EnemyType.MUC;
+                    } else {
+                        closestEnemyType = Comms.EnemyType.UNKNOWN;
+                    }
                 }
             }
         }
