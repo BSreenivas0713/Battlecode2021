@@ -394,7 +394,7 @@ public class EC extends Robot {
                                     currentState = State.CLEANUP;
                                 }
                             }
-                            else if (currentState == State.CHILLING && goToAcceleratedSlanderersState) { //If nothing around, make more slanderers (after you have a defense from the first few rounds)
+                            else if (currentState == State.CHILLING && goToAcceleratedSlanderersState && currInfluence > 107) { //If nothing around, make more slanderers (after you have a defense from the first few rounds)
                                 currentState = State.ACCELERATED_SLANDERERS;
                             }             
                             else if (currentState == State.ACCELERATED_SLANDERERS && !goToAcceleratedSlanderersState) {
@@ -563,13 +563,13 @@ public class EC extends Robot {
                 break;
             case ACCELERATED_SLANDERERS:
                 switch(builtInAcceleratedCount % 3) {
-                    case 0: case 1:
+                    case 1: case 2:
                         toBuild = RobotType.POLITICIAN;
                         influence = getPoliticianInfluence();
                         makePolitician();
                         break;
-                    case 2:
-                        if(Util.getBestSlandererInfluence(currInfluence) > 100) {
+                    case 0:
+                        if(Util.getBestSlandererInfluence(currInfluence) > 0) {
                             toBuild = RobotType.SLANDERER;
                             influence = Util.getBestSlandererInfluence(currInfluence);
                         }
