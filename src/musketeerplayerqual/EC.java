@@ -224,7 +224,12 @@ public class EC extends Robot {
     }
 
     public State getInitialState() {
-        if (rc.getInfluence() < 100) {
+        RobotInfo[] enemies = rc.senseNearbyRobots(sensorRadius, enemy);
+        RobotInfo[] friendlies = rc.senseNearbyRobots(sensorRadius, rc.getTeam());
+        if(enemies.length > friendlies.length && enemies.length >= 5) {
+            return State.STUCKY_MUCKY;
+        }
+        else if (rc.getInfluence() < 100) {
             return State.NEW_TOWER_LOW_INFLUENCE;
         }
         else {
@@ -360,7 +365,10 @@ public class EC extends Robot {
         }
 
         if (enemyRushPolInf == 0) {
-            if(currentState != State.INIT || currentState != State.NEW_TOWER_LOW_INFLUENCE) {
+            if(currentState == State.STUCKY_MUCKY) {
+                currentState = getInitialState();
+            }
+            else if(currentState != State.INIT || currentState != State.NEW_TOWER_LOW_INFLUENCE) {
                 // Override everything for a spawn kill. This is fine, as it only takes 1 turn
                 // and at most happens once every 10 turns.
                 tryStartBuildingSpawnKill();
@@ -670,13 +678,26 @@ public class EC extends Robot {
                     currentState = stateStack.pop();
                 }
                 break;
+            case STUCKY_MUCKY:
+                switch(robotCounter % 3) {
+                    case 0: case 1:
+                        toBuild = RobotType.MUCKRAKER;
+                        influence = getMuckrakerInfluence();
+                        makeMuckraker();
+                        break;
+                    case 2:
+                        toBuild = RobotType.POLITICIAN;
+                        influence = getPoliticianInfluence();
+                        makePolitician();
+                }
+                buildRobot(toBuild, influence);
             default:
                 currentState = State.CHILLING;
                 System.out.println("CRITICAL: Maxwell screwed up stateStack");
                 break;
         }
 
-        // If we just built a bot, then we can use nextFlag safely
+        // If we didn't build a bot, then we can use nextFlag safely
         if(!flagQueue.isEmpty() && !builtRobot) {
             nextFlag = flagQueue.poll();
         }
@@ -923,6 +944,11 @@ public class EC extends Robot {
                             ECflags.add(rushFlag);
                         }
 
+                        if(tempMapLoc.isWithinDistanceSquared(home, 2 * sensorRadius)) {
+                            nearbyECs.add(tempMapLoc);
+                            nearbyECs.updateIterable();
+                        }
+
                         Debug.println(Debug.info, "Found neutral EC at : " + tempMapLoc);
                         break;
                     case ENEMY_EC:
@@ -950,6 +976,11 @@ public class EC extends Robot {
                         cleanUpCount = -1;
                         if (currentState == State.CLEANUP) {
                             currentState = stateStack.pop();
+                        }
+
+                        if(tempMapLoc.isWithinDistanceSquared(home, 2 * sensorRadius)) {
+                            nearbyECs.add(tempMapLoc);
+                            nearbyECs.updateIterable();
                         }
 
                         Debug.println(Debug.info, "Found enemy EC at : " + tempMapLoc);
@@ -1180,6 +1211,7 @@ public class EC extends Robot {
             currentState = State.REMOVING_BLOCKAGE;
         }
     }
+
     public boolean tryRushMuck() throws GameActionException {
         Debug.println("building buff Muck");
 
@@ -1200,6 +1232,7 @@ public class EC extends Robot {
         }
         return false;
     }
+
     public boolean trySendARush() throws GameActionException {
         Debug.println(Debug.info, "building rush bots");
 
@@ -1292,6 +1325,7 @@ public class EC extends Robot {
         }
         return false;
     }
+
     public boolean readyToSendBufMuck() {
         if(nextBufLoc != null && currInfluence > Util.scoutBuffMuckSize && 
             buffMuckCooldown  == 0 && !nextBufLoc.equals(lastSentBufMuck) &&
