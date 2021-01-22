@@ -408,9 +408,8 @@ public class EC extends Robot {
                 }
             }
         } else if (currentState != State.ABOUT_TO_DIE) {
-                stateStack.push(currentState);
-                currentState = State.ABOUT_TO_DIE;
-            }
+            stateStack.push(currentState);
+            currentState = State.ABOUT_TO_DIE;
         }
         
 
