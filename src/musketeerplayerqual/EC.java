@@ -836,7 +836,7 @@ public class EC extends Robot {
     }
 
     public int getMuckrakerInfluence() throws GameActionException {
-        if (numMucks > 50 && numMucks % Util.buffMukFrequency == 0) {
+        if (numMucks > 50 && numMucks % Util.buffMukFrequency == 0 && noAdjacentEC) {
             return Math.max(50, Math.min(currInfluence / 5, 400));
         } else {
             return Math.max(1, currInfluence / 500);
@@ -983,14 +983,10 @@ public class EC extends Robot {
                         }
                         break;
                     case ENEMY_FOUND:
-
-
                         enemyDxDy = Comms.getDxDy(flag);
                         enemyLocX = enemyDxDy[0] + home.x - Util.dOffset;
                         enemyLocY = enemyDxDy[1] + home.y - Util.dOffset;
                         
-
-
                         tempMapLoc = new MapLocation(enemyLocX, enemyLocY);
                         if(scoutIDToEnemyLocs.contains(id)) {
                             Debug.println("Changing scoutID Map because scout has seen an enemy, Scout ID: " + id);
@@ -1297,7 +1293,9 @@ public class EC extends Robot {
         return false;
     }
     public boolean readyToSendBufMuck() {
-        if(nextBufLoc != null && currInfluence > Util.scoutBuffMuckSize && buffMuckCooldown  == 0 && !nextBufLoc.equals(lastSentBufMuck)) {
+        if(nextBufLoc != null && currInfluence > Util.scoutBuffMuckSize && 
+            buffMuckCooldown  == 0 && !nextBufLoc.equals(lastSentBufMuck) &&
+            noAdjacentEC) {
             Debug.setIndicatorLine(Debug.info, home, nextBufLoc,128,0,128);
             return true;
         }
