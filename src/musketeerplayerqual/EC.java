@@ -259,14 +259,16 @@ public class EC extends Robot {
             } else if (rc.canBuildRobot(toBuild, Direction.SOUTHWEST, influence)) {
                 dir = Direction.SOUTHWEST;
             } else {
-                return false;
+                builtRobot = false;
+                return builtRobot;
             }
             rc.buildRobot(toBuild, dir, influence);
             robotCounter += 1;
             RobotInfo robot = rc.senseRobotAtLocation(home.add(dir));
             idSet.add(robot.getID());
             numMucks++;
-            return true;
+            builtRobot = true;
+            return builtRobot;
         } else {
             if (toBuild == RobotType.POLITICIAN && robotCounter == 1) {
                 orderedDirs = Util.getOrderedDirections(Direction.NORTHWEST);
@@ -312,11 +314,13 @@ public class EC extends Robot {
                         System.out.println("CRITICAL: EC didn't find the robot it just built");
                     }
                     robotCounter += 1;
-                    return true;
+                    builtRobot = true;
+                    return builtRobot;
                 }
             }
         }
-        return false;
+        builtRobot = false;
+        return builtRobot;
     }
 
     public void takeTurn() throws GameActionException {
