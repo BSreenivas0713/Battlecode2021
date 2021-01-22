@@ -676,6 +676,7 @@ public class EC extends Robot {
                 }
                 break;
             default:
+                currentState = State.CHILLING;
                 System.out.println("CRITICAL: Maxwell screwed up stateStack");
                 break;
         }
@@ -1322,42 +1323,6 @@ public class EC extends Robot {
         return false;
     }
 
-    /* public void makeBid() throws GameActionException {
-        if(!overBidThreshold) {
-            if (rc.getTeamVotes() > 750) {
-                overBidThreshold = true;
-                Debug.println(Debug.info, "Not bidding. Already won, suckers!");
-            } else {
-                int biddingInfluence;
-                if (currRoundNum < 200) {
-                    biddingInfluence = Math.max(currInfluence / 100, 2);
-                } else {
-                    switch (currentState) {
-                        case CLEANUP:
-                        case BUILDING_SLANDERERS:
-                        case BUILDING_PROTECTORS:
-                            Debug.println(Debug.info, "Bidding high.");
-                            biddingInfluence = currInfluence / 10;
-                            break;
-                        case SAVING_FOR_RUSH:
-                        case BUILDING_SPAWNKILLS:
-                        case RUSHING:
-                            Debug.println(Debug.info, "Bidding low.");
-                            biddingInfluence = currInfluence / 50;
-                            break;
-                        default:
-                            Debug.println(Debug.info, "Bidding medium.");
-                            biddingInfluence = currInfluence / 20;
-                            break;
-                    }
-                    if (rc.canBid(biddingInfluence)) {
-                        rc.bid(biddingInfluence);
-                    }
-                }
-                Debug.println(Debug.info, "Amount bid: " + biddingInfluence);
-            }
-        }
-    } */
     public int bidBS() throws GameActionException {
         int currVotes = rc.getTeamVotes();
         int res;
