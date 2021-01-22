@@ -1,4 +1,4 @@
-package musketeerplayerqual;
+package naivekrypt;
 
 import battlecode.common.*;
 

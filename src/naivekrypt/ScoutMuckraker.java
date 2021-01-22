@@ -1,9 +1,9 @@
-package musketeerplayerqual;
+package naivekrypt;
 import battlecode.common.*;
 
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
-import musketeerplayerqual.fast.FastIterableLocSet;
+import naivekrypt.Util.*;
+import naivekrypt.Debug.*;
+import naivekrypt.fast.FastIterableLocSet;
 
 public class ScoutMuckraker extends Robot {
     static Direction main_direction;
@@ -85,15 +85,15 @@ public class ScoutMuckraker extends Robot {
 
         if (rc.onTheMap(currLoc.add(main_direction))) {
             Debug.println(Debug.info, "next loc on map. moving in direction: " + main_direction);
-            // tryMoveDest(main_direction);
-            Direction[] orderedDirs = Nav.greedyDirection(main_direction, rc);
-            boolean moved = false;
-            for(Direction dir : orderedDirs) {
-                moved = moved || tryMove(dir);
-            }
-            if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
-                    tryMoveDest(main_direction);
-                }
+            tryMoveDest(main_direction);
+            // Direction[] orderedDirs = Nav.greedyDirection(main_direction, rc);
+            // boolean moved = false;
+            // for(Direction dir : orderedDirs) {
+            //     moved = moved || tryMove(dir);
+            // }
+            // if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
+            //         tryMoveDest(main_direction);
+            //     }
         }
         else {
             Debug.println(Debug.info, "new location not on the map. switching to explorer");
