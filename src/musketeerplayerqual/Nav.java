@@ -696,7 +696,10 @@ public class Nav {
         
 		if(lastExploreDir == null) {
             Debug.println(Debug.info, "changing last Explore Dir");
-            Direction oppositeFromHome = rc.getLocation().directionTo(Robot.home).opposite();
+            Direction oppositeFromHome = Util.randomDirection();
+            if (Robot.home != null) {
+                oppositeFromHome = rc.getLocation().directionTo(Robot.home).opposite();
+            }
             Direction[] oppositeFromHomeDirs = {oppositeFromHome, oppositeFromHome.rotateLeft(), oppositeFromHome.rotateRight()};
             lastExploreDir = oppositeFromHomeDirs[(int)(Math.random() * 3)];
 			boredom = 0;

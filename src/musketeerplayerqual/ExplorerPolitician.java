@@ -19,7 +19,9 @@ public class ExplorerPolitician extends Robot {
         this(r);
         home = h;
         homeID = hID;
-        friendlyECs.add(home, homeID);
+        if (home != null) {
+            friendlyECs.add(home, homeID);
+        }
     }
 
     public void takeTurn() throws GameActionException {
@@ -42,12 +44,21 @@ public class ExplorerPolitician extends Robot {
 
         int ecConviction = Integer.MAX_VALUE;
         int numPoliticians = 0;
+        int numReasonablePols = 0;
         int ecRadius = Integer.MAX_VALUE;
         MapLocation ecLoc = null;
 
+        int maxPolAttackableDistSquared = Integer.MIN_VALUE;
+        int maxPoliticianSizeWithinReasonableThreshold = 0;
+        int robotConviction = 0;
+        // int numRobotsInAttackable = rc.senseNearbyRobots(rc.getType().actionRadiusSquared).length;
+        int numFriendlyAttackable = rc.senseNearbyRobots(rc.getType().actionRadiusSquared, rc.getTeam()).length;
+        int polAttackThreshold = (int) (rc.getConviction() * rc.getEmpowerFactor(rc.getTeam(), 0) * 3 / 4);
+
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
-            attackable_conviction += robot.getConviction();
+            robotConviction = robot.getConviction();
+            attackable_conviction += robotConviction;
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp > maxEnemyDistSquared) {
                 maxEnemyDistSquared = temp;
@@ -55,6 +66,15 @@ public class ExplorerPolitician extends Robot {
             }
 
             if(robot.getType() == RobotType.POLITICIAN) {
+                if (robotConviction > maxPoliticianSizeWithinReasonableThreshold &&
+                    robotConviction <= polAttackThreshold) {
+                    numReasonablePols++;
+                    maxPoliticianSizeWithinReasonableThreshold = robotConviction;
+                    if (temp > maxPolAttackableDistSquared) {
+                        maxPolAttackableDistSquared = temp;
+                    }
+                    
+                }
                 numPoliticians++;
             }
 
@@ -65,17 +85,24 @@ public class ExplorerPolitician extends Robot {
             }
         }
 
-        if (ecConviction < 10 * rc.getEmpowerFactor(rc.getTeam(), 0) * rc.getConviction() && rc.canEmpower(ecRadius)) {
-            Debug.println(Debug.info, "Empowered with radius: " + ecRadius);
+        if (ecConviction < 5 * rc.getEmpowerFactor(rc.getTeam(), 0) * rc.getConviction() && rc.canEmpower(ecRadius)) {
+            Debug.println(Debug.info, "Empowered near EC with radius: " + ecRadius);
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), ecLoc, 255, 150, 50);
             rc.empower(ecRadius);
             return;
         }
 
         if(numPoliticians > 3 && rc.getEmpowerFactor(rc.getTeam(), 0) > 3 && rc.canEmpower(maxEnemyDistSquared)) {
-            Debug.println(Debug.info, "Empowered with radius: " + maxEnemyDistSquared);
+            Debug.println(Debug.info, "Empowered because of 3 pols with radius: " + maxEnemyDistSquared);
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestEnemy, 255, 150, 50);
             rc.empower(maxEnemyDistSquared);
+            return;
+        }
+
+        if (maxPoliticianSizeWithinReasonableThreshold > 0 && enemyAttackable.length >= numFriendlyAttackable && 
+            rc.getEmpowerFactor(rc.getTeam(), 0) >= Util.chainEmpowerFactor && rc.canEmpower(maxPolAttackableDistSquared) && numReasonablePols >= 2) {
+            Debug.println(Debug.info, "Empowering because of high buff, trying to start a chain");
+            rc.empower(maxPolAttackableDistSquared);
             return;
         }
 
@@ -96,7 +123,11 @@ public class ExplorerPolitician extends Robot {
             robot = enemySensable[i];
             int currInfluence = robot.getConviction();
             double temp = currLoc.distanceSquaredTo(robot.getLocation());
-            double distToBase = home.distanceSquaredTo(robot.getLocation());
+            double distToBase = (double) Integer.MAX_VALUE;
+            if (home != null) {
+                distToBase = home.distanceSquaredTo(robot.getLocation());
+            }
+
             if (temp < minDistSquared) {
                 minDistSquared = temp;
                 closestEnemy = robot;
@@ -106,13 +137,12 @@ public class ExplorerPolitician extends Robot {
                     closestEnemyType = Comms.EnemyType.UNKNOWN;
                 }
             }
-            if((distToBase <= sensorRadius || (distToBase <= 4 * sensorRadius && robot.getInfluence() > Util.smallMuckThreshold )) && 
+            if(home != null && (distToBase <= sensorRadius || (distToBase <= 4 * sensorRadius && robot.getInfluence() > Util.smallMuckThreshold )) && 
                 robot.getType() == RobotType.MUCKRAKER) {
                 if (temp < MukminDistSquared) {
                     MukminDistSquared = (int) temp;
                     enemyNearBase = true;
                     enemyLoc = robot.getLocation();
-
                 }
             }
             
@@ -129,10 +159,12 @@ public class ExplorerPolitician extends Robot {
             }
         }
 
-        // This means that the first half of an EC-ID/EC-ID broadcast finished.
-        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
-        else if(broadcastECLocation());
-        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));   
+        if (home != null) {
+            // This means that the first half of an EC-ID/EC-ID broadcast finished.
+            if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+            else if(broadcastECLocation());
+            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));   
+        }
         
         if(enemyNearBase) {
             if(rc.canEmpower(MukminDistSquared)) {
@@ -161,7 +193,7 @@ public class ExplorerPolitician extends Robot {
                 moved = moved || tryMove(dir);
             }
             if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
-                    tryMoveDest(main_direction);
+                tryMoveDest(main_direction);
             }
         }
     }

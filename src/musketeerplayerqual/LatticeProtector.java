@@ -64,19 +64,31 @@ public class LatticeProtector extends Robot {
         
         RobotInfo robot;
         int maxEnemyAttackableDistSquared = Integer.MIN_VALUE;
+        int maxPolAttackableDistSquared = Integer.MIN_VALUE;
         MapLocation farthestEnemyAttackable = null;
-        int maxPoliticianSize = 0;
+        int maxPoliticianSizeWithinReasonableThreshold = 0;
         int numMuckAttackable = 0;
+        int robotConviction = 0;
+        int numReasonablePols = 0;
+        // int numRobotsInAttackable = rc.senseNearbyRobots(rc.getType().actionRadiusSquared).length;
+        int numFriendlyAttackable = rc.senseNearbyRobots(rc.getType().actionRadiusSquared, rc.getTeam()).length;
+        int polAttackThreshold = (int) (rc.getConviction() * rc.getEmpowerFactor(rc.getTeam(), 0) * 3 / 4);
         
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
+            robotConviction = robot.getConviction();
             int temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp > maxEnemyAttackableDistSquared) {
                 maxEnemyAttackableDistSquared = temp;
                 farthestEnemyAttackable = robot.getLocation();
             }
-            if (robot.getType() == RobotType.POLITICIAN && robot.getConviction() > maxPoliticianSize) {
-                maxPoliticianSize = robot.getConviction();
+            if (robot.getType() == RobotType.POLITICIAN && robotConviction > maxPoliticianSizeWithinReasonableThreshold &&
+                robotConviction <= polAttackThreshold) {
+                numReasonablePols++;
+                maxPoliticianSizeWithinReasonableThreshold = robotConviction;
+                if (temp > maxPolAttackableDistSquared) {
+                    maxPolAttackableDistSquared = temp;
+                }
             }
             if(robot.getType() == RobotType.MUCKRAKER) {
                 numMuckAttackable++;
@@ -239,6 +251,13 @@ public class LatticeProtector extends Robot {
             Debug.println(Debug.info, "Enemy too close to base. I will empower");
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestEnemyAttackable, 255, 150, 50);
             rc.empower(maxEnemyAttackableDistSquared);
+            return;
+        }
+
+        if (maxPoliticianSizeWithinReasonableThreshold > 0 && enemyAttackable.length >= numFriendlyAttackable && 
+            rc.getEmpowerFactor(rc.getTeam(), 0) >= Util.chainEmpowerFactor && rc.canEmpower(maxPolAttackableDistSquared) && numReasonablePols >= 2) {
+            Debug.println(Debug.info, "Empowering because of high buff, trying to start a chain");
+            rc.empower(maxPolAttackableDistSquared);
             return;
         }
 

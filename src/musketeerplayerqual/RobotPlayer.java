@@ -16,6 +16,7 @@ public strictfp class RobotPlayer {
         Nav.init(rc);
 
         RobotInfo[] sensableWithin2 = rc.senseNearbyRobots(2, rc.getTeam());
+        boolean foundHome = false;
 
         switch (rc.getType()) {
             case ENLIGHTENMENT_CENTER: bot = new EC(rc);          break;
@@ -24,6 +25,7 @@ public strictfp class RobotPlayer {
                     int botFlag = rc.getFlag(robot.getID());
                     Comms.InformationCategory flagIC = Comms.getIC(botFlag);
                     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getTeam() == rc.getTeam()) {
+                        foundHome = true;
                         Debug.println(Debug.info, "Flag for creation: " + botFlag);
                         switch(flagIC) {
                             case NEUTRAL_EC:
@@ -78,7 +80,12 @@ public strictfp class RobotPlayer {
                     break;
                 //TODO: write rush muckraker.
                 System.out.println("CRITICAL: Did not find flag directing type");
-                bot = new LatticeProtector(rc);
+                if (foundHome) {
+                    bot = new LatticeProtector(rc);
+                }
+                else {
+                    bot = new ExplorerPolitician(rc, null, -1);
+                }
                 break;
             case SLANDERER:
                 bot = new DiagonalSlanderer(rc);
