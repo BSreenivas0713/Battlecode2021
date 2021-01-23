@@ -133,6 +133,8 @@ public class ExplorerPolitician extends Robot {
                 closestEnemy = robot;
                 if(robot.getType() == RobotType.MUCKRAKER) {
                     closestEnemyType = Comms.EnemyType.MUC;
+                } else if(Util.isSlandererInfluence(robot.getInfluence()) {
+                    closestEnemyType = Comms.EnemyType.SLA;   
                 } else {
                     closestEnemyType = Comms.EnemyType.UNKNOWN;
                 }
