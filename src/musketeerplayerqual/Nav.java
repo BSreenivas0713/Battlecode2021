@@ -438,6 +438,11 @@ public class Nav {
                     minCost = costs[i][j];
                     minLoc = map[i][j];
                 }
+                else if(map[i][j] != null && minLoc != null && dest != null && costs[i][j] == minCost && minLoc.distanceSquaredTo(dest) > map[i][j].distanceSquaredTo(dest)) {
+                    minCost = costs[i][j];
+                    minLoc = map[i][j];
+                }
+                
             }
         }
         // System.out.println("Bytecode at find min exit" + Clock.getBytecodeNum());
