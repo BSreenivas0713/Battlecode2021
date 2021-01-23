@@ -860,7 +860,7 @@ public class EC extends Robot {
         if (numMucks > 50 && numMucks % Util.buffMukFrequency == 0 && noAdjacentEC) {
             return Math.max(50, Math.min(currInfluence / 5, 400));
         } else {
-            return Math.max(1, currInfluence / 500);
+            return Math.max(1, currInfluence / 50);
         }
     }
 
