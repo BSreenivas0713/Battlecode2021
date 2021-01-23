@@ -4,13 +4,22 @@ def calculate_profit(x):
     return math.floor(x * (0.02 + 0.03 * math.exp(-0.001 * x))) * 50 - x
 
 def calculate_best_profits():
-    length = 950;
-    dp = [-100] * length;
-    dp[0] = calculate_profit(0);
+    length = 950
+    dp = [-100] * length
+    dp[0] = calculate_profit(0)
     for x in range(1, length):
         dp[x] = x if calculate_profit(x) > calculate_profit(dp[x-1]) else dp[x-1]
     
     return dp;
+
+def get_slanderer_influences():
+    dp = calculate_best_profits()
+    length = 950
+    ret = [False] * length
+    for x in dp:
+        ret[x] = True
+    
+    return ret
 
 def unroll(i, j, s):
     for x in range(0, i):
@@ -22,10 +31,5 @@ def unroll(i, s):
         print(s.replace("[j]", "[" + str(x) + "]").replace("(j)", "(" + str(x) + ")"))
 
 if __name__ == '__main__':
-    s = """
-        enc++;
-        costs[rows - 1][j] = heuristic(map[rows - 1][j], dest);
-        q.add(enc);
-        settled.add(enc);"""
-    
-    unroll(5, s);
+    dp = get_slanderer_influences()
+    print(dp)
