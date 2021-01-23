@@ -137,7 +137,7 @@ public class ExplorerPolitician extends Robot {
                     closestEnemyType = Comms.EnemyType.UNKNOWN;
                 }
             }
-            if(home != null && (distToBase <= sensorRadius || (distToBase <= 4 * sensorRadius && robot.getInfluence() > Util.smallMuckThreshold )) && 
+            if(home != null && (distToBase <= RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared || (distToBase <= 4 * RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared && robot.getInfluence() > Util.smallMuckThreshold )) && 
                 robot.getType() == RobotType.MUCKRAKER) {
                 if (temp < MukminDistSquared) {
                     MukminDistSquared = (int) temp;
