@@ -37,6 +37,7 @@ public class EC extends Robot {
         CHILLING,
         ACCELERATED_SLANDERERS,
         INIT,
+        POST_INIT,
         STUCKY_MUCKY,
         RUSHING_MUCKS,
         NEW_TOWER_LOW_INFLUENCE,
@@ -365,7 +366,12 @@ public class EC extends Robot {
         }
 
         if (enemyRushPolInf == 0) {
-            if(currentState == State.STUCKY_MUCKY) {
+            if(currentState == State.POST_INIT) {
+                if(protectorIdSet.size > slandererIDToRound.size) {
+                    currentState = State.CHILLING;
+                }
+            }
+            else if(currentState == State.STUCKY_MUCKY) {
                 currentState = getInitialState();
             }
             else if(currentState != State.INIT || currentState != State.NEW_TOWER_LOW_INFLUENCE) {
@@ -520,9 +526,15 @@ public class EC extends Robot {
                             break;
                         // case 1: case 2:
                         case 1:
-                            toBuild = RobotType.POLITICIAN;
-                            influence = getPoliticianInfluence();
-                            makePolitician();
+                            if(numPols % Util.buffPolFrequency == 0) {
+                                toBuild = RobotType.POLITICIAN;
+                                influence = currInfluence / 5;
+                                signalRobotType(Comms.SubRobotType.POL_BUFF);
+                            } else {
+                                toBuild = RobotType.POLITICIAN;
+                                influence = getPoliticianInfluence();
+                                makePolitician();
+                            }
                             break;
                     }
                     if(buildRobot(toBuild, influence)) {
@@ -533,9 +545,15 @@ public class EC extends Robot {
                 else {
                     switch(chillingCount % 4) {
                         case 0: case 1:
-                            toBuild = RobotType.POLITICIAN;
-                            influence = getPoliticianInfluence();
-                            makePolitician();
+                            if(numPols % Util.buffPolFrequency == 0) {
+                                toBuild = RobotType.POLITICIAN;
+                                influence = currInfluence / 5;
+                                signalRobotType(Comms.SubRobotType.POL_BUFF);
+                            } else {
+                                toBuild = RobotType.POLITICIAN;
+                                influence = getPoliticianInfluence();
+                                makePolitician();
+                            }
                             if(buildRobot(toBuild, influence)) {
                                 Debug.println(Debug.info, "case 1 of the else case of CHILLING");
                                 chillingCount ++;
@@ -572,14 +590,30 @@ public class EC extends Robot {
             case ACCELERATED_SLANDERERS:
                 switch(builtInAcceleratedCount % 3) {
                     case 1: case 2:
-                        toBuild = RobotType.POLITICIAN;
-                        influence = getPoliticianInfluence();
-                        makePolitician();
+                        if(numPols % Util.buffPolFrequency == 0) {
+                            toBuild = RobotType.POLITICIAN;
+                            influence = currInfluence / 5;
+                            signalRobotType(Comms.SubRobotType.POL_BUFF);
+                        } else {
+                            toBuild = RobotType.POLITICIAN;
+                            influence = getPoliticianInfluence();
+                            makePolitician();
+                        }
                         break;
                     case 0:
                         if(Util.getBestSlandererInfluence(currInfluence) > 0) {
                             toBuild = RobotType.SLANDERER;
                             influence = Util.getBestSlandererInfluence(currInfluence);
+                        } else if(protectorIdSet.size < 2 * slandererIDToRound.size) {
+                            if(numPols % Util.buffPolFrequency == 0) {
+                                toBuild = RobotType.POLITICIAN;
+                                influence = currInfluence / 5;
+                                signalRobotType(Comms.SubRobotType.POL_BUFF);
+                            } else {
+                                toBuild = RobotType.POLITICIAN;
+                                influence = getPoliticianInfluence();
+                                makePolitician();
+                            }
                         }
                         else {
                             toBuild = RobotType.MUCKRAKER;
@@ -691,6 +725,12 @@ public class EC extends Robot {
                         makePolitician();
                 }
                 buildRobot(toBuild, influence);
+            case POST_INIT:
+                toBuild = RobotType.POLITICIAN;
+                influence = 15;
+                signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
+                buildRobot(toBuild, influence);
+                break;
             default:
                 currentState = State.CHILLING;
                 System.out.println("CRITICAL: Maxwell screwed up stateStack");
@@ -860,7 +900,7 @@ public class EC extends Robot {
         if (numMucks > 50 && numMucks % Util.buffMukFrequency == 0 && noAdjacentEC) {
             return Math.max(50, Math.min(currInfluence / 5, 400));
         } else {
-            return Math.max(1, currInfluence / 500);
+            return Math.max(1, currInfluence / 50);
         }
     }
 
@@ -1026,6 +1066,9 @@ public class EC extends Robot {
                         }
                         if (rc.getLocation().isWithinDistanceSquared(tempMapLoc, rc.getType().sensorRadiusSquared * 4)) {
                             goToAcceleratedSlanderersState = false;
+                            if(currentState == State.INIT) {
+                                currentState = State.POST_INIT;
+                            }
                         }
 
                         switch(Comms.getEnemyType(flag)) {
@@ -1384,25 +1427,58 @@ public class EC extends Robot {
         return res;
     }
     
+    // public void firstRounds() throws GameActionException {
+    //     switch(robotCounter) {
+    //         case 0: case 12: case 14: case 16: case 18: case 21: case 24: case 26: case 28: 
+    //             toBuild = RobotType.SLANDERER;
+    //             influence = Math.max(130, Util.getBestSlandererInfluence(currInfluence));
+    //             break;
+    //         case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11:
+    //             toBuild = RobotType.MUCKRAKER;
+    //             influence = Integer.max(1, currInfluence / 500);
+    //             if(numMucks < 8) {
+    //                 signalRobotAndDirection(Comms.SubRobotType.MUC_SCOUT, Util.directions[numMucks]);
+    //             }
+    //             break;
+    //         case 1: case 2: case 15: case 19: case 22: case 23: case 25: case 27: case 29:
+    //             toBuild = RobotType.POLITICIAN;
+    //             influence = 15;
+    //             signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
+    //             break;
+    //         case 13: case 17: case 20: 
+    //             toBuild = RobotType.POLITICIAN;
+    //             influence = 15;
+    //             signalRobotType(SubRobotType.POL_EXPLORER);
+    //             break;
+    //     }
+
+    //     if (!buildRobot(toBuild, influence)) {
+    //         toBuild = RobotType.MUCKRAKER;
+    //         influence = 1;
+    //         buildRobot(toBuild, influence);
+    //     }
+    // }
+    
+    
     public void firstRounds() throws GameActionException {
         switch(robotCounter) {
-            case 0: case 12: case 14: case 16: case 18: case 21: case 24: case 26: case 28: 
+            case 0: case 2: case 4: case 6: case 8: case 10: case 12: case 14: case 16: case 18: 
                 toBuild = RobotType.SLANDERER;
-                influence = Math.max(130, Util.getBestSlandererInfluence(currInfluence));
+                influence = Util.getBestSlandererInfluence(currInfluence);
                 break;
-            case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 10: case 11:
+            case 1: case 3: case 5: case 7: case 9: case 11: case 13: case 15: case 17: case 19: 
                 toBuild = RobotType.MUCKRAKER;
                 influence = Integer.max(1, currInfluence / 500);
                 if(numMucks < 8) {
                     signalRobotAndDirection(Comms.SubRobotType.MUC_SCOUT, Util.directions[numMucks]);
                 }
                 break;
-            case 1: case 2: case 15: case 19: case 22: case 23: case 25: case 27: case 29:
+            case 20: case 21: case 22: case 23: case 24: case 25: case 26: case 27: case 28: case 29: case 30: 
                 toBuild = RobotType.POLITICIAN;
                 influence = 15;
                 signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
                 break;
-            case 13: case 17: case 20: 
+            case 31: case 32:
                 toBuild = RobotType.POLITICIAN;
                 influence = 15;
                 signalRobotType(SubRobotType.POL_EXPLORER);

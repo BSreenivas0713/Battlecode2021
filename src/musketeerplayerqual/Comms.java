@@ -43,6 +43,7 @@ public class Comms {
         POL_RUSH,
         POL_GOLEM,
         POL_CLEANUP,
+        POL_BUFF,
         SLANDERER,
         MUC_HUNTER,
         MUC_EXPLORER,

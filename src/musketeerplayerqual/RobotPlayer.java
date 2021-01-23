@@ -53,6 +53,9 @@ public strictfp class RobotPlayer {
                                             bot = new LatticeProtector(rc);
                                         }
                                         break;
+                                    case POL_BUFF:
+                                        bot = new BuffProtectorPolitician(rc);
+                                        break;
                                     case POL_DEFENDER:
                                         bot = new DefenderPolitician(rc);
                                         break;

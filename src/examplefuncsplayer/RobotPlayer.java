@@ -73,7 +73,7 @@ public strictfp class RobotPlayer {
         int currInfluence = rc.getInfluence();
         int biddingInfluence = currInfluence; //- 10;
         if(biddingInfluence != 0){
-        rc.bid(biddingInfluence);
+            rc.bid(biddingInfluence);
         }
         RobotType toBuild = randomSpawnableRobotType();
         int influence = 50;
