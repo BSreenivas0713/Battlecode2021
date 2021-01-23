@@ -253,19 +253,19 @@ public class Robot {
             case SLANDERER:
                 flag = Comms.getFlag(InformationCategory.CLOSEST_ENEMY_OR_FLEEING, 
                                     Comms.ClosestEnemyOrFleeing.SLA,
-                                    // type,
+                                    type,
                                     dx + Util.dOffset, dy + Util.dOffset);
                 break;
             case POL_PROTECTOR:
                 flag = Comms.getFlag(InformationCategory.CLOSEST_ENEMY_OR_FLEEING, 
                                     Comms.ClosestEnemyOrFleeing.POL_PROTECTOR,
-                                    // type,
+                                    type,
                                     dx + Util.dOffset, dy + Util.dOffset);
                 break;
             default:
                 flag = Comms.getFlag(InformationCategory.CLOSEST_ENEMY_OR_FLEEING, 
                                     Comms.ClosestEnemyOrFleeing.OTHER,
-                                    // type,
+                                    type,
                                     dx + Util.dOffset, dy + Util.dOffset);
                 break;
         }

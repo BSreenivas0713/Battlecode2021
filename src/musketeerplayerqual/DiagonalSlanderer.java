@@ -50,16 +50,17 @@ public class DiagonalSlanderer extends Robot {
         for(int i = enemySensable.length - 1; i >= 0; i--) {
             robot = enemySensable[i];
             temp = curr.distanceSquaredTo(robot.getLocation());
-            if (temp < minDistSquared) {
+            if (temp < minDistSquared && robot.getType() == RobotType.MUCKRAKER) {
                 minDistSquared = temp;
                 closestEnemy = robot;
-                if(robot.getType() == RobotType.MUCKRAKER) {
-                    closestEnemyType = Comms.EnemyType.MUC;
-                } else if(Util.isSlandererInfluence(robot.getInfluence())) {
-                    closestEnemyType = Comms.EnemyType.SLA;   
-                } else {
-                    closestEnemyType = Comms.EnemyType.UNKNOWN;
-                }
+                closestEnemyType = Comms.EnemyType.MUC;
+                // if(robot.getType() == RobotType.MUCKRAKER) {
+                //     closestEnemyType = Comms.EnemyType.MUC;
+                // } else if(Util.isSlandererInfluence(robot.getInfluence())) {
+                //     closestEnemyType = Comms.EnemyType.SLA;   
+                // } else {
+                //     closestEnemyType = Comms.EnemyType.UNKNOWN;
+                // }
             }
         }
 
@@ -98,7 +99,7 @@ public class DiagonalSlanderer extends Robot {
                             otherSlaFleeingDir = Comms.getDirection(flag);
                             break;
                         default:
-                            if(!foundOwnEnemy) {
+                            if(!foundOwnEnemy && Comms.getEnemyType(flag) == Comms.EnemyType.MUC) {
                                 enemyDxDyFromRobot = Comms.getDxDy(flag);
     
                                 enemyLoc = new MapLocation(enemyDxDyFromRobot[0] + loc.x - Util.dOffset, 
