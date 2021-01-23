@@ -1,9 +1,9 @@
-package musketeerplayerqual;
+package naivesuey;
 import battlecode.common.*;
 
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
-import musketeerplayerqual.fast.FastIterableLocSet;
+import naivesuey.Util.*;
+import naivesuey.Debug.*;
+import naivesuey.fast.FastIterableLocSet;
 /*1. blow up if around a muckraker if we also sense base/a slanderer
 2. blow up if around 2 or 3 muckrakers 
 3. push enemy muckrakers away from base/where slanderers are if we are within 2 sensor radiuses of base or we see a slanderer

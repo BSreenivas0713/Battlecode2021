@@ -1,10 +1,10 @@
-package musketeerplayerqual;
+package naivesuey;
 
 import battlecode.common.*;
 
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Comms.*;
-import musketeerplayerqual.Debug.*;
+import naivesuey.Util.*;
+import naivesuey.Comms.*;
+import naivesuey.Debug.*;
 
 public strictfp class RobotPlayer {
 
@@ -54,9 +54,6 @@ public strictfp class RobotPlayer {
                                         else {
                                             bot = new LatticeProtector(rc);
                                         }
-                                        break;
-                                    case POL_BUFF:
-                                        bot = new BuffProtectorPolitician(rc);
                                         break;
                                     case POL_DEFENDER:
                                         bot = new DefenderPolitician(rc);
