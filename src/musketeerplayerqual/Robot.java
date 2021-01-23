@@ -238,7 +238,7 @@ public class Robot {
         return res;
     }
 
-    boolean broadcastEnemyLocal(MapLocation enemyLoc) throws GameActionException {
+    boolean broadcastEnemyLocal(MapLocation enemyLoc, Comms.EnemyType type) throws GameActionException {
         if(enemyLoc == null || !rc.canSenseLocation(enemyLoc))
             return false;
         
@@ -253,16 +253,19 @@ public class Robot {
             case SLANDERER:
                 flag = Comms.getFlag(InformationCategory.CLOSEST_ENEMY_OR_FLEEING, 
                                     Comms.ClosestEnemyOrFleeing.SLA,
+                                    // type,
                                     dx + Util.dOffset, dy + Util.dOffset);
                 break;
             case POL_PROTECTOR:
                 flag = Comms.getFlag(InformationCategory.CLOSEST_ENEMY_OR_FLEEING, 
                                     Comms.ClosestEnemyOrFleeing.POL_PROTECTOR,
+                                    // type,
                                     dx + Util.dOffset, dy + Util.dOffset);
                 break;
             default:
                 flag = Comms.getFlag(InformationCategory.CLOSEST_ENEMY_OR_FLEEING, 
                                     Comms.ClosestEnemyOrFleeing.OTHER,
+                                    // type,
                                     dx + Util.dOffset, dy + Util.dOffset);
                 break;
         }
@@ -293,7 +296,7 @@ public class Robot {
         if(localOrGlobal % 2 == parityBroadcastEnemy && (!isSmallMuck || subRobotType == Comms.SubRobotType.MUC_SCOUT )) {
             broadcastEnemyFound(enemyLoc, type);
         } else {
-            broadcastEnemyLocal(enemyLoc);
+            broadcastEnemyLocal(enemyLoc, type);
         }
         localOrGlobal++;
         return true;

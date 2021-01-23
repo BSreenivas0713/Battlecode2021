@@ -104,7 +104,11 @@ public class Comms {
     }
 
     public static int getFlag(InformationCategory cat, ClosestEnemyOrFleeing CEOF, int dx, int dy) {
-        return getFlag(cat, CEOF.ordinal(), dx, dy);
+        return getFlag(cat, (CEOF.ordinal() << 2), dx, dy);
+    }
+
+    public static int getFlag(InformationCategory cat, ClosestEnemyOrFleeing CEOF, EnemyType type, int dx, int dy) {
+        return getFlag(cat, (CEOF.ordinal() << 2) + type.ordinal(), dx, dy);
     }
 
     // dx/dy max 4 bits
@@ -187,7 +191,7 @@ public class Comms {
     }
 
     public static ClosestEnemyOrFleeing getSubCEOF(int flag) {
-        return ClosestEnemyOrFleeing.values()[(flag & ~BIT_MASK_IC) >>> BIT_INF_OFFSET];
+        return ClosestEnemyOrFleeing.values()[(flag >>> BIT_INF_OFFSET >>> 2) & 0x3];
     }
 
     public static int encodeInf(int inf) {
