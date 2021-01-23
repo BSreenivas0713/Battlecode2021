@@ -674,6 +674,7 @@ public class EC extends Robot {
                         makePolitician();
                 }
                 buildRobot(toBuild, influence);
+                break;
             default:
                 currentState = State.CHILLING;
                 System.out.println("CRITICAL: Maxwell screwed up stateStack");
