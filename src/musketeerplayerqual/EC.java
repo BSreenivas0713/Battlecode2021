@@ -39,7 +39,6 @@ public class EC extends Robot {
         INIT,
         STUCKY_MUCKY,
         RUSHING_MUCKS,
-        NEW_TOWER_LOW_INFLUENCE,
         ABOUT_TO_DIE,
     };
 
@@ -230,7 +229,7 @@ public class EC extends Robot {
             return State.STUCKY_MUCKY;
         }
         else if (rc.getInfluence() < 100) {
-            return State.NEW_TOWER_LOW_INFLUENCE;
+            return State.CHILLING;
         }
         else {
             return State.INIT;
@@ -368,7 +367,7 @@ public class EC extends Robot {
             if(currentState == State.STUCKY_MUCKY) {
                 currentState = getInitialState();
             }
-            else if(currentState != State.INIT || currentState != State.NEW_TOWER_LOW_INFLUENCE) {
+            else if(currentState != State.INIT) {
                 // Override everything for a spawn kill. This is fine, as it only takes 1 turn
                 // and at most happens once every 10 turns.
                 tryStartBuildingSpawnKill();
@@ -439,10 +438,6 @@ public class EC extends Robot {
             }
         }
 
-        if (currentState == State.NEW_TOWER_LOW_INFLUENCE && currInfluence > 100) {
-            Debug.println(Debug.info, "switching from new_tower_low_inf to chilling");
-            currentState = State.CHILLING;
-        }
 
         builtRobot = false;
 
@@ -477,20 +472,8 @@ public class EC extends Robot {
                     dyingSemaphore = dyingSemaphoreDefault;
                 }
                 break;
-            case NEW_TOWER_LOW_INFLUENCE:
-                if (Util.getBestSlandererInfluence(currInfluence) != -1 && !muckrakerNear) {
-                    toBuild = RobotType.SLANDERER;
-                    influence = Util.getBestSlandererInfluence(currInfluence);
-                }
-                else {
-                    toBuild = RobotType.MUCKRAKER;
-                    influence = 1;
-                    makeMuckraker();
-                }
-                buildRobot(toBuild, influence);
-                break;
             case CHILLING: 
-                if(savingForSlanderer && Util.getBestSlandererInfluence(currInfluence) > 100 &&
+                if(savingForSlanderer && Util.getBestSlandererInfluence(currInfluence) > 0 &&
                     protectorIdSet.size > 2 * slandererIDToRound.size) {
                     readyForSlanderer = true;
                 }
