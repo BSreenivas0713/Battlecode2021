@@ -1,9 +1,9 @@
-package musketeerplayerqual;
+package naivesuey;
 
 import battlecode.common.*;
 
-import musketeerplayerqual.fast.FasterQueue;
-import musketeerplayerqual.fast.FastIterableIntSet;
+import naivesuey.fast.FasterQueue;
+import naivesuey.fast.FastIterableIntSet;
 
 public class Nav {
     static RobotController rc;

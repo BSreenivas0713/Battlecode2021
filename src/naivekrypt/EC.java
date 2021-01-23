@@ -362,7 +362,7 @@ public class EC extends Robot {
                 if(currentState != State.INIT || currentState != State.NEW_TOWER_LOW_INFLUENCE) {
                     // Override everything for a spawn kill. This is fine, as it only takes 1 turn
                     // and at most happens once every 10 turns.
-                    tryStartBuildingSpawnKill();
+                    // tryStartBuildingSpawnKill();
         
                     if (currentState != State.BUILDING_SPAWNKILLS) {
                         // If we have enough to rush a tower, make that the #1 priority
