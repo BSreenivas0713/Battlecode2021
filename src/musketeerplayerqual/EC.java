@@ -18,16 +18,15 @@ TODO:
 slandies move away from scout mucks (reason why we lose as blue on circle, their scout finds us way earlier
 cuz ours tries to go around a slanderer)
 
-experiment with a lot of mucks going to the same location
+Fix accelerated slanderer mode so that we win on small maps but don't lose on the maps that we started winning because of the change(like snowflake)
+My first guess would be try and get out of the mode sooner. I tried to get out of it if we see any enemy but that didn't work. Myabe if we see more than 1 muckraker
+in our sensor radius? 
 
-slanderers do some pathfinding
+We also don't win decisively on gridlock as blue anymore. Not sure why. Might be worth it to investigate.
 
-make accelerated slanderers work possibly
 
-have babymucks push away big mucks
 
-When to make more Mucks? 
-When to make Bigger Mucks?
+
 */
 public class EC extends Robot {
     static enum State {
@@ -565,13 +564,18 @@ public class EC extends Robot {
                 }  
                 break;
             case ACCELERATED_SLANDERERS:
-                switch(builtInAcceleratedCount % 3) {
-                    case 1: case 2:
+                if(numPols <= 3 * slandererIDToRound.size / 2) {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = getPoliticianInfluence();
+                    buildRobot(toBuild, influence);
+                }
+                switch(builtInAcceleratedCount % 5) {
+                    case 0: case 2: case 4:
                         toBuild = RobotType.POLITICIAN;
                         influence = getPoliticianInfluence();
                         makePolitician();
                         break;
-                    case 0:
+                    case 1: case 3:  
                         if(Util.getBestSlandererInfluence(currInfluence) > 0) {
                             toBuild = RobotType.SLANDERER;
                             influence = Util.getBestSlandererInfluence(currInfluence);
@@ -1219,7 +1223,7 @@ public class EC extends Robot {
         Debug.println("building buff Muck");
 
         toBuild = RobotType.MUCKRAKER;
-        influence = Util.scoutBuffMuckSize;
+        influence = Math.max(Util.scoutBuffMuckSize, currInfluence / 5);
         if(influence >= currInfluence) {
             currentState = stateStack.pop();
             return false;
@@ -1423,7 +1427,7 @@ public class EC extends Robot {
                 toBuild = RobotType.MUCKRAKER;
                 influence = Integer.max(1, currInfluence / 500);
                 if(numMucks < 8) {
-                    signalRobotAndDirection(Comms.SubRobotType.MUC_SCOUT, Util.directions[numMucks]);
+                    signalRobotAndDirection(Comms.SubRobotType.MUC_SCOUT, Util.scoutDirs[numMucks]);
                 }
                 break;
             case 2: case 14: case 17: case 18: case 19: case 21: case 23: case 24: case 26: case 27: case 29:
