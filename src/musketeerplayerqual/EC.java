@@ -431,7 +431,7 @@ public class EC extends Robot {
         if (rc.canBid(biddingInfluence) && currentState != State.INIT) {
             rc.bid(biddingInfluence);
         }
-        System.out.println("Amount bid: " + biddingInfluence);
+        Debug.println("Amount bid: " + biddingInfluence);
 
         //updating currInfluence after a bid
         currInfluence = rc.getInfluence();
@@ -1365,10 +1365,10 @@ public class EC extends Robot {
         if (currVotes > lastVoteCount) {
             lastVoteCount++;
             wonLastBid = true;
-            System.out.println("Won last bid.");
+            Debug.println("Won last bid.");
         } else {
             wonLastBid = false;
-            System.out.println("Lost last bid.");
+            Debug.println("Lost last bid.");
         }
 
         // Check if we are at an equilibrium.
@@ -1377,7 +1377,7 @@ public class EC extends Robot {
             if (!wonLastBid) {
                 bidEquilibrium = true;
                 res = ++prevBid;
-                System.out.println("At equilibrium.");
+                Debug.println("At equilibrium.");
                 return res;
             }
         } else if (bidEquilibrium) {
@@ -1401,7 +1401,7 @@ public class EC extends Robot {
         // Handle the edge cases where the big bid is too small or little bid is too big.
         if (bigBid < 2) bigBid = 2;
         if (res < littleBid) littleBid = res / 2;
-        System.out.println("L: " + littleBid + ", B: " + bigBid);
+        Debug.println("L: " + littleBid + ", B: " + bigBid);
 
         // Check to see if we're ready to go into equilibrium.
         if (res == prevBid - 1) {
