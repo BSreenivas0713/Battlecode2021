@@ -15,17 +15,18 @@ import java.util.ArrayDeque;
 import java.util.PriorityQueue;
 /* 
 TODO: 
+slandies move away from scout mucks (reason why we lose as blue on circle, their scout finds us way earlier
+cuz ours tries to go around a slanderer)
 
-experiment with a lot of mucks going to the same location
+Fix accelerated slanderer mode so that we win on small maps but don't lose on the maps that we started winning because of the change(like snowflake)
+My first guess would be try and get out of the mode sooner. I tried to get out of it if we see any enemy but that didn't work. Myabe if we see more than 1 muckraker
+in our sensor radius? 
 
-slanderers do some pathfinding
+We also don't win decisively on gridlock as blue anymore. Not sure why. Might be worth it to investigate.
 
-make accelerated slanderers work possibly
 
-have babymucks push away big mucks
 
-When to make more Mucks? 
-When to make Bigger Mucks?
+
 */
 public class EC extends Robot {
     static enum State {
@@ -260,7 +261,6 @@ public class EC extends Robot {
         }
         
         Direction[] orderedDirs = Util.getOrderedDirections(pref);
-        //TODO: Actually use isScout smh
         boolean isScout = Comms.getIC(nextFlag) == Comms.InformationCategory.TARGET_ROBOT &&
                         Comms.getSubRobotType(nextFlag) == Comms.SubRobotType.MUC_SCOUT;
 
@@ -450,7 +450,7 @@ public class EC extends Robot {
         if (rc.canBid(biddingInfluence) && currentState != State.INIT) {
             rc.bid(biddingInfluence);
         }
-        // System.out.println("Amount bid: " + biddingInfluence);
+        Debug.println("Amount bid: " + biddingInfluence);
 
         //updating currInfluence after a bid
         currInfluence = rc.getInfluence();
@@ -582,13 +582,18 @@ public class EC extends Robot {
                 }  
                 break;
             case ACCELERATED_SLANDERERS:
-                switch(builtInAcceleratedCount % 3) {
-                    case 1: case 2:
+                if(numPols <= 3 * slandererIDToRound.size / 2) {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = getPoliticianInfluence();
+                    buildRobot(toBuild, influence);
+                }
+                switch(builtInAcceleratedCount % 5) {
+                    case 0: case 2: case 4:
                         toBuild = RobotType.POLITICIAN;
                         influence = getPoliticianInfluence();
                         makePolitician();
                         break;
-                    case 0:
+                    case 1: case 3:  
                         if(Util.getBestSlandererInfluence(currInfluence) > 0) {
                             toBuild = RobotType.SLANDERER;
                             influence = Util.getBestSlandererInfluence(currInfluence);
@@ -1278,7 +1283,7 @@ public class EC extends Robot {
         Debug.println("building buff Muck");
 
         toBuild = RobotType.MUCKRAKER;
-        influence = Util.scoutBuffMuckSize;
+        influence = Math.max(Util.scoutBuffMuckSize, currInfluence / 5);
         if(influence >= currInfluence) {
             currentState = stateStack.pop();
             return false;
@@ -1402,10 +1407,10 @@ public class EC extends Robot {
         if (currVotes > lastVoteCount) {
             lastVoteCount++;
             wonLastBid = true;
-            // System.out.println("Won last bid.");
+            Debug.println("Won last bid.");
         } else {
             wonLastBid = false;
-            // System.out.println("Lost last bid.");
+            Debug.println("Lost last bid.");
         }
 
         // Check if we are at an equilibrium.
@@ -1414,7 +1419,7 @@ public class EC extends Robot {
             if (!wonLastBid) {
                 bidEquilibrium = true;
                 res = ++prevBid;
-                // System.out.println("At equilibrium.");
+                Debug.println("At equilibrium.");
                 return res;
             }
         } else if (bidEquilibrium) {
@@ -1438,7 +1443,7 @@ public class EC extends Robot {
         // Handle the edge cases where the big bid is too small or little bid is too big.
         if (bigBid < 2) bigBid = 2;
         if (res < littleBid) littleBid = res / 2;
-        // System.out.println("L: " + littleBid + ", B: " + bigBid);
+        Debug.println("L: " + littleBid + ", B: " + bigBid);
 
         // Check to see if we're ready to go into equilibrium.
         if (res == prevBid - 1) {
