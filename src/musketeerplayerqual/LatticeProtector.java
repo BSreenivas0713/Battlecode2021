@@ -65,7 +65,9 @@ public class LatticeProtector extends Robot {
         RobotInfo robot;
         int maxEnemyAttackableDistSquared = Integer.MIN_VALUE;
         int maxPolAttackableDistSquared = Integer.MIN_VALUE;
+        int maxMuckAttackableDistSquared = Integer.MIN_VALUE;
         MapLocation farthestEnemyAttackable = null;
+        MapLocation farthestMuckAttackable = null;
         int maxPoliticianSizeWithinReasonableThreshold = 0;
         int numMuckAttackable = 0;
         int robotConviction = 0;
@@ -92,6 +94,10 @@ public class LatticeProtector extends Robot {
             }
             if(robot.getType() == RobotType.MUCKRAKER) {
                 numMuckAttackable++;
+                if(temp > maxMuckAttackableDistSquared) {
+                    maxMuckAttackableDistSquared = temp;
+                    farthestMuckAttackable = robot.getLocation();
+                }
             }
         }
 
@@ -249,10 +255,10 @@ public class LatticeProtector extends Robot {
         //empower if near 2 enemies or enemy is in sensing radius of our base
         if ((numMuckAttackable > 1 || 
             (numMuckAttackable > 0 && (slandererNearby || minMuckrakerDistance <= RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared || maxMuckrakerAttackableSize > 1)))
-            && rc.canEmpower(maxEnemyAttackableDistSquared)) {
-            Debug.println(Debug.info, "Enemy too close to base. I will empower");
-            Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestEnemyAttackable, 255, 150, 50);
-            rc.empower(maxEnemyAttackableDistSquared);
+            && rc.canEmpower(maxMuckAttackableDistSquared)) {
+            Debug.println(Debug.info, "Enemy too close to base. I will empower with radius: " + maxMuckAttackableDistSquared);
+            Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestMuckAttackable, 255, 150, 50);
+            rc.empower(maxMuckAttackableDistSquared);
             return;
         }
 

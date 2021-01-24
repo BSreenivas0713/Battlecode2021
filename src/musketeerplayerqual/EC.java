@@ -450,7 +450,7 @@ public class EC extends Robot {
         if (rc.canBid(biddingInfluence) && currentState != State.INIT) {
             rc.bid(biddingInfluence);
         }
-        System.out.println("Amount bid: " + biddingInfluence);
+        // System.out.println("Amount bid: " + biddingInfluence);
 
         //updating currInfluence after a bid
         currInfluence = rc.getInfluence();
@@ -867,30 +867,8 @@ public class EC extends Robot {
         }
     }
 
-    /*public void toggleBuildProtectors() throws GameActionException {
-        // Debug.println(Debug.info, "can go back to building protectors: " + canGoBackToBuildingProtectors);
-        // Debug.println(Debug.info, "protector id set size: " + protectorIdSet.size);
-        // Debug.println(Debug.info, "current state from toggle building protectors: " + currentState);
-        // Debug.println (Debug.info, "robot counter from toggle protectors: " + robotCounter);
-
-        if (protectorIdSet.size <= 25 && currentState != State.BUILDING_PROTECTORS && 
-            robotCounter > 10 && canGoBackToBuildingProtectors && noAdjacentEC) {
-            Debug.println(Debug.info, "switching to building protectors");
-            stateStack.push(currentState);
-            currentState = State.BUILDING_PROTECTORS;
-            protectorsSpawnedInARow = 0;
-        } else if (protectorIdSet.size > 35 && currentState == State.BUILDING_PROTECTORS) {
-            Debug.println(Debug.info, "we have > 35 protectors, switching to whatevers on the state stack");
-            currentState = stateStack.pop();
-        } else if (protectorsSpawnedInARow >= 10 && currentState == State.BUILDING_PROTECTORS) {
-            Debug.println(Debug.info, "just built 10 protectors in a row, going to building a slanderer");
-            canGoBackToBuildingProtectors = false;
-            currentState = State.BUILDING_SLANDERERS;
-        }
-    }*/
-
     public int getPoliticianInfluence() throws GameActionException {
-        if(numPols > 20 && numPols % Util.buffPolFrequency == 0 && buffPolSet.size < Util.maxBuffPolNum) {
+        if(numPols > 10 && numPols % Util.buffPolFrequency == 0 && buffPolSet.size < Util.maxBuffPolNum) {
             return Math.max(50, currInfluence / 10);
         } else {
             return Math.max(20, currInfluence / 50);
@@ -898,7 +876,8 @@ public class EC extends Robot {
     }
 
     public void makePolitician() throws GameActionException {
-        if(numPols > 20 && numPols % Util.buffPolFrequency == 0 && buffPolSet.size < Util.maxBuffPolNum) {
+        if(numPols > 10 && numPols % Util.buffPolFrequency == 0 && buffPolSet.size < Util.maxBuffPolNum) {
+            System.out.println("Making buff pol");
             signalRobotType(Comms.SubRobotType.POL_BUFF);
         } else if(numPols % Util.explorerPolFrequency == 0) {
             signalRobotType(Comms.SubRobotType.POL_EXPLORER);
@@ -935,8 +914,8 @@ public class EC extends Robot {
     }
 
     public void tryStartBuildingBuffPols() throws GameActionException {
-        if(enemyBuffMuckInf >= 50 * buffPolSet.size && buffPolLock >= 10 &&
-            currentState != State.BUILDING_BUFF_POLS) {
+        if(enemyBuffMuckInf >= 50 && enemyBuffMuckInf >= 50 * buffPolSet.size && 
+            buffPolLock >= 10 && currentState != State.BUILDING_BUFF_POLS) {
             stateStack.push(currentState);
             currentState = State.BUILDING_BUFF_POLS;
             builtInBuffPolsCount = 0;
@@ -1423,10 +1402,10 @@ public class EC extends Robot {
         if (currVotes > lastVoteCount) {
             lastVoteCount++;
             wonLastBid = true;
-            System.out.println("Won last bid.");
+            // System.out.println("Won last bid.");
         } else {
             wonLastBid = false;
-            System.out.println("Lost last bid.");
+            // System.out.println("Lost last bid.");
         }
 
         // Check if we are at an equilibrium.
@@ -1435,7 +1414,7 @@ public class EC extends Robot {
             if (!wonLastBid) {
                 bidEquilibrium = true;
                 res = ++prevBid;
-                System.out.println("At equilibrium.");
+                // System.out.println("At equilibrium.");
                 return res;
             }
         } else if (bidEquilibrium) {
@@ -1459,7 +1438,7 @@ public class EC extends Robot {
         // Handle the edge cases where the big bid is too small or little bid is too big.
         if (bigBid < 2) bigBid = 2;
         if (res < littleBid) littleBid = res / 2;
-        System.out.println("L: " + littleBid + ", B: " + bigBid);
+        // System.out.println("L: " + littleBid + ", B: " + bigBid);
 
         // Check to see if we're ready to go into equilibrium.
         if (res == prevBid - 1) {
