@@ -862,22 +862,27 @@ public class EC extends Robot {
     }
 
     public int getPoliticianInfluence() throws GameActionException {
-        if(numPols > 10 && numPols % Util.buffPolFrequency == 0 && 
-            buffPolSet.size < Util.maxBuffPolNum && protectorIdSet.size > 2 * buffPolSet.size) {
-            System.out.println("Giving buff pol influence");
-            return Math.max(50, currInfluence / 10);
-        } else {
-            return Math.max(20, currInfluence / 50);
-        }
-        // return Math.max(20, currInfluence / 50);
+        // if(numPols > 10 && numPols % Util.buffPolFrequency == 0 && 
+        //     buffPolSet.size < Util.maxBuffPolNum && protectorIdSet.size > 2 * buffPolSet.size) {
+        //     System.out.println("Giving buff pol influence");
+        //     return Math.max(50, currInfluence / 10);
+        // } else {
+        //     return Math.max(20, currInfluence / 50);
+        // }
+        return Math.max(20, currInfluence / 50);
     }
 
     public void makePolitician() throws GameActionException {
-        if(numPols > 10 && numPols % Util.buffPolFrequency == 0 && 
-            buffPolSet.size < Util.maxBuffPolNum && protectorIdSet.size > 2 * buffPolSet.size) {
-            System.out.println("Making buff pol");
-            signalRobotType(Comms.SubRobotType.POL_BUFF);
-        } else if(numPols % Util.explorerPolFrequency == 0) {
+        // if(numPols > 10 && numPols % Util.buffPolFrequency == 0 && 
+        //     buffPolSet.size < Util.maxBuffPolNum && protectorIdSet.size > 2 * buffPolSet.size) {
+        //     System.out.println("Making buff pol");
+        //     signalRobotType(Comms.SubRobotType.POL_BUFF);
+        // } else if(numPols % Util.explorerPolFrequency == 0) {
+        //     signalRobotType(Comms.SubRobotType.POL_EXPLORER);
+        // } else {
+        //     signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
+        // }
+        if(numPols % Util.explorerPolFrequency == 0) {
             signalRobotType(Comms.SubRobotType.POL_EXPLORER);
         } else {
             signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
