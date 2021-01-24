@@ -1394,6 +1394,7 @@ public class EC extends Robot {
         // Handle the edge cases where the big bid is too small or little bid is too big.
         if (bigBid < 2) bigBid = 2;
         if (res < littleBid) littleBid = res / 2;
+        if (res == littleBid && res == bigBid) littleBid /= 2;
         System.out.println("L: " + littleBid + ", B: " + bigBid);
 
         // Check to see if we're ready to go into equilibrium.
