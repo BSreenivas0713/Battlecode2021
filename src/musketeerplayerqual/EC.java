@@ -15,6 +15,8 @@ import java.util.ArrayDeque;
 import java.util.PriorityQueue;
 /* 
 TODO: 
+slandies move away from scout mucks (reason why we lose as blue on circle, their scout finds us way earlier
+cuz ours tries to go around a slanderer)
 
 experiment with a lot of mucks going to the same location
 
