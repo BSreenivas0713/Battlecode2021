@@ -3,7 +3,7 @@ package musketeerplayerqual;
 import battlecode.common.*;
 
 public class Comms {
-    public static final double INF_LOG_BASE = 1.35;
+    public static final double INF_LOG_BASE = 1.17;
     public static final double INF_SCALAR = 1;
     static final int BIT_IC_OFFSET = 20;
     static final int BIT_MASK_IC = 0xF << BIT_IC_OFFSET;

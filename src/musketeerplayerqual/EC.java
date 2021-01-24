@@ -478,6 +478,11 @@ public class EC extends Robot {
                 }
                 break;
             case CHILLING: 
+                if(numPols <= slandererIDToRound.size) {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = getPoliticianInfluence();
+                    buildRobot(toBuild, influence);
+                }
                 if(savingForSlanderer && Util.getBestSlandererInfluence(currInfluence) > 0 &&
                     protectorIdSet.size > 2 * slandererIDToRound.size) {
                     readyForSlanderer = true;
@@ -1401,7 +1406,7 @@ public class EC extends Robot {
     
     public void firstRounds() throws GameActionException {
         switch(robotCounter) {
-            case 0: case 5: case 9: case 13: case 15: case 17: case 20: case 22: case 25: case 28:
+            case 0: case 5: case 9: case 13: case 15: case 20: case 22: case 25: case 28:
                 toBuild = RobotType.SLANDERER;
                 influence = Math.min(130, Util.getBestSlandererInfluence(currInfluence));
                 break;
@@ -1412,7 +1417,7 @@ public class EC extends Robot {
                     signalRobotAndDirection(Comms.SubRobotType.MUC_SCOUT, Util.directions[numMucks]);
                 }
                 break;
-            case 2: case 14: case 18: case 19: case 21: case 23: case 24: case 26: case 27: case 29:
+            case 2: case 14: case 17: case 18: case 19: case 21: case 23: case 24: case 26: case 27: case 29:
                 toBuild = RobotType.POLITICIAN;
                 influence = 15;
                 signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
