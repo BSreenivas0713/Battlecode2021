@@ -131,6 +131,9 @@ public class EC extends Robot {
     static int littleBid;
     static boolean wonLastBid;
     static int lastVoteCount;
+    static boolean biddingOneLess;
+    static boolean bidEquilibrium;
+
     static int initialMucksDirection;
     static Direction closestWall;
     static int[] wallLocations = {0,0,0,0};
@@ -176,9 +179,11 @@ public class EC extends Robot {
         lastSuccessfulBlockageRemoval = -1;
         littleBid = 0;
         prevBid = 0;
-        bigBid = 4;
+        bigBid = 2;
         wonLastBid = false;
         lastVoteCount = 0;
+        biddingOneLess = false;
+        bidEquilibrium = false;
         chillingCount = 0;
         numMucks = 0;
         enemyECsFound = new FastIterableLocSet(20);
@@ -426,7 +431,7 @@ public class EC extends Robot {
         if (rc.canBid(biddingInfluence) && currentState != State.INIT) {
             rc.bid(biddingInfluence);
         }
-        Debug.println(Debug.info, "Amount bid: " + biddingInfluence);
+        System.out.println("Amount bid: " + biddingInfluence);
 
         //updating currInfluence after a bid
         currInfluence = rc.getInfluence();
@@ -1338,34 +1343,59 @@ public class EC extends Robot {
     public int bidBS() throws GameActionException {
         int currVotes = rc.getTeamVotes();
         int res;
+        // Handle the edge cases where we've won or are close to the end or beginning.
         if (currentState == State.INIT || currVotes > 750) {
             return 0;
         } else if (currRoundNum > 1300) {
             return currInfluence / 25;
-        } else if (currVotes > lastVoteCount) {
-            wonLastBid = true;
-            bigBid = prevBid;
-            Debug.println(Debug.info, "Won last bid.");
+        }
+
+        // Check if we won the last bid and increment accordingly.
+        if (currVotes > lastVoteCount) {
             lastVoteCount++;
+            wonLastBid = true;
+            System.out.println("Won last bid.");
         } else {
             wonLastBid = false;
-            littleBid = prevBid;
-            Debug.println(Debug.info, "Lost last bid.");
+            System.out.println("Lost last bid.");
         }
-        Debug.println(Debug.info, "L: " + littleBid + ", B: " + bigBid);
+
+        // Check if we are at an equilibrium.
+        if (biddingOneLess) {
+            biddingOneLess = false;
+            if (!wonLastBid) {
+                bidEquilibrium = true;
+                res = ++prevBid;
+                System.out.println("At equilibrium.");
+                return res;
+            }
+        } else if (bidEquilibrium) {
+            if (wonLastBid && prevBid < currInfluence / 25) {
+                return prevBid;
+            } else bidEquilibrium = false;
+        }
+
+        // Change the big or little depending on if you won.
+        if (wonLastBid) bigBid = prevBid;
+        else littleBid = prevBid;
+
+        // Otherwise use a binary search to find the new bid.
         if (wonLastBid) {
             res = Integer.min(Integer.max((prevBid + littleBid) / 2, 2), currInfluence / 25);
-            prevBid = res;
         } else {
             if (bigBid < currInfluence / 10) bigBid *= 2;
             res = Integer.min(Integer.max((prevBid + bigBid) / 2, 2), currInfluence / 25);
-            if (prevBid == res) {
-                bigBid /= 2;
-            } else {
-                prevBid = res;
-            }
         }
-        if (bigBid < 4) bigBid = 4;
+        // Handle the edge cases where the big bid is too small or little bid is too big.
+        if (bigBid < 2) bigBid = 2;
+        if (res < littleBid) littleBid = res / 2;
+        System.out.println("L: " + littleBid + ", B: " + bigBid);
+
+        // Check to see if we're ready to go into equilibrium.
+        if (res == prevBid - 1) {
+            biddingOneLess = true;
+        }
+        prevBid = res;
         return res;
     }
     
