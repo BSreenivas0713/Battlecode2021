@@ -785,7 +785,13 @@ public class EC extends Robot {
         }
         noAdjacentEC = true;
         for (int i = nearbyECs.size - 1; i >= 0; i--) {
-            RobotInfo robot = rc.senseRobotAtLocation(nearbyECs.locs[i]);
+            MapLocation locOfNearby = nearbyECs.locs[i];
+            RobotInfo robot;
+            if (rc.canSenseLocation(locOfNearby)) {
+                robot = rc.senseRobotAtLocation(locOfNearby);
+            } else {
+                continue;
+            }
             if (robot.getTeam() == enemy) {
                 noAdjacentEC = false;
                 RushFlag rushFlag;
@@ -939,7 +945,7 @@ public class EC extends Robot {
                             ECflags.add(rushFlag);
                         }
 
-                        if(tempMapLoc.isWithinDistanceSquared(home, 2 * sensorRadius)) {
+                        if(tempMapLoc.isWithinDistanceSquared(home, 2 * sensorRadius) && !nearbyECs.contains(tempMapLoc)) {
                             nearbyECs.add(tempMapLoc);
                             nearbyECs.updateIterable();
                         }
@@ -973,7 +979,7 @@ public class EC extends Robot {
                             currentState = stateStack.pop();
                         }
 
-                        if(tempMapLoc.isWithinDistanceSquared(home, 2 * sensorRadius)) {
+                        if(tempMapLoc.isWithinDistanceSquared(home, 2 * sensorRadius) && !nearbyECs.contains(tempMapLoc)) {
                             nearbyECs.add(tempMapLoc);
                             nearbyECs.updateIterable();
                         }
@@ -1387,6 +1393,7 @@ public class EC extends Robot {
         // Otherwise use a binary search to find the new bid.
         if (wonLastBid) {
             res = Integer.min(Integer.max((prevBid + littleBid) / 2, 2), currInfluence / 25);
+            if (res == littleBid && res == bigBid) littleBid /= 2;
         } else {
             if (bigBid < currInfluence / 10) bigBid *= 2;
             res = Integer.min(Integer.max((prevBid + bigBid) / 2, 2), currInfluence / 25);
@@ -1394,7 +1401,6 @@ public class EC extends Robot {
         // Handle the edge cases where the big bid is too small or little bid is too big.
         if (bigBid < 2) bigBid = 2;
         if (res < littleBid) littleBid = res / 2;
-        if (res == littleBid && res == bigBid) littleBid /= 2;
         System.out.println("L: " + littleBid + ", B: " + bigBid);
 
         // Check to see if we're ready to go into equilibrium.
