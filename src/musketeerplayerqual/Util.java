@@ -45,6 +45,17 @@ public class Util {
         Direction.SOUTHWEST,
     };
 
+    static final Direction[] scoutMuckOrder = {
+        Direction.EAST,
+        Direction.WEST,
+        Direction.NORTH,
+        Direction.SOUTH,
+        Direction.NORTHEAST,
+        Direction.NORTHWEST,
+        Direction.SOUTHEAST,
+        Direction.SOUTHWEST,
+    };
+
     static final double spawnKillThreshold = 5;
     static final int dOffset = 64;
     static final int dSmallOffset = 8;
@@ -93,13 +104,16 @@ public class Util {
     
     static final int MuckAttackCooldown = 50;
 
-    static final int rushCooldown = 20;
+    static final int baseRushCooldown = 15;
+    static final int maxRushCooldown = 40;
 
     static final int buffMukFrequency = 20;
     static final int maxBuffMuk = 400;
 
     static final int explorerPolFrequency = 7;
-    static final int buffPolFrequency = 5;
+    static final int buffPolFrequency = 4;
+    static final int maxBuffPolNum = 8;
+    static final int maxBuffPolsInARow = 2;
 
     static final int attackCallBoredom = 30;
 
