@@ -66,8 +66,10 @@ public class LatticeProtector extends Robot {
         int maxEnemyAttackableDistSquared = Integer.MIN_VALUE;
         int maxPolAttackableDistSquared = Integer.MIN_VALUE;
         int maxMuckAttackableDistSquared = Integer.MIN_VALUE;
+        int minMuckAttackableDistSquared = Integer.MAX_VALUE;
         MapLocation farthestEnemyAttackable = null;
         MapLocation farthestMuckAttackable = null;
+        MapLocation closestMuckAttackable = null;
         int maxPoliticianSizeWithinReasonableThreshold = 0;
         int numMuckAttackable = 0;
         int robotConviction = 0;
@@ -97,12 +99,17 @@ public class LatticeProtector extends Robot {
                 if(temp > maxMuckAttackableDistSquared) {
                     maxMuckAttackableDistSquared = temp;
                     farthestMuckAttackable = robot.getLocation();
+                } else if(temp < minMuckAttackableDistSquared) {
+                    minMuckAttackableDistSquared = temp;
+                    closestMuckAttackable = robot.getLocation();
                 }
             }
         }
 
-        RobotInfo closestMuckrakerSensable = null;
-        int minMuckrakerDistance = Integer.MAX_VALUE;
+        RobotInfo closestMuckToHome = null;
+        int closestMuckToHomeDist = Integer.MAX_VALUE;
+        RobotInfo closestMuck = null;
+        int closestMuckDist = Integer.MAX_VALUE;
         int maxMuckrakerAttackableSize = 0;
         RobotInfo closestEnemy = null;
         Comms.EnemyType closestEnemyType = null;
@@ -113,9 +120,9 @@ public class LatticeProtector extends Robot {
             MapLocation tempLoc = robot.getLocation();
             int currDistance = tempLoc.distanceSquaredTo(home);
             if (robot.getType() == RobotType.MUCKRAKER) {
-                if(currDistance < minMuckrakerDistance) {
-                    closestMuckrakerSensable = robot;
-                    minMuckrakerDistance = currDistance;
+                if(currDistance < closestMuckToHomeDist) {
+                    closestMuckToHome = robot;
+                    closestMuckToHomeDist = currDistance;
                 }
                 if(robot.getConviction() > maxMuckrakerAttackableSize) {
                     maxMuckrakerAttackableSize = robot.getConviction();
@@ -133,6 +140,11 @@ public class LatticeProtector extends Robot {
                 } else {
                     closestEnemyType = Comms.EnemyType.UNKNOWN;
                 }
+            }
+
+            if(robot.getType() == RobotType.MUCKRAKER && temp < closestMuckDist) {
+                closestMuckDist = temp;
+                closestMuck = robot;
             }
 
             if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
@@ -159,24 +171,28 @@ public class LatticeProtector extends Robot {
 
         MapLocation rusherLoc = null;
 
+        boolean amClosestPolToClosestMuck = true;
         int totalProtectorX = 0;
         int totalProtectorY = 0;
         int numProtectors = 0;
+        MapLocation tempLoc;
+        int tempDist;
 
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
             robot = friendlySensable[i];
+            tempLoc = robot.getLocation();
+            tempDist = currLoc.distanceSquaredTo(tempLoc);
             if(rc.canGetFlag(robot.getID())) {
-                int robotFlag = rc.getFlag(robot.getID());
-                Comms.InformationCategory IC = Comms.getIC(robotFlag);
-                if(Comms.isSubRobotType(robotFlag, Comms.SubRobotType.POL_PROTECTOR) ||
+                int flag = rc.getFlag(robot.getID());
+                Comms.InformationCategory IC = Comms.getIC(flag);
+                if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_PROTECTOR) ||
                     (robot.getType() == RobotType.POLITICIAN && IC == Comms.InformationCategory.FOLLOWING)) {
                     protectorNearby = true;
-                    int currDistToProtector = robot.getLocation().distanceSquaredTo(rc.getLocation());
+                    int currDistToProtector = tempLoc.distanceSquaredTo(currLoc);
                     if (currDistToProtector < closestProtectorDist) {
                         closestProtectorDist = currDistToProtector;
-                        closestProtectorLoc = robot.getLocation();
+                        closestProtectorLoc = tempLoc;
                     }
-                    numProtectors++;
                     // if(rc.getLocation().distanceSquaredTo(robot.getLocation()) < 20) {
 
                     //     Debug.setIndicatorDot(Debug.info, robot.getLocation(), 100, 100, 100);
@@ -184,34 +200,37 @@ public class LatticeProtector extends Robot {
                     totalProtectorX += robot.getLocation().x;
                     totalProtectorY += robot.getLocation().y;
                     numProtectors++;
-                } else if (Comms.isSubRobotType(robotFlag, Comms.SubRobotType.POL_RUSH)) {
+
+                    if(closestMuck != null && 
+                        closestMuckDist > tempLoc.distanceSquaredTo(closestMuck.getLocation())) {
+                        Debug.setIndicatorDot(Debug.info, tempLoc, 255, 255, 255);
+                        Debug.setIndicatorLine(Debug.info, currLoc, tempLoc, 255, 255, 255);
+                        Debug.println("Found a pol closer to my closest muck");
+                        amClosestPolToClosestMuck = false;
+                    }
+                } else if (Comms.isSubRobotType(flag, Comms.SubRobotType.POL_RUSH)) {
                     rusherLoc = robot.getLocation();
+                }
+
+                if(Comms.isSubRobotType(flag, Comms.SubRobotType.SLANDERER)) {
+                    slandererOrECNearby = true;
+                    slandererNearby = true;
+                    if (tempDist < nearestSlandyDist) {
+                        nearestSlandy = tempLoc;
+                        nearestSlandyDist = tempDist;
+                    }
+                }
+
+                if(closestMuckToHome != null) {
+                    if(flag == Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestMuckToHome.getID())) {
+                        numFollowingClosestMuckraker++;
+                    }
                 }
             }
             
             if ((robot.getType() == RobotType.ENLIGHTENMENT_CENTER)) {
                 slandererOrECNearby = true;
                 ECNearby = true;
-            } else {
-                MapLocation tempLoc = robot.getLocation();
-                int tempDist = currLoc.distanceSquaredTo(tempLoc);
-                if(rc.canGetFlag(robot.getID())) {
-                    int flag = rc.getFlag(robot.getID());
-                    if(Comms.isSubRobotType(flag, Comms.SubRobotType.SLANDERER)) {
-                        slandererOrECNearby = true;
-                        slandererNearby = true;
-                        if (tempDist < nearestSlandyDist && tempLoc.distanceSquaredTo(home) > currLoc.distanceSquaredTo(home)) {
-                            nearestSlandy = tempLoc;
-                            nearestSlandyDist = tempDist;
-                        }
-                    }
-    
-                    if(closestMuckrakerSensable != null) {
-                        if(flag == Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestMuckrakerSensable.getID())) {
-                            numFollowingClosestMuckraker++;
-                        }
-                    }
-                }
             }
         }
 
@@ -254,7 +273,8 @@ public class LatticeProtector extends Robot {
         /* Step by Step decision making*/
         //empower if near 2 enemies or enemy is in sensing radius of our base
         if ((numMuckAttackable > 1 || 
-            (numMuckAttackable > 0 && (slandererNearby || minMuckrakerDistance <= RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared || maxMuckrakerAttackableSize > 1)))
+            (numMuckAttackable > 0 && (slandererNearby || closestMuckToHomeDist <= 2 * RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared || maxMuckrakerAttackableSize > 1) &&
+                amClosestPolToClosestMuck))
             && rc.canEmpower(maxMuckAttackableDistSquared)) {
             Debug.println(Debug.info, "Enemy too close to base. I will empower with radius: " + maxMuckAttackableDistSquared);
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestMuckAttackable, 255, 150, 50);
@@ -287,24 +307,36 @@ public class LatticeProtector extends Robot {
         else if(broadcastECLocation());
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
         
+        main_direction = Direction.CENTER;
+
+        // if(closestMuck != null) {
+        //     Debug.println("AmClosestPol: " + amClosestPolToClosestMuck);
+        //     Debug.setIndicatorLine(Debug.info, rc.getLocation(), closestMuck.getLocation(), 255, 200, 100);
+        // }
+
         //tries to block a muckraker in its path(if the muckraker is within 2 sensing radiuses of the EC)
-        if (closestMuckrakerSensable != null && 
-            closestMuckrakerSensable.getLocation().isWithinDistanceSquared(home, (5 * sensorRadius)) &&
-            numFollowingClosestMuckraker < Util.maxFollowingSingleUnit) {
-            Debug.println(Debug.info, "I am pushing a muckraker away. ID: " + closestMuckrakerSensable.getID());
-            setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestMuckrakerSensable.getID()));
+        if (closestMuckToHome != null && 
+            closestMuckToHome.getLocation().isWithinDistanceSquared(home, (5 * sensorRadius)) &&
+            numFollowingClosestMuckraker < Util.maxFollowingSingleUnit &&
+            amClosestPolToClosestMuck) {
+            Debug.println(Debug.info, "I am pushing a muckraker away. ID: " + closestMuckToHome.getID());
+            setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestMuckToHome.getID()));
             Debug.println(Debug.info, "I am pushing a muckraker away");
-            MapLocation closestMuckrakerSensableLoc = closestMuckrakerSensable.getLocation();
+            MapLocation closestMuckrakerSensableLoc = closestMuckToHome.getLocation();
             Direction muckrakerPathtoBase = closestMuckrakerSensableLoc.directionTo(home);
             MapLocation squareToBlock = closestMuckrakerSensableLoc.add(muckrakerPathtoBase);
-            Direction toMove = rc.getLocation().directionTo(squareToBlock);
-            tryMoveDest(toMove);
-            return;
+            main_direction = currLoc.directionTo(squareToBlock);
         }
-
-        main_direction = Direction.CENTER;
+        // else if(closestMuck != null && 
+        //         numFollowingClosestMuckraker < Util.maxFollowingSingleUnit &&
+        //         amClosestPolToClosestMuck) {
+        //     main_direction = currLoc.directionTo(closestMuck.getLocation());
+        //     setFlag(Comms.getFlag(Comms.InformationCategory.FOLLOWING, closestMuck.getID()));
+        //     Debug.println("I am following a muckraker. ID: " + closestMuck.getID());
+        //     Debug.setIndicatorLine(Debug.info, rc.getLocation(), closestMuck.getLocation(), 255, 200, 100);
+        // }
         //moves out of sensor radius of Enlightenment Center
-        if(ECNearby) { //this is the old case, changed it to what is below for experimentation
+        else if(ECNearby) { //this is the old case, changed it to what is below for experimentation
             // if (home != null && currLoc.isWithinDistanceSquared(home, RobotType.ENLIGHTENMENT_CENTER.sensorRadiusSquared * 4)) {
             // Debug.println(Debug.info, "I am moving away from the base");
             // main_direction = Util.rotateInSpinDirection(spinDirection, currLoc.directionTo(home).opposite());

@@ -44,25 +44,15 @@ public class Util {
         Direction.SOUTHEAST,
         Direction.SOUTHWEST,
     };
+
     static final Direction[] scoutDirs = {
         Direction.NORTH,
         Direction.SOUTH,
         Direction.WEST,
         Direction.EAST,
         Direction.NORTHWEST,
-        Direction.NORTHEAST,
         Direction.SOUTHEAST,
-        Direction.SOUTHWEST,
-    };
-
-    static final Direction[] scoutMuckOrder = {
-        Direction.EAST,
-        Direction.WEST,
-        Direction.NORTH,
-        Direction.SOUTH,
         Direction.NORTHEAST,
-        Direction.NORTHWEST,
-        Direction.SOUTHEAST,
         Direction.SOUTHWEST,
     };
 
@@ -219,6 +209,16 @@ public class Util {
                 return null;
         }
 
+    }
+
+    static Direction[] getAboutToDieBuildOrder(Direction dir) {
+        switch(dir) {
+            case NORTH: case SOUTH:
+            case EAST: case WEST:
+                return new Direction[]{dir, dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight(), dir.opposite()};
+            default:
+                return new Direction[]{dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().opposite(), dir.rotateRight().opposite()};
+        }
     }
 
     /**
