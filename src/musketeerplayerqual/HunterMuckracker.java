@@ -253,17 +253,17 @@ public class HunterMuckracker extends Robot {
         else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
 
-        if(!muckraker_Found_EC){
+        if(disperseBot != null) {
+            main_direction = currLoc.directionTo(disperseBot.getLocation()).opposite();
+            tryMoveDest(main_direction);
+            Debug.println(Debug.info, "Dispersing to avoid rusher.");
+        }
+        else if(!muckraker_Found_EC){
             if (bestSlanderer != null) {
                 main_direction = currLoc.directionTo(bestSlanderer.getLocation());
                 tryMoveDest(main_direction);
                 Debug.println(Debug.info, "Prioritizing killing slandies.");
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), bestSlanderer.getLocation(), 255, 150, 50);
-            }
-            else if (disperseBot != null) {
-                main_direction = currLoc.directionTo(disperseBot.getLocation()).opposite();
-                tryMoveDest(main_direction);
-                Debug.println(Debug.info, "Dispersing to avoid rusher.");
             }
             else if (enemyLocation != null) {
                 if(!seenEnemyLocation || rc.getInfluence() > Util.bufMuckCooldownThreshold) {
