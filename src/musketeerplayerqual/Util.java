@@ -44,14 +44,15 @@ public class Util {
         Direction.SOUTHEAST,
         Direction.SOUTHWEST,
     };
+
     static final Direction[] scoutDirs = {
         Direction.NORTH,
         Direction.SOUTH,
         Direction.WEST,
         Direction.EAST,
         Direction.NORTHWEST,
-        Direction.NORTHEAST,
         Direction.SOUTHEAST,
+        Direction.NORTHEAST,
         Direction.SOUTHWEST,
     };
 
@@ -103,13 +104,16 @@ public class Util {
     
     static final int MuckAttackCooldown = 50;
 
-    static final int rushCooldown = 20;
+    static final int baseRushCooldown = 15;
+    static final int maxRushCooldown = 30;
 
     static final int buffMukFrequency = 20;
     static final int maxBuffMuk = 400;
 
     static final int explorerPolFrequency = 7;
     static final int buffPolFrequency = 5;
+    static final int maxBuffPolNum = 8;
+    static final int maxBuffPolsInARow = 4;
 
     static final int attackCallBoredom = 30;
 
@@ -205,6 +209,16 @@ public class Util {
                 return null;
         }
 
+    }
+
+    static Direction[] getAboutToDieBuildOrder(Direction dir) {
+        switch(dir) {
+            case NORTH: case SOUTH:
+            case EAST: case WEST:
+                return new Direction[]{dir, dir.rotateLeft().rotateLeft(), dir.rotateRight().rotateRight(), dir.opposite()};
+            default:
+                return new Direction[]{dir.rotateLeft(), dir.rotateRight(), dir.rotateLeft().opposite(), dir.rotateRight().opposite()};
+        }
     }
 
     /**

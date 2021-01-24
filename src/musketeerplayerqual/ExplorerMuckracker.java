@@ -216,24 +216,23 @@ public class ExplorerMuckracker extends Robot {
         if (bestSlanderer != null) {
             main_direction = currLoc.directionTo(bestSlanderer.getLocation());
         }
-
-        if(!muckraker_Found_EC){
+        
+        if (disperseBot != null) {
+            main_direction = currLoc.directionTo(disperseBot.getLocation()).opposite();
+            tryMoveDest(main_direction);
+            Debug.println(Debug.info, "Dispersing to avoid rusher.");
+        }
+        else if(!muckraker_Found_EC){
             if (bestSlanderer != null) {
                 main_direction = currLoc.directionTo(bestSlanderer.getLocation());
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), bestSlanderer.getLocation(), 255, 150, 50);
                 tryMoveDest(main_direction);
                 Debug.println(Debug.info, "Moving towards a slanderer");
             }
-            else if (disperseBot != null) {
-                main_direction = currLoc.directionTo(disperseBot.getLocation()).opposite();
-                tryMoveDest(main_direction);
-                Debug.println(Debug.info, "Dispersing to avoid rusher.");
-            }
             else if (spawnKillRunFromHome) {
                 main_direction = currLoc.directionTo(home).opposite();
                 tryMoveDest(main_direction);
                 Debug.println(Debug.info, "Moving away from home");
-
             }
             else if (enemyLocation != null) {
                 if(!seenEnemyLocation) {
