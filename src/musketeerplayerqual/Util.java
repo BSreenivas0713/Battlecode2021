@@ -44,6 +44,16 @@ public class Util {
         Direction.SOUTHEAST,
         Direction.SOUTHWEST,
     };
+    static final Direction[] scoutDirs = {
+        Direction.NORTH,
+        Direction.SOUTH,
+        Direction.WEST,
+        Direction.EAST,
+        Direction.NORTHWEST,
+        Direction.NORTHEAST,
+        Direction.SOUTHEAST,
+        Direction.SOUTHWEST,
+    };
 
     static final double spawnKillThreshold = 5;
     static final int dOffset = 64;
