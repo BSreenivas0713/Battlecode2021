@@ -107,13 +107,14 @@ public class RushPolitician extends Robot {
         if(/*enemyLocation != null && */currLoc.isWithinDistanceSquared(enemyLocation, actionRadius)) {
             Debug.println(Debug.info, "Close to EC; using heuristic for movement");
             main_direction = rc.getLocation().directionTo(enemyLocation);
-            if(tryMove(main_direction)) {
-                moveSemaphore = 2;
-            } else {
-                moveSemaphore--;
+            if(rc.isReady()) {
+                boolean moved = tryMove(main_direction) || tryMove(main_direction.rotateRight()) || tryMove(main_direction.rotateLeft());
+                if(moved) {
+                    moveSemaphore = 2;
+                } else {
+                    moveSemaphore--;
+                }
             }
-            tryMove(main_direction.rotateRight());
-            tryMove(main_direction.rotateLeft());
         } else /*if (enemyLocation != null) */{
             Debug.println(Debug.info, "Using gradient descent for movement");
             main_direction = Nav.gradientDescent();
