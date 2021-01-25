@@ -19,7 +19,6 @@ public class LatticeProtector extends Robot {
     static int turnLastSeenSlanderer;
     static Direction wallDirection = null;
     static boolean explorer = false;
-    static int stuckSemaphore = 50;
 
     
     public LatticeProtector(RobotController r) {
@@ -51,7 +50,7 @@ public class LatticeProtector extends Robot {
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
         if (rc.getTeamVotes() < 751 && rc.canEmpower(actionRadius)) {
-            if (rc.getRoundNum() >= 1495 || stuckSemaphore == 0) {
+            if (rc.getRoundNum() >= 1495) {
                 rc.empower(actionRadius);
             }
         }
@@ -399,12 +398,6 @@ public class LatticeProtector extends Robot {
                 main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
             }
             tryMove +=1;
-        }
-
-        if (rc.isReady()) {
-            stuckSemaphore--;
-        } else {
-            stuckSemaphore = 50;
         }
     }
 }
