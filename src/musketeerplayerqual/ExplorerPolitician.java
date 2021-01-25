@@ -7,7 +7,6 @@ import musketeerplayerqual.Debug.*;
 public class ExplorerPolitician extends Robot {
     static Direction main_direction;
     static boolean   toDetonate = false;
-    static int stuckSemaphore = 50;
 
     //TOCONSIDER: allow for these types to attack neutrals
     public ExplorerPolitician(RobotController r) {
@@ -36,7 +35,7 @@ public class ExplorerPolitician extends Robot {
         }
 
         if (rc.getTeamVotes() < 751 && rc.canEmpower(actionRadius)) {
-            if (rc.getRoundNum() >= 1495 || stuckSemaphore == 0) {
+            if (rc.getRoundNum() >= 1495) {
                 rc.empower(actionRadius);
             }
         }
@@ -205,11 +204,5 @@ public class ExplorerPolitician extends Robot {
                 tryMoveDest(main_direction);
             }
         }
-
-        if (rc.isReady()) {
-            stuckSemaphore--;
-        } else {
-            stuckSemaphore = 50;
-        } 
     }
 }
