@@ -54,6 +54,32 @@ public class RushPolitician extends Robot {
                     Nav.setDest(loc);
                 }
             }
+            if(rc.canGetFlag(homeID)) {
+                Debug.println(Debug.info, "Checking home flag");
+                int flag = rc.getFlag(homeID);
+                Comms.InformationCategory IC = Comms.getIC(flag);
+                switch(IC) {
+                    case ENEMY_EC:
+                        if(enemyLocation == null) {
+                            int[] dxdy = Comms.getDxDy(flag);
+                            MapLocation enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
+                            Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+
+                            Comms.GroupRushType GRtype = Comms.getRushType(flag);
+                            int GRmod = Comms.getRushMod(flag);
+                            Debug.println(Debug.info, "EC is sending a rush: Read ENEMY_EC flag. Type: " + GRtype + ", mod: " + GRmod);
+
+                            if((GRtype == Comms.GroupRushType.MUC || GRtype == Comms.GroupRushType.MUC_POL)) {
+                                Debug.println(Debug.info, "Joining the rush");
+                                enemyLocation = enemyLoc;
+                                Nav.setDest(enemyLocation);
+                            } else {
+                                Debug.println(Debug.info, "I was not included in this rush");
+                            }
+                        }
+                        break;
+                }
+            }
         } else {
             for(int i = enemyAttackable.length - 1; i >= 0; i--) {
                 robot = enemyAttackable[i];

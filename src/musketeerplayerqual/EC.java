@@ -823,17 +823,18 @@ public class EC extends Robot {
                 influence = 100; // getObesityInfluence()
                 toBuild = RobotType.POLITICIAN;
                 RushFlag rushFlag = ECflags.peek();
+                if(rushFlag == null){
+                    currentState = stateStack.pop();
+                    doStateAction();
+                    break;
+                }
                 if (buildRobot(toBuild, influence)) {
-                    if (rushFlag == null) {
-                        signalRobotType(Comms.SubRobotType.POL_FAT);
-                    } else {
-                        if(rushFlag.team == enemy) {
-                            nextFlag = Comms.getFlagRush(InformationCategory.ENEMY_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
-                                                        rushFlag.dx + Util.dOffset, rushFlag.dy + Util.dOffset);
-                        } else { 
-                            nextFlag = Comms.getFlagRush(InformationCategory.NEUTRAL_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
-                                                        rushFlag.dx + Util.dOffset, rushFlag.dy + Util.dOffset);
-                        }
+                    if(rushFlag.team == enemy) {
+                        nextFlag = Comms.getFlagRush(InformationCategory.ENEMY_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
+                                                    rushFlag.dx + Util.dOffset, rushFlag.dy + Util.dOffset);
+                    } else { 
+                        nextFlag = Comms.getFlagRush(InformationCategory.NEUTRAL_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
+                                                    rushFlag.dx + Util.dOffset, rushFlag.dy + Util.dOffset);
                     }
                 }
                 if (currInfluence <= 1000) {
