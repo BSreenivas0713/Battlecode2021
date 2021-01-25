@@ -12,12 +12,10 @@ public class RushPolitician extends Robot {
     
     public RushPolitician(RobotController r, MapLocation enemyLoc) {
         super(r);
-        /*if (enemyLoc.isAdjacentTo(r.getLocation())) { // Comment out the if case to render my changes irrelevant
-            enemyLocation = null;
-        } else {*/
-            enemyLocation = enemyLoc;
-            Nav.setDest(enemyLoc);
-        //}
+        enemyLocation = enemyLoc;
+        if (enemyLocation != null) {
+            Nav.setDest(enemyLocation);
+        }
         moveSemaphore = 2;
         subRobotType = Comms.SubRobotType.POL_RUSH;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
@@ -35,11 +33,11 @@ public class RushPolitician extends Robot {
 
         Debug.println(Debug.info, "I am a rush politician; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
-        //if (enemyLocation != null) {
+        if (enemyLocation != null) {
             Debug.println(Debug.info, "target map location: x:" + enemyLocation.x + ", y:" + enemyLocation.y);
-        /*} else {
+        } else {
             Debug.println(Debug.info, "I have no target. I will explore around...");
-        }*/
+        }
         Debug.println(Debug.info, "Semaphore: " + moveSemaphore);
 
         MapLocation currLoc = rc.getLocation();
@@ -47,7 +45,7 @@ public class RushPolitician extends Robot {
         RobotInfo robot;
         int minEnemyDistSquared = Integer.MAX_VALUE;
         MapLocation closestEnemy = null;
-        /*if (enemyLocation == null) {
+        if (enemyLocation == null) {
             for (int i = enemySensable.length - 1; i >= 0; i--) {
                 robot = enemySensable[i];
                 MapLocation loc = robot.getLocation();
@@ -56,7 +54,7 @@ public class RushPolitician extends Robot {
                     Nav.setDest(loc);
                 }
             }
-        } else {*/
+        } else {
             for(int i = enemyAttackable.length - 1; i >= 0; i--) {
                 robot = enemyAttackable[i];
                 MapLocation loc = robot.getLocation();
@@ -94,7 +92,7 @@ public class RushPolitician extends Robot {
                     }
                 }
             }
-        //}
+        }
         
         if (rc.canEmpower(minEnemyDistSquared) && (moveSemaphore <= 0 || minEnemyDistSquared <= 1)) {
             int radius = Math.min(actionRadius, minEnemyDistSquared);
@@ -104,7 +102,7 @@ public class RushPolitician extends Robot {
             return;
         }
 
-        if(/*enemyLocation != null && */currLoc.isWithinDistanceSquared(enemyLocation, actionRadius)) {
+        if(enemyLocation != null && currLoc.isWithinDistanceSquared(enemyLocation, actionRadius)) {
             Debug.println(Debug.info, "Close to EC; using heuristic for movement");
             main_direction = rc.getLocation().directionTo(enemyLocation);
             if(rc.isReady()) {
@@ -115,15 +113,15 @@ public class RushPolitician extends Robot {
                     moveSemaphore--;
                 }
             }
-        } else /*if (enemyLocation != null) */{
+        } else if (enemyLocation != null) {
             Debug.println(Debug.info, "Using gradient descent for movement");
             main_direction = Nav.gradientDescent();
             tryMoveDest(main_direction);
-        /*} else {
+        } else {
             main_direction = Nav.explore();
             if (main_direction != null) {
                 tryMoveDest(main_direction);
-            }*/
+            }
         }
 
         Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);

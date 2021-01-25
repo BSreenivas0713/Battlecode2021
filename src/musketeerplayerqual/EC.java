@@ -42,6 +42,7 @@ public class EC extends Robot {
         RUSHING_MUCKS,
         ABOUT_TO_DIE,
         BUILDING_BUFF_POLS,
+        OBESITY,
     };
 
     static class RushFlag implements Comparable<RushFlag> {
@@ -418,6 +419,10 @@ public class EC extends Robot {
                                 currentState = State.CHILLING;
                                 builtInAcceleratedCount = 0;
                             }
+                            else if (currInfluence > 2000 && currentState != State.OBESITY) {
+                                stateStack.push(currentState);
+                                currentState = State.OBESITY;
+                            }
                         }
                     }
                 }
@@ -732,6 +737,27 @@ public class EC extends Robot {
                     }
                 }
                 break;
+            case OBESITY:
+                influence = 100; // getObesityInfluence()
+                toBuild = RobotType.POLITICIAN;
+                RushFlag rushFlag = ECflags.peek();
+                if (buildRobot(toBuild, influence)) {
+                    if (rushFlag == null) {
+                        signalRobotType(Comms.SubRobotType.POL_FAT);
+                    } else {
+                        if(rushFlag.team == enemy) {
+                            nextFlag = Comms.getFlagRush(InformationCategory.ENEMY_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
+                                                        rushFlag.dx + Util.dOffset, rushFlag.dy + Util.dOffset);
+                        } else { 
+                            nextFlag = Comms.getFlagRush(InformationCategory.NEUTRAL_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
+                                                        rushFlag.dx + Util.dOffset, rushFlag.dy + Util.dOffset);
+                        }
+                    }
+                }
+                if (currInfluence <= 1000) {
+                    currentState = stateStack.pop();
+                }
+                break; 
             default:
                 currentState = State.CHILLING;
                 System.out.println("CRITICAL: Maxwell screwed up stateStack");
