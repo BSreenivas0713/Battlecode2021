@@ -1,10 +1,10 @@
-package musketeerplayerqual;
+package smarterecs;
 
 import battlecode.common.*;
 
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Comms.*;
-import musketeerplayerqual.Debug.*;
+import smarterecs.Util.*;
+import smarterecs.Comms.*;
+import smarterecs.Debug.*;
 
 public strictfp class RobotPlayer {
 
@@ -34,7 +34,7 @@ public strictfp class RobotPlayer {
                                 MapLocation spawningLoc = robot.getLocation();
                                 MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
                                 
-                                bot = new SupportRushPolitician(rc, enemyLoc);
+                                bot = new RushPolitician(rc, enemyLoc);
                                 break;
                             case TARGET_ROBOT:
                                 Comms.SubRobotType type = Comms.getSubRobotType(botFlag);
@@ -67,25 +67,6 @@ public strictfp class RobotPlayer {
                                         } else {
                                             bot = new ExplorerPolitician(rc);
                                         }
-                                        break;
-                                    case POL_HEAD:
-                                        int[] headDxDy = Comms.getDxDySubRobotType(botFlag);
-                                        MapLocation spawningLoc2 = robot.getLocation();
-                                        MapLocation enemyLoc2 = new MapLocation(headDxDy[0] + spawningLoc2.x - Util.dOffset, headDxDy[1] + spawningLoc2.y - Util.dOffset);
-                                        bot = new HeadRushPolitician(rc, enemyLoc2);
-                                        break;
-                                    case POL_SUPPORT:
-                                        int[] supportDxDy = Comms.getDxDySubRobotType(botFlag);
-                                        if (supportDxDy[0] == 0 && supportDxDy[1] == 0) {
-                                            // This shouldn't happen but just in case
-                                            bot = new LatticeProtector(rc);
-                                        } else {
-                                            MapLocation spawningLoc1 = robot.getLocation();
-                                            MapLocation enemyLoc1 = new MapLocation(supportDxDy[0] + spawningLoc1.x - Util.dOffset, supportDxDy[1] + spawningLoc1.y - Util.dOffset);
-                                            bot = new SupportRushPolitician(rc, enemyLoc1);
-                                        }
-                                    case POL_FAT:
-                                        bot = new RushPolitician(rc, null);
                                         break;
                                 }
                                 break;
