@@ -117,6 +117,8 @@ public class Util {
 
     static final int attackCallBoredom = 30;
 
+    static final int foundEnemyLocationBoredom = 20;
+
     /**
      * Returns a random Direction.
      *
