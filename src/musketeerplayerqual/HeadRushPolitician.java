@@ -137,7 +137,7 @@ public class HeadRushPolitician extends Robot {
                     moved = tryMove(main_direction) || tryMove(main_direction.rotateRight()) || tryMove(main_direction.rotateLeft());
                 }
                 if(moved) {
-                    moveSemaphore = 4;
+                    moveSemaphore = 5;
                 } else {
                     moveSemaphore--;
                 }

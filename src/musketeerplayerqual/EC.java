@@ -406,7 +406,7 @@ public class EC extends Robot {
                 // Override everything for a spawn kill. This is fine, as it only takes 1 turn
                 // and at most happens once every 10 turns.
                 // tryStartBuildingSpawnKill();
-                // tryStartBuildingBuffPols();
+                tryStartBuildingBuffPols();
 
                 if(currentState != State.BUILDING_BUFF_POLS) {
                     // If we have enough to rush a tower, make that the #1 priority
@@ -422,7 +422,7 @@ public class EC extends Robot {
                                 stateStack.push(currentState);
                             }
                             currentState = State.BETTER_RUSHING;
-                            rushingState = RushingState.SUPPORT1;
+                            rushingState = RushingState.MUCK;
                             currRushFlag = ECflags.peek();
                         }
                     }
@@ -673,8 +673,11 @@ public class EC extends Robot {
                         toBuild = RobotType.MUCKRAKER;
                         influence = currRushFlag.muckInf;
                         nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, currRushFlag.dx + Util.dOffset, currRushFlag.dy + Util.dOffset);
-                        if(buildRobot(toBuild, influence)) {
-                            rushingState = RushingState.RUSH;
+                        if(influence == 0) {
+                            rushingState = RushingState.SUPPORT1;
+                            doStateAction();
+                        } else if(buildRobot(toBuild, influence)) {
+                            rushingState = RushingState.SUPPORT1;
                         }
                         break;
                     case SUPPORT1:
@@ -689,9 +692,9 @@ public class EC extends Robot {
                     case RUSH:
                         toBuild = RobotType.POLITICIAN;
                         influence = currRushFlag.rushInf;
-                        // nextFlag = Comms.getFlagRush(InformationCategory.HEAD_RUSH, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
-                        //                             currRushFlag.dx + Util.dOffset, currRushFlag.dy + Util.dOffset);
-                        signalRobotTypeAndDxDy(Comms.SubRobotType.POL_HEAD, currRushFlag.dx, currRushFlag.dy);
+                        nextFlag = Comms.getFlagRush(InformationCategory.ENEMY_EC, (int)(4 * Math.random()), Comms.GroupRushType.MUC_POL, 
+                                                    currRushFlag.dx + Util.dOffset, currRushFlag.dy + Util.dOffset);
+                        // signalRobotTypeAndDxDy(Comms.SubRobotType.POL_HEAD, currRushFlag.dx, currRushFlag.dy);
                         if(buildRobot(toBuild, influence)) {
                             Debug.println("ECflags size: " + ECflags.size());
                             ECflags.remove(currRushFlag);
@@ -983,31 +986,31 @@ public class EC extends Robot {
     }
 
     public int getPoliticianInfluence() throws GameActionException {
-        // if(numPols > 10 && numPols % Util.buffPolFrequency == 0 && 
-        //     buffPolSet.size < Util.maxBuffPolNum && protectorIdSet.size > 2 * buffPolSet.size) {
-        //     System.out.println("Giving buff pol influence");
-        //     return Math.max(50, currInfluence / 10);
-        // } else {
-        //     return Math.max(20, currInfluence / 50);
-        // }
-        return Math.max(20, currInfluence / 50);
+        if(numPols > 10 && numPols % Util.buffPolFrequency == 0 && 
+            buffPolSet.size < Util.maxBuffPolNum && protectorIdSet.size > 2 * buffPolSet.size) {
+            System.out.println("Giving buff pol influence");
+            return Math.max(50, currInfluence / 10);
+        } else {
+            return Math.max(20, currInfluence / 50);
+        }
+        // return Math.max(20, currInfluence / 50);
     }
 
     public void makePolitician() throws GameActionException {
-        // if(numPols > 10 && numPols % Util.buffPolFrequency == 0 && 
-        //     buffPolSet.size < Util.maxBuffPolNum && protectorIdSet.size > 2 * buffPolSet.size) {
-        //     System.out.println("Making buff pol");
-        //     signalRobotType(Comms.SubRobotType.POL_BUFF);
-        // } else if(numPols % Util.explorerPolFrequency == 0) {
-        //     signalRobotType(Comms.SubRobotType.POL_EXPLORER);
-        // } else {
-        //     signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
-        // }
-        if(numPols % Util.explorerPolFrequency == 0) {
+        if(numPols > 10 && numPols % Util.buffPolFrequency == 0 && 
+            buffPolSet.size < Util.maxBuffPolNum && protectorIdSet.size > 2 * buffPolSet.size) {
+            System.out.println("Making buff pol");
+            signalRobotType(Comms.SubRobotType.POL_BUFF);
+        } else if(numPols % Util.explorerPolFrequency == 0) {
             signalRobotType(Comms.SubRobotType.POL_EXPLORER);
         } else {
             signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
         }
+        // if(numPols % Util.explorerPolFrequency == 0) {
+        //     signalRobotType(Comms.SubRobotType.POL_EXPLORER);
+        // } else {
+        //     signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
+        // }
     }
 
     public int getMuckrakerInfluence() throws GameActionException {
@@ -1128,7 +1131,7 @@ public class EC extends Robot {
                             // rushFlag = new RushFlag(currReqInf, dx, dy, flag, Team.NEUTRAL);
                             muckInf = 0;
                             supportInf = Math.min(100, Math.max(20, neededInf / 5));
-                            rushInf = neededInf * 2 + 10;
+                            rushInf = neededInf * 2 + 20;
                             currReqInf = rushInf + supportInf + muckInf;
                             rushFlag = new RushFlag(currReqInf, dx, dy, flag, Team.NEUTRAL,
                                                     muckInf, supportInf, rushInf);
@@ -1161,7 +1164,7 @@ public class EC extends Robot {
                             // muckInf = Math.max(20, neededInf / 4);
                             muckInf = 0;
                             supportInf = Math.min(100, Math.max(20, neededInf / 5));
-                            rushInf = neededInf * 2 + 10;
+                            rushInf = neededInf * 2 + 20;
                             currReqInf = rushInf + supportInf + muckInf;
                             rushFlag = new RushFlag(currReqInf, dx, dy, flag, rc.getTeam().opponent(),
                                                     muckInf, supportInf, rushInf);

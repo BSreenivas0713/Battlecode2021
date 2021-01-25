@@ -110,7 +110,7 @@ public class SupportRushPolitician extends Robot {
                     moved = tryMove(main_direction) || tryMove(main_direction.rotateRight()) || tryMove(main_direction.rotateLeft());
                 }
                 if(moved || (seenRushPol && !enemyLocation.equals(lastRusherLoc))) {
-                    moveSemaphore = 6;
+                    moveSemaphore = 10;
                 } else {
                     moveSemaphore--;
                 }

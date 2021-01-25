@@ -52,6 +52,27 @@ public class ExplorerMuckracker extends Robot {
             int flag = rc.getFlag(homeID);
             Comms.InformationCategory IC = Comms.getIC(flag);
             switch(IC) {
+                // case TARGET_ROBOT:
+                //     if(Comms.getSubRobotType(flag) == Comms.SubRobotType.POL_SUPPORT && enemyLocation == null) {
+                //         int[] dxdy = Comms.getDxDySubRobotType(flag);
+                //         MapLocation enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
+                //         Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+
+                //         int GRmod = (int)(Math.random() * 2);
+                //         Debug.println(Debug.info, "EC is sending a rush: Read POL_SUPPORT flag. Mod: " + GRmod);
+
+                //         if(GRmod == rc.getID() % 2) {
+                //             Debug.println(Debug.info, "Joining the rush");
+                //             locGotEnemyLocation = rc.getLocation();
+                //             enemyLocation = enemyLoc;
+                //             seenEnemyLocation = false;
+                //             isEnemyLocEC = true;
+                //             turnsSinceClosestDistanceDecreased = 0;
+                //             closestDistanceToDest = Integer.MAX_VALUE;
+                //         } else {
+                //             Debug.println(Debug.info, "I was not included in this rush");
+                //         }
+                //     }
                 case ENEMY_EC:
                     if(enemyLocation == null) {
                         int[] dxdy = Comms.getDxDy(flag);

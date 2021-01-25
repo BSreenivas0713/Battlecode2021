@@ -43,7 +43,7 @@ public class Comms {
         REPORTING_WALL,
         MY_LOC,
         DELETE_ENEMY_LOC,
-        // BUFF_MUCK,
+        BUFF_MUCK,
         RUSH_READY,
     }
 

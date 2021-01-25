@@ -442,7 +442,6 @@ public class Nav {
                     minCost = costs[i][j];
                     minLoc = map[i][j];
                 }
-                
             }
         }
         // System.out.println("Bytecode at find min exit" + Clock.getBytecodeNum());
