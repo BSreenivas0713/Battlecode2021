@@ -68,6 +68,9 @@ public strictfp class RobotPlayer {
                                             bot = new ExplorerPolitician(rc);
                                         }
                                         break;
+                                    case POL_FAT:
+                                        bot = new RushPolitician(rc, null);
+                                        break;
                                 }
                                 break;
                             default:
