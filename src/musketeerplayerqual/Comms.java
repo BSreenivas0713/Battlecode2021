@@ -19,6 +19,14 @@ public class Comms {
     //Old flag setup: CCCCCIIIIIXXXXXXXYYYYYYY
     //New flag setup: CCCCIIIIIIXXXXXXXYYYYYYY
 
+    static final int INF_BOUND_1 = 100;
+    static final int INF_BOUND_2 = 400;
+    static final int INF_BOUND_3 = 1000;
+    static final int INF_BOUND_4 = 2000;
+    static final int INF_BOUND_5 = 3500;
+    static final int INF_BOUND_6 = 5600;
+    static final int INF_BOUND_7 = 8000;
+
     public enum InformationCategory {
         EMPTY,                      // UNUSED BUT BREAKS IF REMOVED? TODO: LOOK INTO
         NEUTRAL_EC,
@@ -33,6 +41,7 @@ public class Comms {
         REPORTING_WALL,
         MY_LOC,
         DELETE_ENEMY_LOC,
+        BUFF_MUCK,
     }
 
     public enum SubRobotType {
@@ -197,6 +206,44 @@ public class Comms {
     public static int encodeInf(int inf) {
         return (int) Math.min(63, Math.floor(Math.log(inf / INF_SCALAR) / Math.log(Comms.INF_LOG_BASE)));
     }
+
+    // public static int getInf(int flag) {
+    //     int encodedInf = (flag & ~BIT_MASK_IC) >>> BIT_INF_OFFSET;
+        
+    //     if(encodedInf < 10) {
+    //         return encodedInf * INF_BOUND_1 / 10;
+    //     } else if(encodedInf < 20) {
+    //         return (encodedInf - 10) * ((INF_BOUND_2 - INF_BOUND_1) / 10) + INF_BOUND_1;
+    //     } else if(encodedInf < 30) {
+    //         return (encodedInf - 20) * ((INF_BOUND_3 - INF_BOUND_2) / 10) + INF_BOUND_2;
+    //     } else if(encodedInf < 40) {
+    //         return (encodedInf - 30) * ((INF_BOUND_4 - INF_BOUND_3) / 10) + INF_BOUND_3;
+    //     } else if(encodedInf < 50) {
+    //         return (encodedInf - 40) * ((INF_BOUND_5 - INF_BOUND_4) / 10) + INF_BOUND_4;
+    //     } else if(encodedInf < 60) {
+    //         return (encodedInf - 50) * ((INF_BOUND_6 - INF_BOUND_5) / 10) + INF_BOUND_5;
+    //     } else {
+    //         return (encodedInf - 60) * ((INF_BOUND_7 - INF_BOUND_6) / 4) + INF_BOUND_6;
+    //     }
+    // }
+
+    // public static int encodeInf(int inf) {
+    //     if(inf < INF_BOUND_1) {
+    //         return inf / 10;
+    //     } else if(inf < INF_BOUND_2) {
+    //         return (inf - INF_BOUND_1) / ((INF_BOUND_2 - INF_BOUND_1) / 10) + 10;
+    //     } else if(inf < INF_BOUND_3) {
+    //         return (inf - INF_BOUND_2) / ((INF_BOUND_3 - INF_BOUND_2) / 10) + 20;
+    //     } else if(inf < INF_BOUND_4) {
+    //         return (inf - INF_BOUND_3) / ((INF_BOUND_4 - INF_BOUND_3) / 10) + 30;
+    //     } else if(inf < INF_BOUND_5) {
+    //         return (inf - INF_BOUND_4) / ((INF_BOUND_5 - INF_BOUND_4) / 10) + 40;
+    //     } else if(inf < INF_BOUND_6) {
+    //         return (inf - INF_BOUND_5) / ((INF_BOUND_6 - INF_BOUND_5) / 10) + 50;
+    //     } else {
+    //         return Math.max(63, (inf - INF_BOUND_6) / ((INF_BOUND_7 - INF_BOUND_6) / 4) + 60);
+    //     }
+    // }
 
     // DO NOT USE WITH OR MUK_SCOUT
     public static SubRobotType getSubRobotType(int flag) {

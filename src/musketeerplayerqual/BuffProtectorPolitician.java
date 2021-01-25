@@ -45,11 +45,20 @@ public class BuffProtectorPolitician extends Robot {
         int maxEnemyAttackableDistSquared = Integer.MIN_VALUE;
         MapLocation farthestEnemyAttackable = null;
         int maxAttackableSize = 0;
+        RobotInfo closestBuffMuck = null;
+        int closestBuffMuckDist = Integer.MAX_VALUE;
+        int farthestAttackableEnemyDist = Integer.MIN_VALUE;
+        int temp;
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
             if (robot.getConviction() > maxAttackableSize) {
                 maxAttackableSize = robot.getConviction();
                 maxEnemyAttackableDistSquared = currLoc.distanceSquaredTo(robot.getLocation());
+            }
+
+            temp = currLoc.distanceSquaredTo(robot.getLocation());
+            if(temp > farthestAttackableEnemyDist) {
+                farthestAttackableEnemyDist = temp;
             }
         }
 
@@ -67,7 +76,13 @@ public class BuffProtectorPolitician extends Robot {
                 minMuckrakerDistance = currDistance;
             }
 
-            int temp = currLoc.distanceSquaredTo(robot.getLocation());
+            if(robot.getType() == RobotType.MUCKRAKER &&
+                closestBuffMuckDist > currLoc.distanceSquaredTo(robot.getLocation())) {
+                closestBuffMuckDist = currLoc.distanceSquaredTo(robot.getLocation());
+                closestBuffMuck = robot;
+            }
+
+            temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (temp < minDistSquared) {
                 minDistSquared = temp;
                 closestEnemy = robot;
@@ -108,20 +123,33 @@ public class BuffProtectorPolitician extends Robot {
         }
         
         /* Step by Step decision making*/
-        //empower if near 2 enemies or enemy is in sensing radius of our base
-        if ((maxAttackableSize >= rc.getInfluence() / 5)
-            && rc.canEmpower(maxEnemyAttackableDistSquared)) {
-            Debug.println(Debug.info, "Big enemy nearby");
-            Debug.setIndicatorLine(Debug.info, rc.getLocation(), farthestEnemyAttackable, 255, 150, 50);
-            rc.empower(maxEnemyAttackableDistSquared);
+        if ((closestBuffMuck != null && closestBuffMuck.getConviction() >= rc.getConviction() / 3)
+            && rc.canEmpower(closestBuffMuckDist)) {
+            Debug.println(Debug.info, "Big enemy nearby: Empowering with radius: " + closestBuffMuckDist);
+            Debug.setIndicatorLine(Debug.info, rc.getLocation(), closestBuffMuck.getLocation(), 255, 150, 50);
+            rc.empower(closestBuffMuckDist);
+            return;
+        }
+        
+        if(enemyAttackable.length >= 3 && rc.canEmpower(farthestAttackableEnemyDist)) {
+            Debug.println(Debug.info, "Lots of enemies nearby: Empowering with radius: " + farthestAttackableEnemyDist);
+            rc.empower(farthestAttackableEnemyDist);
             return;
         }
 
         // This means that the first half of an EC-ID/EC-ID broadcast finished.
         if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
 
+        if(closestBuffMuck != null) {
+            Debug.println("Moving towards a buff muck");
+            Direction toMove = currLoc.directionTo(closestBuffMuck.getLocation());
+            Direction[] orderedDirs = Nav.greedyDirection(toMove, rc);
+            for(Direction dir : orderedDirs) {
+                tryMove(dir);
+            }
+        }
         //moves out of sensor radius of Enlightenment Center
-        if (ECNearby) {
+        else if (ECNearby) {
             Debug.println(Debug.info, "I am moving away from the base");
             Direction toMove = Util.rotateInSpinDirection(spinDirection, rc.getLocation().directionTo(home).opposite());
             tryMoveDest(toMove);
@@ -135,13 +163,28 @@ public class BuffProtectorPolitician extends Robot {
         }
 
         //Rotates around the base
-        int tryMove = 0;
+        boolean switchedDirection = false;
         Debug.println(Debug.info, "I am rotating around the base");
-        while (!tryMoveDest(main_direction) && rc.isReady() && tryMove <= 1){
+        Direction[] orderedDirs = {main_direction, main_direction.rotateLeft(), main_direction.rotateRight()};
+        for(Direction dir : orderedDirs) {
+            MapLocation target = rc.getLocation().add(dir);
+            if(!rc.onTheMap(target)) {
+                switchedDirection = true;
+                break;
+            } else {
+                tryMove(dir);
+            }
+        }
+
+        if(switchedDirection && rc.isReady()) {
             Debug.println(Debug.info, "I am switching rotation direction");
             spinDirection = Util.switchSpinDirection(spinDirection);
             main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc));
-            tryMove +=1;
+
+            orderedDirs = new Direction[]{main_direction, main_direction.rotateRight(), main_direction.rotateLeft()};
+            for(Direction dir : orderedDirs) {
+                tryMove(dir);
+            }
         }
     }
 }
