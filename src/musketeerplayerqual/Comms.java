@@ -16,6 +16,8 @@ public class Comms {
     static final int BIT_MASK_SMALL_COORD = 0xF;
     static final int BIT_MASK_DIR = 0xF;
     static final int BIT_FRIEND_OFFSET = 2;
+    static final int BIT_MASK_SUBROBOTTYPE = 0x1F;
+    static final int BIT_WITH_SUBROBOTTYPE_OFFSET = 5;
     //Old flag setup: CCCCCIIIIIXXXXXXXYYYYYYY
     //New flag setup: CCCCIIIIIIXXXXXXXYYYYYYY
 
@@ -41,7 +43,8 @@ public class Comms {
         REPORTING_WALL,
         MY_LOC,
         DELETE_ENEMY_LOC,
-        BUFF_MUCK,
+        // BUFF_MUCK,
+        RUSH_READY,
     }
 
     public enum SubRobotType {
@@ -53,6 +56,8 @@ public class Comms {
         POL_GOLEM,
         POL_CLEANUP,
         POL_BUFF,
+        POL_SUPPORT,
+        POL_HEAD,
         SLANDERER,
         MUC_HUNTER,
         MUC_EXPLORER,
@@ -125,10 +130,6 @@ public class Comms {
         return (cat.ordinal() << BIT_IC_OFFSET) + (turnCount << BIT_TURNCOUNT_OFFSET) + (dx << BIT_SMALL_DX_OFFSET) + dy;
     }
 
-    public static int getFlag(InformationCategory cat, SubRobotType type, int dx, int dy) {
-        return getFlag(cat, type.ordinal(), dx, dy);
-    }
-
     public static int getFlag(InformationCategory cat, int turnCount, Direction avgDirection) {
         return getFlag(cat, turnCount, avgDirection.ordinal());
     }
@@ -145,6 +146,11 @@ public class Comms {
     // TARGET_ROBOT / ROBOT_TYPE
     public static int getFlag(InformationCategory cat, SubRobotType type) {
         return getFlag(cat, 0, type.ordinal());
+    }
+
+    public static int getFlag(InformationCategory cat, SubRobotType type, int dx, int dy) {
+        return (cat.ordinal() << BIT_IC_OFFSET) + (dx << BIT_WITH_SUBROBOTTYPE_OFFSET << BIT_DX_OFFSET) +
+                (dy << BIT_WITH_SUBROBOTTYPE_OFFSET) + type.ordinal();
     }
 
     public static int getFlag(InformationCategory cat) {
@@ -175,6 +181,13 @@ public class Comms {
         int[] res = new int[2];
         res[0] = (flag >>> BIT_DX_OFFSET) & BIT_MASK_COORD;
         res[1] = flag & BIT_MASK_COORD;
+        return res;
+    }
+
+    public static int[] getDxDySubRobotType(int flag) {
+        int[] res = new int[2];
+        res[0] = (flag >>> BIT_DX_OFFSET >>> BIT_WITH_SUBROBOTTYPE_OFFSET) & BIT_MASK_COORD;
+        res[1] = (flag >>> BIT_WITH_SUBROBOTTYPE_OFFSET) & BIT_MASK_COORD;
         return res;
     }
 
@@ -247,11 +260,11 @@ public class Comms {
 
     // DO NOT USE WITH OR MUK_SCOUT
     public static SubRobotType getSubRobotType(int flag) {
-        return SubRobotType.values()[(flag & BIT_MASK_COORDS)];
+        return SubRobotType.values()[(flag & BIT_MASK_SUBROBOTTYPE)];
     }
 
     public static SubRobotType getSubRobotTypeScout(int flag) {
-        return SubRobotType.values()[(flag & BIT_MASK_COORDS)];
+        return SubRobotType.values()[(flag & BIT_MASK_SUBROBOTTYPE)];
     }
 
     public static Direction getDirection(int flag) {
@@ -309,6 +322,8 @@ public class Comms {
                 }
             case ENEMY_FOUND:
                 return getIsSla(flag) == IsSla.YES && type == SubRobotType.SLANDERER;
+            case RUSH_READY:
+                return type == SubRobotType.POL_HEAD;
             default:
                 return false;
         }
