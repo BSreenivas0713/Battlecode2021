@@ -84,6 +84,7 @@ public strictfp class RobotPlayer {
                                             MapLocation enemyLoc1 = new MapLocation(supportDxDy[0] + spawningLoc1.x - Util.dOffset, supportDxDy[1] + spawningLoc1.y - Util.dOffset);
                                             bot = new SupportRushPolitician(rc, enemyLoc1);
                                         }
+                                        break;
                                     case POL_FAT:
                                         bot = new RushPolitician(rc, null);
                                         break;
