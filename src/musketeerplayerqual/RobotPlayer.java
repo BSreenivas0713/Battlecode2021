@@ -34,7 +34,7 @@ public strictfp class RobotPlayer {
                                 MapLocation spawningLoc = robot.getLocation();
                                 MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
                                 
-                                bot = new SupportRushPolitician(rc, enemyLoc);
+                                bot = new HeadRushPolitician(rc, enemyLoc);
                                 break;
                             case TARGET_ROBOT:
                                 Comms.SubRobotType type = Comms.getSubRobotType(botFlag);
