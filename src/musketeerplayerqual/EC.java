@@ -88,6 +88,7 @@ public class EC extends Robot {
     static int robotCounter;
     static RobotType toBuild;
     static int influence;
+    static int maxUsableInfluence;
     static int cleanUpCount;
     static int currRoundNum;
     static int numMucks;
@@ -257,6 +258,8 @@ public class EC extends Robot {
 
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
         Debug.println(Debug.info, "Trying to build robot of type: " + toBuild + " influence: " + influence);
+        Debug.println("Max usable influence: " + maxUsableInfluence);
+        influence = Math.min(maxUsableInfluence, influence);
         DirectionPreference pref = DirectionPreference.RANDOM;
         if(currentState == State.BUILDING_SPAWNKILLS || spawnKillLock < 10) {
             pref = DirectionPreference.ORTHOGONAL;
@@ -348,9 +351,7 @@ public class EC extends Robot {
 
         int[] nearStuff = checkIfMuckrakerNear();
         muckrakerNear = (nearStuff[0] == 1);
-        if (nearStuff[1] > currInfluence) {
-            enemyRushPolInf = nearStuff[1];
-        }
+        enemyRushPolInf = nearStuff[1];
 
         processFriendlyECFlags();
         processLocalFlags();
@@ -365,14 +366,13 @@ public class EC extends Robot {
             }
         }
         
-
         goToAcceleratedSlanderersState = true;
         //goToAcceleratedSlanderer gets set to false if there is an enemy within 2 sensor radiuses of the base
         if(enemySensable.length > 0 || currInfluence > Util.buildSlandererThreshold) { //also set to false if we sense an enemy in our base or we have enough influence
             goToAcceleratedSlanderersState = false;
         }
 
-        if (enemyRushPolInf == 0) {
+        if (enemyRushPolInf * rc.getEmpowerFactor(enemy, 0) <= currInfluence) {
             if(currentState == State.STUCKY_MUCKY) {
                 currentState = getInitialState();
             }
@@ -427,7 +427,6 @@ public class EC extends Robot {
             currentState = State.ABOUT_TO_DIE;
         }
         
-
         // At this point, state is either RUSHING, SAVING, BUILDING (spawn kill or protectors),or CLEANUP
         // At most, two things have been pushed to the state stack, the previous state, and whatever protectors overrode.
 
@@ -448,6 +447,7 @@ public class EC extends Robot {
             }
         }
 
+        maxUsableInfluence = Math.max(1, currInfluence - enemyRushPolInf / 2);
 
         builtRobot = false;
 
@@ -467,7 +467,21 @@ public class EC extends Robot {
         else {
             Debug.println(Debug.info, "flag queue is empty");
         }
+        Debug.println("Enemy Rush pol: " + enemyRushPolInf);
 
+        doStateAction();
+
+        // If we didn't build a bot, then we can use nextFlag safely
+        if(!flagQueue.isEmpty() && !builtRobot) {
+            nextFlag = flagQueue.poll();
+        }
+
+        prevState = currentState;
+
+        Debug.println(Debug.info, "next flag that will be set: " + nextFlag);
+    }
+
+    public void doStateAction() throws GameActionException {
         switch(currentState) {
             case INIT: 
                 firstRounds();
@@ -477,6 +491,13 @@ public class EC extends Robot {
                 influence = 1;
                 dyingSemaphore--;
                 buildRobot(toBuild, influence);
+                if(rc.isReady()) {
+                    Debug.println("Robots in orthogonal directions already, executing the turn for the last state");
+                    currentState = stateStack.pop();
+                    dyingSemaphore = dyingSemaphoreDefault;
+                    doStateAction();
+                    break;
+                }
                 if (dyingSemaphore == 0) {
                     currentState = stateStack.pop();
                     dyingSemaphore = dyingSemaphoreDefault;
@@ -716,15 +737,6 @@ public class EC extends Robot {
                 System.out.println("CRITICAL: Maxwell screwed up stateStack");
                 break;
         }
-
-        // If we didn't build a bot, then we can use nextFlag safely
-        if(!flagQueue.isEmpty() && !builtRobot) {
-            nextFlag = flagQueue.poll();
-        }
-
-        prevState = currentState;
-
-        Debug.println(Debug.info, "next flag that will be set: " + nextFlag);
     }
 
     public Direction findClosestWall() throws GameActionException {
