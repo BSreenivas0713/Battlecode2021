@@ -82,7 +82,7 @@ public strictfp class RobotPlayer {
                 if(bot != null)
                     break;
                 //TODO: write rush muckraker.
-                System.out.println("CRITICAL: Did not find flag directing type");
+                // System.out.println("CRITICAL: Did not find flag directing type");
                 if (foundHome) {
                     bot = new LatticeProtector(rc);
                 }
@@ -112,13 +112,15 @@ public strictfp class RobotPlayer {
                                 break;
                             case TARGET_ROBOT:
                                 Comms.SubRobotType subType = Comms.getSubRobotTypeScout(botFlag);
-                                if (subType == Comms.SubRobotType.MUC_SCOUT) {
-                                    Direction dirToMove = Comms.getScoutDirection(botFlag);
-                                    bot = new ScoutMuckraker(rc, dirToMove);
-                                } else if (subType == Comms.SubRobotType.MUC_SURVIVAL) {
-                                    bot = new SurvivalMuckracker(rc);
+                                switch(subType) {
+                                    case MUC_SCOUT:
+                                        Direction dirToMove = Comms.getScoutDirection(botFlag);
+                                        bot = new ScoutMuckraker(rc, dirToMove);
+                                        break;
+                                    case MUC_SURVIVAL:
+                                        bot = new SurvivalMuckracker(rc);
+                                        break;
                                 }
-                                
                                 break;
                             default:
                                 break;
