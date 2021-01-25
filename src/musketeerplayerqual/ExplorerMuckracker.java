@@ -7,10 +7,13 @@ import musketeerplayerqual.fast.FastIterableLocSet;
 
 public class ExplorerMuckracker extends Robot {
     static Direction main_direction;
+    static MapLocation locGotEnemyLocation;
     static MapLocation enemyLocation;
     static int turnsSinceClosestDistanceDecreased;
     static int closestDistanceToDest;
     static boolean seenEnemyLocation;
+    static boolean isEnemyLocEC;
+    static int turnFoundEnemyLoc;
     static RotationDirection spinDirection = Util.RotationDirection.COUNTERCLOCKWISE;
 
     public ExplorerMuckracker(RobotController r) {
@@ -21,6 +24,7 @@ public class ExplorerMuckracker extends Robot {
         turnsSinceClosestDistanceDecreased = 0;
         closestDistanceToDest = Integer.MAX_VALUE;
         seenEnemyLocation = false;
+        isEnemyLocEC = true;
     }
 
     public ExplorerMuckracker(RobotController r, MapLocation h, int hID) {
@@ -38,28 +42,9 @@ public class ExplorerMuckracker extends Robot {
 
         Debug.println(Debug.info, "I am an explorer mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
-        if(enemyLocation != null) {
-            Debug.println(Debug.info, "enemy location: " + enemyLocation);
-        }
+
         if(main_direction == null){
             main_direction = Util.randomDirection();
-        }
-
-        boolean setChillFlag = false;
-        boolean setAttackFlag = false;
-
-        if(enemyLocation != null && rc.canSenseLocation(enemyLocation) ) {
-            RobotInfo supposedToBeAnEC = rc.senseRobotAtLocation(enemyLocation);
-            if(supposedToBeAnEC == null || supposedToBeAnEC.getType() != RobotType.ENLIGHTENMENT_CENTER) {
-                Debug.println(Debug.info, "Enemy EC not found, setting chill flag, reseting enemyLocation");
-                Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
-                
-                int dx = enemyLocation.x - currLoc.x;
-                int dy = enemyLocation.y - currLoc.y;
-                
-                enemyLocation = null;
-                seenEnemyLocation = false;
-            }
         }
 
         if(rc.canGetFlag(homeID)) {
@@ -80,8 +65,10 @@ public class ExplorerMuckracker extends Robot {
                         if((GRtype == Comms.GroupRushType.MUC || GRtype == Comms.GroupRushType.MUC_POL) && 
                             GRmod == rc.getID() % 2) {
                             Debug.println(Debug.info, "Joining the rush");
+                            locGotEnemyLocation = rc.getLocation();
                             enemyLocation = enemyLoc;
                             seenEnemyLocation = false;
+                            isEnemyLocEC = true;
                             turnsSinceClosestDistanceDecreased = 0;
                             closestDistanceToDest = Integer.MAX_VALUE;
                         } else {
@@ -103,8 +90,10 @@ public class ExplorerMuckracker extends Robot {
                         if(enemyType == Comms.EnemyType.SLA && 
                             GRmod == rc.getID() % 2) {
                             Debug.println(Debug.info, "Following the slanderer");
+                            locGotEnemyLocation = rc.getLocation();
                             enemyLocation = enemyLoc;
                             seenEnemyLocation = false;
+                            isEnemyLocEC = true;
                             turnsSinceClosestDistanceDecreased = 0;
                             closestDistanceToDest = Integer.MAX_VALUE;
                         } else {
@@ -118,8 +107,10 @@ public class ExplorerMuckracker extends Robot {
                         MapLocation enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
 
                         if(enemyLocation.equals(enemyLoc)) {
+                            locGotEnemyLocation = null;
                             enemyLocation = null;
                             seenEnemyLocation = false;
+                            isEnemyLocEC = true;
                         }
                     }
                     break;
@@ -158,8 +149,10 @@ public class ExplorerMuckracker extends Robot {
                     inActionRadiusOfFriendly = true;
                 }
                 if(enemyLocation != null && robot.getLocation().equals(enemyLocation)) {
+                    locGotEnemyLocation = null;
                     enemyLocation = null;
                     seenEnemyLocation = false;
+                    isEnemyLocEC = true;
                     Debug.println("Base has been captured. EnemyLocation is null");
                 }
             }
@@ -213,49 +206,72 @@ public class ExplorerMuckracker extends Robot {
         else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
         else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
         
-        if (bestSlanderer != null) {
-            main_direction = currLoc.directionTo(bestSlanderer.getLocation());
+        if(enemyLocation != null && seenEnemyLocation && !isEnemyLocEC &&
+            rc.getRoundNum() > turnFoundEnemyLoc + Util.foundEnemyLocationBoredom) {
+            locGotEnemyLocation = null;
+            enemyLocation = null;
+            seenEnemyLocation = false;
+            isEnemyLocEC = true;
+            Debug.println("Got bored of following direction past enemyLocation. Deleting enemyLocation.");
         }
-
-        if(!muckraker_Found_EC){
+        
+        if (disperseBot != null) {
+            main_direction = currLoc.directionTo(disperseBot.getLocation()).opposite();
+            tryMoveDest(main_direction);
+            Debug.println(Debug.info, "Dispersing to avoid rusher.");
+        }
+        else if(!muckraker_Found_EC){
             if (bestSlanderer != null) {
                 main_direction = currLoc.directionTo(bestSlanderer.getLocation());
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), bestSlanderer.getLocation(), 255, 150, 50);
                 tryMoveDest(main_direction);
                 Debug.println(Debug.info, "Moving towards a slanderer");
             }
-            else if (disperseBot != null) {
-                main_direction = currLoc.directionTo(disperseBot.getLocation()).opposite();
-                tryMoveDest(main_direction);
-                Debug.println(Debug.info, "Dispersing to avoid rusher.");
-            }
             else if (spawnKillRunFromHome) {
                 main_direction = currLoc.directionTo(home).opposite();
                 tryMoveDest(main_direction);
                 Debug.println(Debug.info, "Moving away from home");
-
             }
             else if (enemyLocation != null) {
-                if(!seenEnemyLocation) {
-                    seenEnemyLocation = rc.canSenseLocation(enemyLocation);
+                if(!seenEnemyLocation && rc.canSenseLocation(enemyLocation)) {
+                    RobotInfo supposedToBeAnEC = rc.senseRobotAtLocation(enemyLocation);
+                    if(supposedToBeAnEC == null || supposedToBeAnEC.getType() != RobotType.ENLIGHTENMENT_CENTER) {
+                        Debug.println(Debug.info, "Enemy EC not found, going in the enemy direction for 20 turns");
+                        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
+                        
+                        int dx = enemyLocation.x - currLoc.x;
+                        int dy = enemyLocation.y - currLoc.y;
+        
+                        isEnemyLocEC = false;
+                    } else {
+                        Debug.println("Enemy EC found");
+                    }
+
+                    seenEnemyLocation = true;
+                    turnFoundEnemyLoc = rc.getRoundNum();
                 }
 
                 boolean rotating = false;
                 if(seenEnemyLocation) {
-                    if(rc.getLocation().distanceSquaredTo(enemyLocation) <= actionRadius) {
-                        main_direction = rc.getLocation().directionTo(enemyLocation).opposite();
-                        Debug.println(Debug.info, "I moving away from the enemy location");
-                    } else if(closest_muk_dist <= 4) {
-                        main_direction = rc.getLocation().directionTo(closest_muk.getLocation()).opposite();
-                        Debug.println(Debug.info, "I moving away from another muck");
+                    if(isEnemyLocEC) {
+                        if(rc.getLocation().distanceSquaredTo(enemyLocation) <= actionRadius) {
+                            main_direction = rc.getLocation().directionTo(enemyLocation).opposite();
+                            Debug.println(Debug.info, "I moving away from the enemy location");
+                        } else if(closest_muk_dist <= 4 && rc.getInfluence() < Util.smallMuckThreshold) {
+                            main_direction = rc.getLocation().directionTo(closest_muk.getLocation()).opposite();
+                            Debug.println(Debug.info, "I moving away from another muck");
+                        } else {
+                            rotating = true;
+                            main_direction = Util.rightOrLeftTurn(spinDirection, enemyLocation.directionTo(currLoc)); //Direction if we only want to rotate around the base
+                            Debug.println(Debug.info, "I am rotating around the base");
+                        }
                     } else {
-                        rotating = true;
-                        main_direction = Util.rightOrLeftTurn(spinDirection, enemyLocation.directionTo(currLoc)); //Direction if we only want to rotate around the base
-                        Debug.println(Debug.info, "I am rotating around the base");
+                        main_direction = locGotEnemyLocation.directionTo(enemyLocation);
+                        Debug.println("Enemy location is not an EC: Continuing past enemyLocation for a few turns");
                     }
                 } else {
                     main_direction = rc.getLocation().directionTo(enemyLocation);
-                    Debug.println(Debug.info, "I am going straight to the base");
+                    Debug.println(Debug.info, "I am going straight to the enemy location: " + main_direction);
                 }
 
                 Direction[] orderedDirs = Nav.greedyDirection(main_direction, rc);
@@ -264,7 +280,7 @@ public class ExplorerMuckracker extends Robot {
                     moved = moved || tryMove(dir);
                 }
 
-                if(!moved && rotating) {
+                if(!moved && rotating && rc.isReady()) {
                     Debug.println(Debug.info, "I am switching rotation direction");
                     spinDirection = Util.switchSpinDirection(spinDirection);
                     main_direction = Util.rightOrLeftTurn(spinDirection, enemyLocation.directionTo(currLoc));
@@ -276,7 +292,14 @@ public class ExplorerMuckracker extends Robot {
                         }
                     }
                 }
+
                 if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
+                    tryMoveDest(main_direction);
+                }
+
+                if(!moved && rc.isReady()) {
+                    Debug.println("Failed to move. Continuing towards/past enemy location");
+                    main_direction = locGotEnemyLocation.directionTo(enemyLocation);
                     tryMoveDest(main_direction);
                 }
 
@@ -297,7 +320,7 @@ public class ExplorerMuckracker extends Robot {
                     }
                 }
                 
-                Debug.println(Debug.info, "Prioritizing hunting base at " + enemyLocation + ". Boredom: " + turnsSinceClosestDistanceDecreased);
+                Debug.println(Debug.info, "Prioritizing hunting enemy at " + enemyLocation + ". Boredom: " + turnsSinceClosestDistanceDecreased);
                 Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
             }
             else {

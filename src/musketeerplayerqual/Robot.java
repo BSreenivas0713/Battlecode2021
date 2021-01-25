@@ -319,6 +319,14 @@ public class Robot {
             flag = Comms.getFlagEnemyFound(InformationCategory.ENEMY_FOUND, IsSla.NO, type, enemyDx + Util.dOffset, enemyDy + Util.dOffset);
         }
 
+        // if(rc.canSenseLocation(enemyLoc)) {
+        //     RobotInfo robot = rc.senseRobotAtLocation(enemyLoc);
+        //     int conviction = robot.getConviction();
+        //     if(robot.getType() == RobotType.MUCKRAKER && conviction > 50) {
+        //         flag = Comms.getFlag(InformationCategory.BUFF_MUCK, Comms.encodeInf(conviction), enemyDx + Util.dOffset, enemyDy + Util.dOffset);
+        //     }
+        // }
+
         setFlag(flag);
 
         return true;
