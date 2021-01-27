@@ -110,11 +110,7 @@ public class RushPolitician extends Robot {
                     robot = friendlySensable[i];
                     MapLocation loc = robot.getLocation();
                     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 8)) {
-                        int dist = currLoc.distanceSquaredTo(loc);
-                        if(dist < minEnemyDistSquared) {
-                            minEnemyDistSquared = dist;
-                            closestEnemy = loc;
-                        }
+                        enemyLocation = null;
                     }
                 }
             }

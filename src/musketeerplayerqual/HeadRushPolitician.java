@@ -76,6 +76,16 @@ public class HeadRushPolitician extends Robot {
             }
         }
 
+        if (distToEC == Integer.MAX_VALUE) {
+            for(int i = friendlySensable.length - 1; i >= 0; i--) {
+                robot = friendlySensable[i];
+                MapLocation loc = robot.getLocation();
+                if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 8)) {
+                    changeTo = new RushPolitician(rc, null);
+                }
+            }
+        }
+
         if(distToEC == Integer.MAX_VALUE) {
             distToEC = currLoc.distanceSquaredTo(enemyLocation);
         }
