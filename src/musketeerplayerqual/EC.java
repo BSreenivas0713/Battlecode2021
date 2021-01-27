@@ -988,6 +988,10 @@ public class EC extends Robot {
             buffPolSet.size < Util.maxBuffPolNum && protectorIdSet.size > 2 * buffPolSet.size) {
             System.out.println("Giving buff pol influence");
             return Math.max(50, currInfluence / 10);
+        } else if (currInfluence > 1500 && numPols % Util.acceleratedExplorerPolFrequency == 0) {
+            return Math.max(100, currInfluence / 20);
+        } else if (numPols % Util.explorerPolFrequency == 0 && currInfluence > 400) {
+            return Math.max(100, currInfluence / 20);
         } else {
             return Math.max(20, currInfluence / 50);
         }
@@ -999,8 +1003,9 @@ public class EC extends Robot {
             buffPolSet.size < Util.maxBuffPolNum && protectorIdSet.size > 2 * buffPolSet.size) {
             System.out.println("Making buff pol");
             signalRobotType(Comms.SubRobotType.POL_BUFF);
-        } else if(numPols % Util.explorerPolFrequency == 0) {
-            signalRobotType(Comms.SubRobotType.POL_EXPLORER);
+        } else if ((currInfluence > 1500 && numPols % Util.acceleratedExplorerPolFrequency == 0) ||
+            (numPols % Util.explorerPolFrequency == 0 && currInfluence > 400)) {
+            nextFlag = Comms.getFlagRush(InformationCategory.ENEMY_EC, 0, Comms.GroupRushType.MUC_POL, 0, 0);
         } else {
             signalRobotAndDirection(SubRobotType.POL_PROTECTOR, closestWall);
         }
