@@ -34,11 +34,7 @@ public class ExplorerPolitician extends Robot {
             main_direction = Util.randomDirection();
         }
 
-        if (rc.getTeamVotes() < 751 && rc.canEmpower(actionRadius)) {
-            if (rc.getRoundNum() >= 1495) {
-                rc.empower(actionRadius);
-            }
-        }
+        if (rc.getTeamVotes() < 751 && rc.getRoundNum() >= 1450) changeTo = new CleanupPolitician(rc, home, homeID);
         
         RobotInfo robot;
         int min_attackable_conviction = (rc.getConviction() - 10) / 3;

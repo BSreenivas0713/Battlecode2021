@@ -48,6 +48,8 @@ public class HeadRushPolitician extends Robot {
         int distToEC = Integer.MAX_VALUE;
         MapLocation closestEnemy = null;
 
+        if (rc.getTeamVotes() < 751 && rc.getRoundNum() >= 1450) changeTo = new CleanupPolitician(rc, home, homeID);
+
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
             MapLocation loc = robot.getLocation();
