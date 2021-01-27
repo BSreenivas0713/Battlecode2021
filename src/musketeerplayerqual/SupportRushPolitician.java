@@ -5,6 +5,10 @@ import battlecode.common.*;
 import musketeerplayerqual.Util.*;
 import musketeerplayerqual.Debug.*;
 
+/*
+ * TODO: Try to avoid the edge case of support pol being in front of the head rusher
+ * with no adjacent spot for the head rusher.
+ */
 public class SupportRushPolitician extends Robot {
     static MapLocation enemyLocation;
     static MapLocation ecLoc;
@@ -106,6 +110,8 @@ public class SupportRushPolitician extends Robot {
             main_direction = rc.getLocation().directionTo(enemyLocation);
             if(rc.isReady()) {
                 boolean moved = false;
+                // if(!currLoc.isWithinDistanceSquared(enemyLocation, 1) ||
+                //     (seeRushPol && currLoc.isAdjacentTo(ecLoc) && !enemyLocation.isAdjacentTo(ecLoc))) {
                 if(!currLoc.isWithinDistanceSquared(enemyLocation, 1)) {
                     moved = tryMove(main_direction) || tryMove(main_direction.rotateRight()) || tryMove(main_direction.rotateLeft());
                 }
