@@ -36,6 +36,8 @@ public class BuffProtectorPolitician extends Robot {
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         MapLocation currLoc = rc.getLocation();
 
+        if (rc.getTeamVotes() < 751 && rc.getRoundNum() >= 1450) changeTo = new CleanupPolitician(rc, home, homeID);
+
         main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc)); //Direction if we only want to rotate around the base
         /* Creating all the variables that we need to do the step by step decision making for later*/
 
