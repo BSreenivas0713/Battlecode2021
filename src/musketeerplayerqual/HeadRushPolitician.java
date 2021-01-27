@@ -80,8 +80,14 @@ public class HeadRushPolitician extends Robot {
             for(int i = friendlySensable.length - 1; i >= 0; i--) {
                 robot = friendlySensable[i];
                 MapLocation loc = robot.getLocation();
+                int dist = currLoc.distanceSquaredTo(loc);
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 8)) {
-                    changeTo = new RushPolitician(rc, null);
+                    if (robot.getConviction() > 50) {
+                        changeTo = new RushPolitician(rc, null);
+                    } else if (dist < distToEC) {
+                        distToEC = dist;
+                        closestEnemy = loc;
+                    }
                 }
             }
         }

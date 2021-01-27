@@ -109,8 +109,14 @@ public class RushPolitician extends Robot {
                 for(int i = friendlySensable.length - 1; i >= 0; i--) {
                     robot = friendlySensable[i];
                     MapLocation loc = robot.getLocation();
+                    int dist = currLoc.distanceSquaredTo(loc);
                     if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 8)) {
-                        enemyLocation = null;
+                        if (robot.getConviction() > 50) {
+                            enemyLocation = null;
+                        } else if (dist < minEnemyDistSquared) {
+                            minEnemyDistSquared = dist;
+                            closestEnemy = loc;
+                        }
                     }
                 }
             }
@@ -140,9 +146,16 @@ public class RushPolitician extends Robot {
             main_direction = Nav.gradientDescent();
             tryMoveDest(main_direction);
         } else {
-            main_direction = Nav.explore();
-            if (main_direction != null) {
-                tryMoveDest(main_direction);
+            Direction[] orderedDirs = Nav.exploreGreedy(rc);
+            boolean moved = false;
+            if(orderedDirs != null) {
+                for(Direction dir : orderedDirs) {
+                    moved = moved || tryMove(dir);
+                }
+                orderedDirs = Util.getOrderedDirections(main_direction);
+                for(Direction dir : orderedDirs) {
+                    moved = moved || tryMove(dir);
+                }
             }
         }
 
