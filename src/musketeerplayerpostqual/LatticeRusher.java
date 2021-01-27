@@ -29,6 +29,8 @@ public class LatticeRusher extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
+        if (rc.getTeamVotes() < 751 && rc.getRoundNum() >= 1450) changeTo = new CleanupPolitician(rc, home, homeID);
+
         Debug.println(Debug.info, "I am a Lattice Rusher; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
         Debug.println(Debug.info, "target map location: x:" + enemyLocation.x + ", y:" + enemyLocation.y);
