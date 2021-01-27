@@ -32,9 +32,12 @@ public strictfp class RobotPlayer {
                             case ENEMY_EC:
                                 int[] dxdy = Comms.getDxDy(botFlag);
                                 MapLocation spawningLoc = robot.getLocation();
-                                MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
-                                
-                                bot = new HeadRushPolitician(rc, enemyLoc);
+                                if (dxdy[0] == 0 && dxdy[1] == 0) {
+                                    bot = new RushPolitician(rc, null);
+                                } else {
+                                    MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
+                                    bot = new HeadRushPolitician(rc, enemyLoc);
+                                }
                                 break;
                             case TARGET_ROBOT:
                                 Comms.SubRobotType type = Comms.getSubRobotType(botFlag);
