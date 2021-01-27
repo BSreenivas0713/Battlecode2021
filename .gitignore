@@ -1,6 +1,7 @@
 dist/*
 build/*
 src/lectureplayer
+gradle.properties
 
 /matches
 /deploy/lib
