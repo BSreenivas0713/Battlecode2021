@@ -51,6 +51,8 @@ public class SupportRushPolitician extends Robot {
         int minEnemyDistOfRusher = Integer.MAX_VALUE;
         MapLocation closestEnemyToRusher = null;
 
+        if (rc.getTeamVotes() < 751 && rc.getRoundNum() >= 1450) changeTo = new CleanupPolitician(rc, home, homeID);
+
         boolean seeRushPol = false;
         if (currLoc.isWithinDistanceSquared(ecLoc, actionRadius) || seenRushPol) {
             for(int i = friendlySensable.length - 1; i >= 0; i--) {
