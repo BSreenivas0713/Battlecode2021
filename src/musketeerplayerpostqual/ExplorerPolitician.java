@@ -30,6 +30,8 @@ public class ExplorerPolitician extends Robot {
         Debug.println(Debug.info, "I am an explorer politician; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
+        if (rc.getTeamVotes() < 751 && rc.getRoundNum() >= 1450) changeTo = new CleanupPolitician(rc, home, homeID);
+
         if(main_direction == null){
             main_direction = Util.randomDirection();
         }
