@@ -40,6 +40,8 @@ public class RushPolitician extends Robot {
         }
         Debug.println(Debug.info, "Semaphore: " + moveSemaphore);
 
+        if (rc.getTeamVotes() < 751 && rc.getRoundNum() >= 1450) changeTo = new CleanupPolitician(rc, home, homeID);
+
         MapLocation currLoc = rc.getLocation();
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         RobotInfo robot;
