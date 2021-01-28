@@ -186,6 +186,7 @@ public class EC extends Robot {
 
     static int enemyRushPolInf;
     static int enemyBuffMuckInf;
+    static int enemyBuffMuckInfEntering;
     static int dyingSemaphore;
     static int dyingSemaphoreDefault;
     static double passabilityOfHome;
@@ -251,6 +252,7 @@ public class EC extends Robot {
 
         enemyRushPolInf = 0;
         enemyBuffMuckInf = 0;
+        enemyBuffMuckInfEntering = 0;
         passabilityOfHome = rc.sensePassability(home);
         dyingSemaphoreDefault = (int) (4.0 * (2.0 / passabilityOfHome));
         dyingSemaphore = dyingSemaphoreDefault;
@@ -409,7 +411,7 @@ public class EC extends Robot {
             goToAcceleratedSlanderersState = false;
         }
 
-        if (enemyRushPolInf * rc.getEmpowerFactor(enemy, 0) <= currInfluence) {
+        if ((enemyRushPolInf - 10) * rc.getEmpowerFactor(enemy, 0) <= currInfluence) {
             if(currentState == State.STUCKY_MUCKY) {
                 currentState = getInitialState();
             }
@@ -829,7 +831,11 @@ public class EC extends Robot {
                 buildRobot(toBuild, influence);
                 break;
             case BUILDING_BUFF_POLS:
-                influence = Math.max(50, currInfluence / 10);
+                if(builtInBuffPolsCount == 0) {
+                    influence = Math.max(50, Math.max(currInfluence / 10, enemyBuffMuckInfEntering + 10));
+                } else {
+                    influence = Math.max(50, currInfluence / 10);
+                }
                 toBuild = RobotType.POLITICIAN;
                 signalRobotType(Comms.SubRobotType.POL_BUFF);
                 if(buildRobot(toBuild, influence)) {
@@ -1074,6 +1080,7 @@ public class EC extends Robot {
             stateStack.push(currentState);
             currentState = State.BUILDING_BUFF_POLS;
             builtInBuffPolsCount = 0;
+            enemyBuffMuckInfEntering = enemyBuffMuckInf;
         }
     }
 

@@ -203,9 +203,7 @@ public class LatticeProtector extends Robot {
                         Debug.println("Found a pol closer to my closest muck");
                         amClosestPolToClosestMuck = false;
                     }
-                } else if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_ACTIVE_RUSH) || 
-                Comms.isSubRobotType(flag, Comms.SubRobotType.POL_HEAD) ||
-                Comms.isSubRobotType(flag, Comms.SubRobotType.POL_SUPPORT)) {
+                } else if(Comms.isRusher(flag)) {
                     Debug.println(Debug.info, "Found a rusher.");
                     rusherLoc = robot.getLocation();
                 }

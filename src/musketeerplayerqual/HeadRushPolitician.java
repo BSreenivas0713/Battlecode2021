@@ -107,9 +107,10 @@ public class HeadRushPolitician extends Robot {
         }
 
         if((distToEC <= 1 || moveSemaphore <= 0) && rc.isReady()) {
-            defaultFlag = Comms.getFlag(Comms.InformationCategory.RUSH_READY);
+            subRobotType = Comms.SubRobotType.POL_HEAD_READY;
+            defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
             nextFlag = defaultFlag;
-            setFlag(defaultFlag);
+            setFlag(nextFlag);
             readyToEmpower = true;
         }
 
@@ -130,6 +131,9 @@ public class HeadRushPolitician extends Robot {
                     if(rc.canGetFlag(robot.getID())) {
                         int flag = rc.getFlag(robot.getID());
                         if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_SUPPORT)) {
+                            if(!seenSupportPol) {
+                                readySemaphore = 10;
+                            }
                             seenSupportPol = true;
                             seeSupportPol = true;
                         }
@@ -142,20 +146,34 @@ public class HeadRushPolitician extends Robot {
             if(rc.isReady()) {
                 readySemaphore--;
             }
-            broadcastSlanderers();
             Debug.println("In empower position but waiting for support pol. readySemaphore: " + readySemaphore);
+            Debug.println("Seen support: " + seenSupportPol + ", See support: " + seeSupportPol);
+        } else {
+            broadcastSlanderers();
         }
         
-        if (rc.canEmpower(distToEC) && 
-        ((readyToEmpower && seenSupportPol && !seeSupportPol) || 
-        (readySemaphore <= 0) ||
-        (rc.senseNearbyRobots(distToEC).length == 1) ||
-        canConvertEC)) {
-            int radius = Math.min(actionRadius, distToEC);
-            Debug.println(Debug.info, "Empowered with radius: " + radius);
-            Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
-            rc.empower(radius);
-            return;
+        if (rc.canEmpower(distToEC)) {
+            if(readyToEmpower && seenSupportPol && !seeSupportPol) {
+                Debug.println(Debug.info, "Support pol empowered. Empowered with radius: " + distToEC);
+                Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
+                rc.empower(distToEC);
+                return;
+            // } else if(canConvertEC) {
+            //     Debug.println(Debug.info, "Can convert EC immediately. Empowered with radius: " + distToEC);
+            //     Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
+            //     rc.empower(distToEC);
+            //     return;
+            } else if(rc.senseNearbyRobots(distToEC).length == 1) {
+                Debug.println(Debug.info, "Only EC in attack radius. Empowered with radius: " + distToEC);
+                Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
+                rc.empower(distToEC);
+                return;
+            } else if(readySemaphore <= 0) {
+                Debug.println(Debug.info, "Ready semaphore <= 0. Empowered with radius: " + distToEC);
+                Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
+                rc.empower(distToEC);
+                return;
+            }
         }
 
         if(currLoc.isWithinDistanceSquared(enemyLocation, actionRadius)) {
@@ -178,6 +196,7 @@ public class HeadRushPolitician extends Robot {
             tryMoveDest(main_direction);
         }
 
+        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
         Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
     }
 }

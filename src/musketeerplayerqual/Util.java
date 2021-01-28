@@ -114,7 +114,7 @@ public class Util {
     static final int acceleratedExplorerPolFrequency = 3;
     static final int buffPolFrequency = 8;
     static final int maxBuffPolNum = 8;
-    static final int maxBuffPolsInARow = 4;
+    static final int maxBuffPolsInARow = 3;
 
     static final int attackCallBoredom = 30;
 

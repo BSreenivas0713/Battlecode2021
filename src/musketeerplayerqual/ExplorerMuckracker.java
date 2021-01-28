@@ -182,9 +182,7 @@ public class ExplorerMuckracker extends Robot {
             if(rc.canGetFlag(robot.getID())) {
                 int flag = rc.getFlag(robot.getID());
                 // Move out of the way of rush pols
-                if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_ACTIVE_RUSH) || 
-                Comms.isSubRobotType(flag, Comms.SubRobotType.POL_HEAD) ||
-                Comms.isSubRobotType(flag, Comms.SubRobotType.POL_SUPPORT)) {
+                if(Comms.isRusher(flag)) {
                     Debug.println(Debug.info, "Found a rusher.");
                     disperseBot = robot;
                 }

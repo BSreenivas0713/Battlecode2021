@@ -3,7 +3,7 @@ package musketeerplayerqual;
 import battlecode.common.*;
 
 public class Comms {
-    public static final double INF_LOG_BASE = 1.17;
+    public static final double INF_LOG_BASE = 1.16;
     public static final double INF_SCALAR = 1;
     static final int BIT_IC_OFFSET = 20;
     static final int BIT_MASK_IC = 0xF << BIT_IC_OFFSET;
@@ -44,7 +44,6 @@ public class Comms {
         MY_LOC,
         DELETE_ENEMY_LOC,
         BUFF_MUCK,
-        RUSH_READY,
     }
 
     public enum SubRobotType {
@@ -59,6 +58,7 @@ public class Comms {
         POL_BUFF,
         POL_SUPPORT,
         POL_HEAD,
+        POL_HEAD_READY,
         POL_FAT,
         SLANDERER,
         MUC_HUNTER,
@@ -219,7 +219,7 @@ public class Comms {
     }
 
     public static int encodeInf(int inf) {
-        return (int) Math.min(63, Math.floor(Math.log(inf / INF_SCALAR) / Math.log(Comms.INF_LOG_BASE)));
+        return (int) Math.min(63, Math.ceil(Math.log(inf / INF_SCALAR) / Math.log(Comms.INF_LOG_BASE)));
     }
 
     // public static int getInf(int flag) {
@@ -324,10 +324,21 @@ public class Comms {
                 }
             case ENEMY_FOUND:
                 return getIsSla(flag) == IsSla.YES && type == SubRobotType.SLANDERER;
-            case RUSH_READY:
-                return type == SubRobotType.POL_HEAD;
             default:
                 return false;
         }
+    }
+
+    public static boolean isRusher(int flag) {
+        if(Comms.getIC(flag) == Comms.InformationCategory.ROBOT_TYPE) {
+            switch(Comms.getSubRobotType(flag)) {
+                case POL_HEAD:
+                case POL_HEAD_READY:
+                case POL_ACTIVE_RUSH:
+                case POL_SUPPORT:
+                    return true;
+            }
+        }
+        return false;
     }
 }
