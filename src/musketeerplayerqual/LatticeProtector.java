@@ -69,6 +69,7 @@ public class LatticeProtector extends Robot {
         int numMuckAttackable = 0;
         int robotConviction = 0;
         int numReasonablePols = 0;
+        int maxMuckrakerAttackableSize = 0;
         // int numRobotsInAttackable = rc.senseNearbyRobots(rc.getType().actionRadiusSquared).length;
         int numFriendlyAttackable = rc.senseNearbyRobots(rc.getType().actionRadiusSquared, rc.getTeam()).length;
         int polAttackThreshold = (int) (rc.getConviction() * rc.getEmpowerFactor(rc.getTeam(), 0) * 3 / 4);
@@ -98,6 +99,9 @@ public class LatticeProtector extends Robot {
                     minMuckAttackableDistSquared = temp;
                     closestMuckAttackable = robot.getLocation();
                 }
+                if(robot.getConviction() > maxMuckrakerAttackableSize) {
+                    maxMuckrakerAttackableSize = robot.getConviction();
+                }
             }
         }
 
@@ -105,7 +109,6 @@ public class LatticeProtector extends Robot {
         int closestMuckToHomeDist = Integer.MAX_VALUE;
         RobotInfo closestMuck = null;
         int closestMuckDist = Integer.MAX_VALUE;
-        int maxMuckrakerAttackableSize = 0;
         RobotInfo closestEnemy = null;
         Comms.EnemyType closestEnemyType = null;
         double minDistSquared = Integer.MAX_VALUE;
@@ -118,9 +121,6 @@ public class LatticeProtector extends Robot {
                 if(currDistance < closestMuckToHomeDist) {
                     closestMuckToHome = robot;
                     closestMuckToHomeDist = currDistance;
-                }
-                if(robot.getConviction() > maxMuckrakerAttackableSize) {
-                    maxMuckrakerAttackableSize = robot.getConviction();
                 }
             }
 
@@ -203,7 +203,7 @@ public class LatticeProtector extends Robot {
                         Debug.println("Found a pol closer to my closest muck");
                         amClosestPolToClosestMuck = false;
                     }
-                } else if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_RUSH) || 
+                } else if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_ACTIVE_RUSH) || 
                 Comms.isSubRobotType(flag, Comms.SubRobotType.POL_HEAD) ||
                 Comms.isSubRobotType(flag, Comms.SubRobotType.POL_SUPPORT)) {
                     Debug.println(Debug.info, "Found a rusher.");
@@ -300,11 +300,6 @@ public class LatticeProtector extends Robot {
         //     return;
         // }
 
-        // This means that the first half of an EC-ID/EC-ID broadcast finished.
-        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
-        else if(broadcastECLocation());
-        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
-        
         main_direction = Direction.CENTER;
 
         // if(closestMuck != null) {
@@ -398,5 +393,9 @@ public class LatticeProtector extends Robot {
             }
             tryMove +=1;
         }
+        // This means that the first half of an EC-ID/EC-ID broadcast finished.
+        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+        else if(broadcastECorSlanderers());
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
     }
 }

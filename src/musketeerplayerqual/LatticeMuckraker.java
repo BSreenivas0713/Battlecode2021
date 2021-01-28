@@ -56,7 +56,7 @@ public class LatticeMuckraker extends Robot {
             robot = friendlySensable[i];
             if(rc.canGetFlag(robot.getID())) {
                 int flag = rc.getFlag(robot.getID());
-                if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_RUSH) || 
+                if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_ACTIVE_RUSH) || 
                 Comms.isSubRobotType(flag, Comms.SubRobotType.POL_HEAD) ||
                 Comms.isSubRobotType(flag, Comms.SubRobotType.POL_SUPPORT)) {
                     Debug.println(Debug.info, "Found a rusher.");

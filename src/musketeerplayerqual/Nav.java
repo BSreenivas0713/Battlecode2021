@@ -27,7 +27,7 @@ public class Nav {
     static int turnsSinceClosestDistanceDecreased;
 
 
-    static Direction lastExploreDir;
+    public static Direction lastExploreDir;
     static final int EXPLORE_BOREDOM = 20;
     static int boredom;
 

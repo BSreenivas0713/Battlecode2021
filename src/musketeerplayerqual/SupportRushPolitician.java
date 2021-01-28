@@ -100,7 +100,7 @@ public class SupportRushPolitician extends Robot {
         
         Debug.println("Rusher ready: " + rusherReady + ". Seen rusher: " + seenRushPol + ", See rusher: " + seeRushPol);
         if (rc.canEmpower(radius) && 
-        (rusherReady || moveSemaphore <= 0 || (seenRushPol && !seeRushPol))) {
+        ((rusherReady && currLoc.isWithinDistanceSquared(enemyLocation, 4)) || moveSemaphore <= 0 || (seenRushPol && !seeRushPol))) {
             Debug.println(Debug.info, "Empowered with radius: " + radius);
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), closestEnemyToRusher, 255, 150, 50);
             rc.empower(radius);
@@ -118,10 +118,11 @@ public class SupportRushPolitician extends Robot {
                     moved = tryMove(main_direction) || tryMove(main_direction.rotateRight()) || tryMove(main_direction.rotateLeft());
                 }
                 if(moved || (seenRushPol && !enemyLocation.equals(lastRusherLoc))) {
-                    moveSemaphore = 10;
+                    moveSemaphore = 30;
                 } else {
                     moveSemaphore--;
                 }
+                broadcastSlanderers();
             }
         } else {
             Debug.println(Debug.info, "Using gradient descent for movement");

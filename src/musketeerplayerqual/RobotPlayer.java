@@ -166,6 +166,8 @@ public strictfp class RobotPlayer {
 
                 if (bot.changeTo != null) {
                     bot = bot.changeTo;
+                    bot.changeTo = null;
+                    continue;
                 }
                 // Debug.println(Debug.info, "BC left at end: " + Clock.getBytecodesLeft());
 
