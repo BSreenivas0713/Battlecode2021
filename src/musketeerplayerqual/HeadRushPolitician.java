@@ -86,7 +86,7 @@ public class HeadRushPolitician extends Robot {
                 int dist = currLoc.distanceSquaredTo(loc);
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyLocation.isWithinDistanceSquared(loc, 8)) {
                     if (robot.getConviction() > 50) {
-                        changeTo = new RushPolitician(rc, null);
+                        changeTo = new RushPolitician(rc, null, home, homeID);
                     } else if (dist < distToEC) {
                         distToEC = dist;
                         closestEnemy = loc;

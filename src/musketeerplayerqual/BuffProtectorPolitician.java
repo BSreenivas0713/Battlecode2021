@@ -157,7 +157,7 @@ public class BuffProtectorPolitician extends Robot {
         
         /* Step by Step decision making*/
         if ((closestBuffMuck != null && closestBuffMuck.getConviction() >= rc.getConviction() / 3)
-            && rc.canEmpower(closestBuffMuckDist)) {
+            && rc.canEmpower(closestBuffMuckDist) && currLoc.isAdjacentTo(closestBuffMuck.getLocation())) {
             Debug.println(Debug.info, "Big enemy nearby: Empowering with radius: " + closestBuffMuckDist);
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), closestBuffMuck.getLocation(), 255, 150, 50);
             rc.empower(closestBuffMuckDist);
