@@ -76,7 +76,9 @@ public class ExplorerPolitician extends Robot {
                         if(dxdy[0] != 0 && dxdy[1] != 0) {
                             MapLocation enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
                             Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
-                            changeTo = new RushPolitician(rc, enemyLoc);
+                            if(rc.getInfluence() > 100) {
+                                changeTo = new RushPolitician(rc, enemyLoc);
+                            }
                         }
                         break;
                 }
@@ -112,7 +114,9 @@ public class ExplorerPolitician extends Robot {
                 ecLoc = robot.getLocation();
             }
         }
-
+        if(changeTo != null) {
+            return;
+        }
         if (ecConviction < 5 * rc.getEmpowerFactor(rc.getTeam(), 0) * rc.getConviction() && rc.canEmpower(ecRadius)) {
             Debug.println(Debug.info, "Empowered near EC with radius: " + ecRadius);
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), ecLoc, 255, 150, 50);
