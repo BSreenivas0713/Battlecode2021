@@ -1158,7 +1158,7 @@ public class EC extends Robot {
                             // currReqInf = neededInf * 2 + 10;
                             // rushFlag = new RushFlag(currReqInf, dx, dy, flag, Team.NEUTRAL);
                             muckInf = 0;
-                            supportInf = Math.min(100, Math.max(20, neededInf / 5));
+                            supportInf = Math.max(20, neededInf / 5);
                             rushInf = neededInf * 2 + 20;
                             currReqInf = rushInf + supportInf + muckInf;
                             rushFlag = new RushFlag(currReqInf, dx, dy, flag, Team.NEUTRAL,
@@ -1479,7 +1479,11 @@ public class EC extends Robot {
             if(numBuffMucksToMake == 0) {
                 lastSentBufMuck = nextBufLoc;
                 nextBufLoc = null;
-                buffMuckCooldown = Math.min(Util.maxRushCooldown, Util.baseRushCooldown + Math.max(Math.abs(currRushFlag.dx), Math.abs(currRushFlag.dy)));
+                if(currRushFlag == null) {
+                    buffMuckCooldown = Util.bufMuckCooldownThreshold;
+                } else {
+                    buffMuckCooldown = Math.min(Util.maxRushCooldown, Util.baseRushCooldown + Math.max(Math.abs(currRushFlag.dx), Math.abs(currRushFlag.dy)));
+                }
                 currentState = stateStack.pop();
             }
             return true;
