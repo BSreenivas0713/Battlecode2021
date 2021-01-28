@@ -17,7 +17,7 @@ public class SupportRushPolitician extends Robot {
     static int moveSemaphore;
     static boolean seenRushPol;
     static boolean rusherReady;
-    static final int readyRushFlag = Comms.getFlag(Comms.InformationCategory.RUSH_READY);
+    static int rusherID;
     
     public SupportRushPolitician(RobotController r, MapLocation enemyLoc) {
         super(r);
@@ -29,6 +29,7 @@ public class SupportRushPolitician extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         seenRushPol = false;
         rusherReady = false;
+        rusherID = -1;
     }
     
     public SupportRushPolitician(RobotController r, MapLocation enemyLoc, MapLocation h, int hID) {
@@ -55,6 +56,7 @@ public class SupportRushPolitician extends Robot {
 
         boolean seeRushPol = false;
         if (currLoc.isWithinDistanceSquared(ecLoc, actionRadius) || seenRushPol) {
+            Debug.println("Searching for rush pol");
             for(int i = friendlySensable.length - 1; i >= 0; i--) {
                 robot = friendlySensable[i];
 
@@ -65,11 +67,23 @@ public class SupportRushPolitician extends Robot {
                         seenRushPol = true;
                         seeRushPol = true;
                         enemyLocation = robot.getLocation();
-                        if(flag == readyRushFlag) {
-                            Debug.println("Rusher is ready to empower");
-                            rusherReady = true;
-                        }
+                        rusherReady = false;
+                        rusherID = robot.getID();
+                    } else if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_HEAD_READY)) {
+                        Debug.println("Found rusher. Following him");
+                        seenRushPol = true;
+                        seeRushPol = true;
+                        enemyLocation = robot.getLocation();
+                        Debug.println("Rusher is ready to empower");
+                        rusherReady = true;
+                        rusherID = robot.getID();
                     }
+                }
+
+                if(!seeRushPol && seenRushPol && robot.getID() == rusherID) {
+                    Debug.println("Found rusher. Following him");
+                    seeRushPol = true;
+                    enemyLocation = robot.getLocation();
                 }
             }
         }
@@ -115,14 +129,16 @@ public class SupportRushPolitician extends Robot {
                 // if(!currLoc.isWithinDistanceSquared(enemyLocation, 1) ||
                 //     (seeRushPol && currLoc.isAdjacentTo(ecLoc) && !enemyLocation.isAdjacentTo(ecLoc))) {
                 if(!currLoc.isWithinDistanceSquared(enemyLocation, 1)) {
+                    Debug.println("Trying to get closer");
                     moved = tryMove(main_direction) || tryMove(main_direction.rotateRight()) || tryMove(main_direction.rotateLeft());
+                } else {
+                    Debug.println("Already next to enemy location");
                 }
                 if(moved || (seenRushPol && !enemyLocation.equals(lastRusherLoc))) {
                     moveSemaphore = 30;
                 } else {
                     moveSemaphore--;
                 }
-                broadcastSlanderers();
             }
         } else {
             Debug.println(Debug.info, "Using gradient descent for movement");
@@ -131,6 +147,11 @@ public class SupportRushPolitician extends Robot {
         }
         lastRusherLoc = enemyLocation;
 
+        if(!rusherReady && !seeRushPol) {
+            broadcastSlanderers();
+        }
+
+        Debug.setIndicatorDot(Debug.info, enemyLocation, 255, 0, 0);
         Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
     }
 }
