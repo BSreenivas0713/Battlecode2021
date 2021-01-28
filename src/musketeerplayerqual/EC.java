@@ -1476,14 +1476,14 @@ public class EC extends Robot {
             nextFlag = Comms.getFlag(Comms.InformationCategory.ENEMY_EC_MUK, nextBufLoc.x - home.x + Util.dOffset, nextBufLoc.y - home.y + Util.dOffset);
             firstScoutDeathReported = true;
             numBuffMucksToMake--;
+            if(currRushFlag == null) {
+                buffMuckCooldown = Util.bufMuckCooldownThreshold;
+            } else {
+                buffMuckCooldown = Math.min(Util.maxRushCooldown, Util.baseRushCooldown + Math.max(Math.abs(currRushFlag.dx), Math.abs(currRushFlag.dy)));
+            }
             if(numBuffMucksToMake == 0) {
                 lastSentBufMuck = nextBufLoc;
                 nextBufLoc = null;
-                if(currRushFlag == null) {
-                    buffMuckCooldown = Util.bufMuckCooldownThreshold;
-                } else {
-                    buffMuckCooldown = Math.min(Util.maxRushCooldown, Util.baseRushCooldown + Math.max(Math.abs(currRushFlag.dx), Math.abs(currRushFlag.dy)));
-                }
                 currentState = stateStack.pop();
             }
             return true;
