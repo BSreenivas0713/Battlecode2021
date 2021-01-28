@@ -44,6 +44,7 @@ public class EC extends Robot {
         BUILDING_BUFF_POLS,
         BETTER_RUSHING,
         OBESITY,
+        SCOUT_RUSH,
     };
 
     static enum RushingState {
@@ -181,6 +182,7 @@ public class EC extends Robot {
     static FastIntIntMap slandererIDToRound;
     static MapLocation nextBufLoc;
     static FastIntLocMap scoutIDToEnemyLocs;
+    static FastQueue<MapLocation> oldFriendECs;
 
     static MapLocation recentSlanderer;
 
@@ -249,6 +251,7 @@ public class EC extends Robot {
         nearbyECs = new FastIterableLocSet(12);
         nextBufLoc = null;
         scoutIDToEnemyLocs = new FastIntLocMap();
+        oldFriendECs = new FastQueue<>(20);
 
         enemyRushPolInf = 0;
         enemyBuffMuckInf = 0;
@@ -422,53 +425,57 @@ public class EC extends Robot {
                 tryStartBuildingBuffPols();
 
                 if(currentState != State.BUILDING_BUFF_POLS) {
-                    // If we have enough to rush a tower, make that the #1 priority
-                    if (readyToRush()) {
-                        // if (currentState != State.RUSHING) {
-                        //     if (currentState != State.SAVING_FOR_RUSH) {
-                        //         stateStack.push(currentState);
-                        //     }
-                        //     currentState = State.RUSHING;
-                        // }
-                        if (currentState != State.BETTER_RUSHING) {
-                            if (currentState != State.SAVING_FOR_RUSH) {
-                                stateStack.push(currentState);
-                            }
-                            currentState = State.BETTER_RUSHING;
-                            rushingState = RushingState.MUCK;
-                            currRushFlag = ECflags.peek();
-                        }
-                    }
-                    else if (readyToSendBufMuck()) {
-                        if(currentState != State.RUSHING_MUCKS) {
-                            stateStack.push(currentState);
-                            currentState = State.RUSHING_MUCKS;
-                        }
-                    }
-                    
-                    else {
-                        // Second priority is removing blockage
-                        tryStartRemovingBlockage();
-                        // Third priority is building protectors.
-                        if (currentState != State.REMOVING_BLOCKAGE) {
-                            // If there's nothing to do, clean up
-                            if (currRoundNum > 500 && tryStartCleanup()) {
-                                if (currentState != State.CLEANUP) {
-                                    stateStack.push(currentState);
-                                    currentState = State.CLEANUP;
-                                }
-                            }
-                            else if (currentState == State.CHILLING && goToAcceleratedSlanderersState && currInfluence > 107) { //If nothing around, make more slanderers (after you have a defense from the first few rounds)
-                                currentState = State.ACCELERATED_SLANDERERS;
-                            }             
-                            else if (currentState == State.ACCELERATED_SLANDERERS && !goToAcceleratedSlanderersState) {
-                                currentState = State.CHILLING;
-                                builtInAcceleratedCount = 0;
-                            }
-                            // else if (currInfluence > 2000 && currentState != State.OBESITY) {
-                            //     stateStack.push(currentState);
-                            //     currentState = State.OBESITY;
+                    tryStartSendingScoutRushPol();
+
+                    if(currentState != State.SCOUT_RUSH) {
+                        // If we have enough to rush a tower, make that the #1 priority
+                        if (readyToRush()) {
+                            // if (currentState != State.RUSHING) {
+                            //     if (currentState != State.SAVING_FOR_RUSH) {
+                            //         stateStack.push(currentState);
+                            //     }
+                            //     currentState = State.RUSHING;
                             // }
+                            if (currentState != State.BETTER_RUSHING) {
+                                if (currentState != State.SAVING_FOR_RUSH) {
+                                    stateStack.push(currentState);
+                                }
+                                currentState = State.BETTER_RUSHING;
+                                rushingState = RushingState.MUCK;
+                                currRushFlag = ECflags.peek();
+                            }
+                        }
+                        else if (readyToSendBufMuck()) {
+                            if(currentState != State.RUSHING_MUCKS) {
+                                stateStack.push(currentState);
+                                currentState = State.RUSHING_MUCKS;
+                            }
+                        }
+                        
+                        else {
+                            // Second priority is removing blockage
+                            tryStartRemovingBlockage();
+                            // Third priority is building protectors.
+                            if (currentState != State.REMOVING_BLOCKAGE) {
+                                // If there's nothing to do, clean up
+                                if (currRoundNum > 500 && tryStartCleanup()) {
+                                    if (currentState != State.CLEANUP) {
+                                        stateStack.push(currentState);
+                                        currentState = State.CLEANUP;
+                                    }
+                                }
+                                else if (currentState == State.CHILLING && goToAcceleratedSlanderersState && currInfluence > 107) { //If nothing around, make more slanderers (after you have a defense from the first few rounds)
+                                    currentState = State.ACCELERATED_SLANDERERS;
+                                }             
+                                else if (currentState == State.ACCELERATED_SLANDERERS && !goToAcceleratedSlanderersState) {
+                                    currentState = State.CHILLING;
+                                    builtInAcceleratedCount = 0;
+                                }
+                                // else if (currInfluence > 2000 && currentState != State.OBESITY) {
+                                //     stateStack.push(currentState);
+                                //     currentState = State.OBESITY;
+                                // }
+                            }
                         }
                     }
                 }
@@ -519,6 +526,7 @@ public class EC extends Robot {
             Debug.println(Debug.info, "flag queue is empty");
         }
         Debug.println("Enemy Rush pol: " + enemyRushPolInf);
+        Debug.println("Enemy Buff muck: " + enemyBuffMuckInf + ", buff pol cooldown: " + buffPolLock + ", num buff pols: " + buffPolSet.size);
 
         doStateAction();
 
@@ -533,6 +541,7 @@ public class EC extends Robot {
     }
 
     public void doStateAction() throws GameActionException {
+        MapLocation enemyLocation;
         switch(currentState) {
             case INIT: 
                 firstRounds();
@@ -680,7 +689,7 @@ public class EC extends Robot {
                 trySendARush();
                 break;
             case BETTER_RUSHING:
-                MapLocation enemyLocation = home.translate(currRushFlag.dx, currRushFlag.dy);
+                enemyLocation = home.translate(currRushFlag.dx, currRushFlag.dy);
                 switch(rushingState) {
                     case MUCK:
                         Debug.println("Building support muck");
@@ -875,6 +884,23 @@ public class EC extends Robot {
                     currentState = stateStack.pop();
                 }
                 break; 
+            case SCOUT_RUSH:
+                enemyLocation = oldFriendECs.peek();
+                if(enemyLocation == null) {
+                    currentState = stateStack.pop();
+                    doStateAction();
+                } else {
+                    toBuild = RobotType.POLITICIAN;
+                    influence = Math.max(100, currInfluence / 20);
+                    int dx = enemyLocation.x - home.x;
+                    int dy = enemyLocation.y - home.y;
+                    signalRobotTypeAndDxDy(Comms.SubRobotType.POL_ACTIVE_RUSH, dx, dy);
+                    if(buildRobot(toBuild, influence)) {
+                        currentState = stateStack.pop();
+                        oldFriendECs.poll();
+                    }
+                }
+                break;
             default:
                 currentState = State.CHILLING;
                 System.out.println("CRITICAL: Maxwell screwed up stateStack");
@@ -1100,8 +1126,15 @@ public class EC extends Robot {
         }
     }
 
+    public void tryStartSendingScoutRushPol() throws GameActionException {
+        if(!oldFriendECs.isEmpty() && currentState != State.SCOUT_RUSH) {
+            stateStack.push(currentState);
+            currentState = State.SCOUT_RUSH;
+        }
+    }
+
     public void tryStartBuildingBuffPols() throws GameActionException {
-        if(enemyBuffMuckInf >= 50 && enemyBuffMuckInf >= 50 * buffPolSet.size && 
+        if(enemyBuffMuckInf >= 30 && enemyBuffMuckInf >= 50 * buffPolSet.size && 
             buffPolLock >= 10 && currentState != State.BUILDING_BUFF_POLS) {
             stateStack.push(currentState);
             currentState = State.BUILDING_BUFF_POLS;
@@ -1453,6 +1486,7 @@ public class EC extends Robot {
                 Debug.println(Debug.info, "EC at: " + key + ", id: " + id);
             } else {
                 friendlyECs.remove(key);
+                oldFriendECs.add(key);
             }
         }
         flagQueueCooldown++;

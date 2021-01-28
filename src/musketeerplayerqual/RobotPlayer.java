@@ -91,6 +91,17 @@ public strictfp class RobotPlayer {
                                     case POL_FAT:
                                         bot = new RushPolitician(rc, null);
                                         break;
+                                    case POL_ACTIVE_RUSH:
+                                        int[] activeRushDxDy = Comms.getDxDySubRobotType(botFlag);
+                                        if (activeRushDxDy[0] == 0 && activeRushDxDy[1] == 0) {
+                                            // This shouldn't happen but just in case
+                                            bot = new RushPolitician(rc, null);
+                                        } else {
+                                            MapLocation spawningLoc1 = robot.getLocation();
+                                            MapLocation enemyLoc1 = new MapLocation(activeRushDxDy[0] + spawningLoc1.x - Util.dOffset, activeRushDxDy[1] + spawningLoc1.y - Util.dOffset);
+                                            bot = new RushPolitician(rc, enemyLoc1);
+                                        }
+                                        break;
                                 }
                                 break;
                             default:

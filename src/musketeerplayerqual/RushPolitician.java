@@ -56,6 +56,7 @@ public class RushPolitician extends Robot {
                 robot = enemySensable[i];
                 MapLocation loc = robot.getLocation();
                 if (robot.getType() == RobotType.ENLIGHTENMENT_CENTER && robot.getInfluence() <= 600) {
+                    Debug.println("Nearby enemy EC: Setting enemyLocation");
                     enemyLocation = loc;
                     subRobotType = Comms.SubRobotType.POL_ACTIVE_RUSH;
                     defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
@@ -64,6 +65,7 @@ public class RushPolitician extends Robot {
                     Nav.setDest(loc);
                 }
             }
+
             if(homeID != -1 && rc.canGetFlag(homeID)) {
                 Debug.println(Debug.info, "Checking home flag");
                 int flag = rc.getFlag(homeID);
@@ -114,8 +116,10 @@ public class RushPolitician extends Robot {
                         break;
                 }
             } else {
+                Debug.println("Home was taken. Rushing home");
                 enemyLocation = home;
                 homeID = -1;
+                Nav.setDest(enemyLocation);
             }
             
             int maxMuckAttackableDistSquared = Integer.MIN_VALUE;
