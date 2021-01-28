@@ -23,7 +23,7 @@ public class HeadRushPolitician extends Robot {
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         seenSupportPol = false;
         supportPolEmpowered = false;
-        readySemaphore = 5;
+        readySemaphore = 10;
         readyToEmpower = false;
     }
     
@@ -45,6 +45,7 @@ public class HeadRushPolitician extends Robot {
         MapLocation currLoc = rc.getLocation();
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         RobotInfo robot;
+        RobotInfo ec = null;
         int distToEC = Integer.MAX_VALUE;
         MapLocation closestEnemy = null;
 
@@ -59,6 +60,7 @@ public class HeadRushPolitician extends Robot {
                 if(dist < distToEC) {
                     distToEC = dist;
                     closestEnemy = loc;
+                    ec = robot;
                 }
             }
         }
@@ -72,6 +74,7 @@ public class HeadRushPolitician extends Robot {
                 if(dist < distToEC) {
                     distToEC = dist;
                     closestEnemy = loc;
+                    ec = robot;
                 }
             }
         }
@@ -92,8 +95,15 @@ public class HeadRushPolitician extends Robot {
             }
         }
 
+        boolean canConvertEC = false;
         if(distToEC == Integer.MAX_VALUE) {
             distToEC = currLoc.distanceSquaredTo(enemyLocation);
+        } else {
+            RobotInfo[] botsInAttack = rc.senseNearbyRobots(distToEC);
+            int damagePerBot = (int) ((rc.getConviction() - 10) * rc.getEmpowerFactor(rc.getTeam(), 0) / botsInAttack.length);
+            if(ec != null && damagePerBot > ec.getConviction()) {
+                canConvertEC = true;
+            }
         }
 
         if((distToEC <= 1 || moveSemaphore <= 0) && rc.isReady()) {
@@ -132,13 +142,15 @@ public class HeadRushPolitician extends Robot {
             if(rc.isReady()) {
                 readySemaphore--;
             }
+            broadcastSlanderers();
             Debug.println("In empower position but waiting for support pol. readySemaphore: " + readySemaphore);
         }
         
         if (rc.canEmpower(distToEC) && 
         ((readyToEmpower && seenSupportPol && !seeSupportPol) || 
         (readySemaphore <= 0) ||
-        (rc.senseNearbyRobots(distToEC).length == 1))) {
+        (rc.senseNearbyRobots(distToEC).length == 1) ||
+        canConvertEC)) {
             int radius = Math.min(actionRadius, distToEC);
             Debug.println(Debug.info, "Empowered with radius: " + radius);
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);

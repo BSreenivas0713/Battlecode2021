@@ -162,13 +162,6 @@ public class ExplorerPolitician extends Robot {
                 inActionRadiusOfFriendly = true;
             }
         }
-
-        if (home != null) {
-            // This means that the first half of an EC-ID/EC-ID broadcast finished.
-            if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
-            else if(broadcastECLocation());
-            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));   
-        }
         
         if(enemyNearBase) {
             if(rc.canEmpower(MukminDistSquared)) {
@@ -199,6 +192,13 @@ public class ExplorerPolitician extends Robot {
             if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
                 tryMoveDest(main_direction);
             }
+        }
+
+        if (home != null) {
+            // This means that the first half of an EC-ID/EC-ID broadcast finished.
+            if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+            else if(broadcastECorSlanderers());
+            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));   
         }
     }
 }

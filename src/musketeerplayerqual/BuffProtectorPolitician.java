@@ -36,6 +36,10 @@ public class BuffProtectorPolitician extends Robot {
         RobotInfo[] neutrals = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
         MapLocation currLoc = rc.getLocation();
 
+        if(!rc.canGetFlag(homeID)) {
+            changeTo = new RushPolitician(rc, home);
+        }
+
         main_direction = Util.rightOrLeftTurn(spinDirection, home.directionTo(currLoc)); //Direction if we only want to rotate around the base
         /* Creating all the variables that we need to do the step by step decision making for later*/
 
@@ -49,16 +53,25 @@ public class BuffProtectorPolitician extends Robot {
         int closestBuffMuckDist = Integer.MAX_VALUE;
         int farthestAttackableEnemyDist = Integer.MIN_VALUE;
         int temp;
+        int numMuckAttackable = 0;
+        int maxMuckAttackableDistSquared = Integer.MIN_VALUE;
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
+            temp = currLoc.distanceSquaredTo(robot.getLocation());
             if (robot.getConviction() > maxAttackableSize) {
                 maxAttackableSize = robot.getConviction();
-                maxEnemyAttackableDistSquared = currLoc.distanceSquaredTo(robot.getLocation());
+                maxEnemyAttackableDistSquared = temp;
             }
 
-            temp = currLoc.distanceSquaredTo(robot.getLocation());
             if(temp > farthestAttackableEnemyDist) {
                 farthestAttackableEnemyDist = temp;
+            }
+
+            if(robot.getType() == RobotType.MUCKRAKER) {
+                numMuckAttackable++;
+                if(temp > maxMuckAttackableDistSquared) {
+                    maxMuckAttackableDistSquared = temp;
+                }
             }
         }
 
@@ -121,6 +134,26 @@ public class BuffProtectorPolitician extends Robot {
                 }
             }
         }
+
+        int mostKilled = Integer.MIN_VALUE;
+        int bestRadius = actionRadius;
+        int numKilled;
+        int damagePerBot;
+        for(int i = actionRadius; i >= 0; i--) {
+            RobotInfo[] botsInAttack = rc.senseNearbyRobots(i);
+            damagePerBot = (int) ((rc.getConviction() - 10) * rc.getEmpowerFactor(rc.getTeam(), 0) / botsInAttack.length);
+            numKilled = 0;
+            for(int j = botsInAttack.length - 1; j >= 0; j--) {
+                robot = botsInAttack[j];
+                if(robot.getTeam() == enemy && damagePerBot > robot.getConviction()) {
+                    numKilled++;
+                }
+            }
+            if(numKilled > mostKilled) {
+                mostKilled = numKilled;
+                bestRadius = i;
+            }
+        }
         
         /* Step by Step decision making*/
         if ((closestBuffMuck != null && closestBuffMuck.getConviction() >= rc.getConviction() / 3)
@@ -130,15 +163,24 @@ public class BuffProtectorPolitician extends Robot {
             rc.empower(closestBuffMuckDist);
             return;
         }
+
+        if(mostKilled >= 2 && rc.canEmpower(bestRadius)) {
+            Debug.println("Can kill at least 2 enemies. Empowering with radius: " + bestRadius);
+            rc.empower(bestRadius);
+            return;
+        }
+
+        if(numMuckAttackable >= 2 && slandererNearby && rc.canEmpower(maxMuckAttackableDistSquared)) {
+            Debug.println("Slanderer nearby with mucks. Empowering with radius: " + maxMuckAttackableDistSquared);
+            rc.empower(maxMuckAttackableDistSquared);
+            return;
+        }
         
         if(enemyAttackable.length >= 3 && rc.canEmpower(farthestAttackableEnemyDist)) {
             Debug.println(Debug.info, "Lots of enemies nearby: Empowering with radius: " + farthestAttackableEnemyDist);
             rc.empower(farthestAttackableEnemyDist);
             return;
         }
-
-        // This means that the first half of an EC-ID/EC-ID broadcast finished.
-        if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
 
         if(closestBuffMuck != null) {
             Debug.println("Moving towards a buff muck");
@@ -186,5 +228,8 @@ public class BuffProtectorPolitician extends Robot {
                 tryMove(dir);
             }
         }
+
+        // This means that the first half of an EC-ID/EC-ID broadcast finished.
+        if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
     }
 }
