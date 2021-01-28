@@ -1,18 +1,20 @@
-package musketeerplayerqual;
+package musketeerplayerfinal;
 import battlecode.common.*;
 
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
+import musketeerplayerfinal.Util.*;
+import musketeerplayerfinal.Debug.*;
 
 public class ExplorerPolitician extends Robot {
     static Direction main_direction;
     static boolean   toDetonate = false;
+    static MapLocation enemyLocation;
 
     //TOCONSIDER: allow for these types to attack neutrals
     public ExplorerPolitician(RobotController r) {
         super(r);
         subRobotType = Comms.SubRobotType.POL_EXPLORER;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
+        enemyLocation = null;
     }
     
     public ExplorerPolitician(RobotController r, MapLocation h, int hID) {
@@ -74,7 +76,6 @@ public class ExplorerPolitician extends Robot {
                         if(dxdy[0] != 0 && dxdy[1] != 0) {
                             MapLocation enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
                             Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
-                            Debug.println(Debug.info, "EC is sending a rush: Read ENEMY_EC flag. Type: " + GRtype + ", mod: " + GRmod);
                             changeTo = new RushPolitician(rc, enemyLoc);
                         }
                         break;
