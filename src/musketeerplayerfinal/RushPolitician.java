@@ -33,6 +33,8 @@ public class RushPolitician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
+        if (rc.getTeamVotes() < 751 && rc.getRoundNum() >= 1450) changeTo = new CleanupPolitician(rc, home, homeID);
+
         Debug.println(Debug.info, "I am a rush politician; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
         //if (enemyLocation != null) {
