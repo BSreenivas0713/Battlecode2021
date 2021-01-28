@@ -76,7 +76,11 @@ public class RushPolitician extends Robot {
                 if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && 
                     enemyLocation.isWithinDistanceSquared(loc, 8)) {
                     int dist = currLoc.distanceSquaredTo(loc);
-                    if(dist < minEnemyDistSquared) {
+                    if (robot.getConviction() > 50 && enemyLocation.isWithinDistanceSquared(loc, 2)) {
+                            enemyLocation = null;
+                            changeTo = new ExplorerPolitician(rc);
+                        }
+                    else if(dist < minEnemyDistSquared) {
                         minEnemyDistSquared = dist;
                         closestEnemy = loc;
                     }
@@ -97,7 +101,9 @@ public class RushPolitician extends Robot {
                 }
             }
         //}
-        
+        if(changeTo != null) {
+            return;
+        }
         if (rc.canEmpower(minEnemyDistSquared) && (moveSemaphore <= 0 || minEnemyDistSquared <= 1)) {
             int radius = Math.min(actionRadius, minEnemyDistSquared);
             Debug.println(Debug.info, "Empowered with radius: " + radius);

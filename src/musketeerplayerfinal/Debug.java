@@ -3,7 +3,7 @@ package musketeerplayerfinal;
 import battlecode.common.*;
 
 public class Debug {
-    static final boolean verbose = false;
+    static final boolean verbose = true;
     public static final boolean info = true;
     public static final boolean pathfinding = true;
     private static final boolean indicators = true;
