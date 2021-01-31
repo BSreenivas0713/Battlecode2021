@@ -13,6 +13,7 @@ import musketeerplayerfinal.fast.FastQueue;
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
 /* 
+This file controls our enlightenment centers, spawning units and organizing bidding.
 TODO: 
 slandies move away from scout mucks (reason why we lose as blue on circle, their scout finds us way earlier
 cuz ours tries to go around a slanderer)
