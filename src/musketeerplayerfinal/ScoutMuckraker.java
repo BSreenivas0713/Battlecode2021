@@ -1,8 +1,7 @@
 package musketeerplayerfinal;
 import battlecode.common.*;
-
-import musketeerplayerfinal.Util.*;
 import musketeerplayerfinal.Debug.*;
+import musketeerplayerfinal.Util.*;
 import musketeerplayerfinal.fast.FastIterableLocSet;
 
 public class ScoutMuckraker extends Robot {

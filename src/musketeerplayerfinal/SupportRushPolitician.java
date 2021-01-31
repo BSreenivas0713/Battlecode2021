@@ -1,9 +1,8 @@
-package musketeerplayerqual;
+package musketeerplayerfinal;
 
 import battlecode.common.*;
-
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
+import musketeerplayerfinal.Debug.*;
+import musketeerplayerfinal.Util.*;
 
 /*
  * TODO: Try to avoid the edge case of support pol being in front of the head rusher

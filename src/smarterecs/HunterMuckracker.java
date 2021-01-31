@@ -1,8 +1,7 @@
 package smarterecs;
 import battlecode.common.*;
-
+import musketeerplayerfinal.Debug.*;
 import smarterecs.Util.*;
-import musketeerplayerqual.Debug.*;
 import smarterecs.fast.FastIterableLocSet;
 
 public class HunterMuckracker extends Robot {

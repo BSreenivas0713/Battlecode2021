@@ -14,7 +14,7 @@ public class LatticeRusher extends Robot {
         super(r);
         enemyLocation = enemyLoc;
         moveSemaphore = 2;
-        subRobotType = Comms.SubRobotType.POL_ACTIVE_RUSH;
+        subRobotType = Comms.SubRobotType.POL_RUSH;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         Nav.setDest(enemyLoc);
     }

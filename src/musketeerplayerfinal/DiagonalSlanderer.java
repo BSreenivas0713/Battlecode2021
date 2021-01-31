@@ -1,9 +1,8 @@
 package musketeerplayerfinal;
 
 import battlecode.common.*;
-
-import musketeerplayerfinal.Util.*;
 import musketeerplayerfinal.Debug.*;
+import musketeerplayerfinal.Util.*;
 
 public class DiagonalSlanderer extends Robot {
     static Direction main_direction;
@@ -27,7 +26,7 @@ public class DiagonalSlanderer extends Robot {
         
         if (rc.getType() != RobotType.SLANDERER) {
             if(rc.getConviction() > 100) {
-                changeTo = new ExplorerPolitician(rc, home, homeID);
+                changeTo = new RushPolitician(rc, null, home, homeID);
             } else {
                 changeTo = new LatticeProtector(rc, home, homeID);
             }
@@ -76,6 +75,7 @@ public class DiagonalSlanderer extends Robot {
         int id;
         int flag;
         int dist;
+        RobotInfo disperseBot = null;
         for(int i = friendlySensable.length - 1; i >= 0; i--) {
             robot = friendlySensable[i];
             loc = robot.getLocation();
@@ -91,6 +91,8 @@ public class DiagonalSlanderer extends Robot {
                 }
                 else if (Comms.isSubRobotType(flag, Comms.SubRobotType.POL_SPAWNKILL)) {
                     spawnKillDude = loc;
+                } else if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_HEAD_READY)) {
+                    disperseBot = robot;
                 }
 
                 if(Comms.getIC(flag) == Comms.InformationCategory.CLOSEST_ENEMY_OR_FLEEING) {
@@ -124,8 +126,6 @@ public class DiagonalSlanderer extends Robot {
         }
         MapLocation latticeLoc;
 
-        if(foundOwnEnemy && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
-
         if(closestEnemy != null && curr.isWithinDistanceSquared(closestEnemy.getLocation(), Util.minDistFromEnemy)) {
             main_direction = curr.directionTo(closestEnemy.getLocation()).opposite();
             // flag = Comms.getFlag(Comms.InformationCategory.SLA_FLEEING, main_direction.ordinal());
@@ -140,6 +140,10 @@ public class DiagonalSlanderer extends Robot {
             // main_direction = candidateDirs[(int)(Math.random() * candidateDirs.length)];
             main_direction = otherSlaFleeingDir;
             Debug.println(Debug.info, "Prioritizing joining a fleeing slanderer " + main_direction);
+        } else if (disperseBot != null && curr.isAdjacentTo(disperseBot.getLocation())) {
+            main_direction = curr.directionTo(disperseBot.getLocation()).opposite();
+            tryMoveDest(main_direction);
+            Debug.println(Debug.info, "Dispersing to avoid rusher.");
         } else if (spawnKillDude != null) {
             main_direction = curr.directionTo(spawnKillDude).opposite();
         } else if (moveBack) {
@@ -182,5 +186,7 @@ public class DiagonalSlanderer extends Robot {
         //     avgEnemyDir = null;
         //     resetFlagOnNewTurn = true;
         // }
+
+        if(foundOwnEnemy && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
     }
 }

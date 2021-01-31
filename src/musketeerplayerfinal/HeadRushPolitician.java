@@ -1,9 +1,8 @@
-package musketeerplayerqual;
+package musketeerplayerfinal;
 
 import battlecode.common.*;
-
-import musketeerplayerqual.Util.*;
-import musketeerplayerqual.Debug.*;
+import musketeerplayerfinal.Debug.*;
+import musketeerplayerfinal.Util.*;
 
 public class HeadRushPolitician extends Robot {
     static MapLocation enemyLocation;
