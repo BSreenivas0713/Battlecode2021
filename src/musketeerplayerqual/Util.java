@@ -105,22 +105,19 @@ public class Util {
     static final int MuckAttackCooldown = 50;
 
     static final int baseRushCooldown = 15;
-    static final int maxRushCooldown = 40;
+    static final int maxRushCooldown = 30;
 
     static final int buffMukFrequency = 20;
     static final int maxBuffMuk = 400;
 
     static final int explorerPolFrequency = 7;
-    static final int acceleratedExplorerPolFrequency = 3;
-    static final int buffPolFrequency = 8;
+    static final int buffPolFrequency = 5;
     static final int maxBuffPolNum = 8;
-    static final int maxBuffPolsInARow = 3;
+    static final int maxBuffPolsInARow = 4;
 
     static final int attackCallBoredom = 30;
 
     static final int foundEnemyLocationBoredom = 10;
-
-    static final int slaInfoExpiration = 10;
 
     /**
      * Returns a random Direction.

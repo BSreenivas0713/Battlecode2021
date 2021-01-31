@@ -1,9 +1,8 @@
 package musketeerplayerfinal;
 
 import battlecode.common.*;
-
-import musketeerplayerfinal.fast.FasterQueue;
 import musketeerplayerfinal.fast.FastIterableIntSet;
+import musketeerplayerfinal.fast.FasterQueue;
 
 public class Nav {
     static RobotController rc;
@@ -27,7 +26,7 @@ public class Nav {
     static int turnsSinceClosestDistanceDecreased;
 
 
-    static Direction lastExploreDir;
+    public static Direction lastExploreDir;
     static final int EXPLORE_BOREDOM = 20;
     static int boredom;
 
@@ -442,7 +441,6 @@ public class Nav {
                     minCost = costs[i][j];
                     minLoc = map[i][j];
                 }
-                
             }
         }
         // System.out.println("Bytecode at find min exit" + Clock.getBytecodeNum());

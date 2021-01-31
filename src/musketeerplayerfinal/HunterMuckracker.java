@@ -1,8 +1,7 @@
 package musketeerplayerfinal;
 import battlecode.common.*;
-
-import musketeerplayerfinal.Util.*;
 import musketeerplayerfinal.Debug.*;
+import musketeerplayerfinal.Util.*;
 import musketeerplayerfinal.fast.FastIterableLocSet;
 
 public class HunterMuckracker extends Robot {
@@ -47,6 +46,10 @@ public class HunterMuckracker extends Robot {
 
         Debug.println(Debug.info, "I am a hunter Mucker; current influence: " + rc.getInfluence() + "; current conviction: " + rc.getConviction());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
+        if(enemyLocation != null) {
+            Debug.println("Enemylocation: " + enemyLocation);
+            Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
+        }
 
         if(main_direction == null){
             main_direction = Util.randomDirection();
@@ -57,27 +60,50 @@ public class HunterMuckracker extends Robot {
             int flag = rc.getFlag(homeID);
             Comms.InformationCategory IC = Comms.getIC(flag);
             switch(IC) {
+                // case TARGET_ROBOT:
+                //     if(Comms.getSubRobotType(flag) == Comms.SubRobotType.POL_SUPPORT && enemyLocation == null) {
+                //         int[] dxdy = Comms.getDxDySubRobotType(flag);
+                //         MapLocation enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
+                //         Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+
+                //         int GRmod = (int)(Math.random() * 2);
+                //         Debug.println(Debug.info, "EC is sending a rush: Read POL_SUPPORT flag. Mod: " + GRmod);
+
+                //         if(GRmod == rc.getID() % 2) {
+                //             Debug.println(Debug.info, "Joining the rush");
+                //             locGotEnemyLocation = rc.getLocation();
+                //             enemyLocation = enemyLoc;
+                //             seenEnemyLocation = false;
+                //             isEnemyLocEC = true;
+                //             turnsSinceClosestDistanceDecreased = 0;
+                //             closestDistanceToDest = Integer.MAX_VALUE;
+                //         } else {
+                //             Debug.println(Debug.info, "I was not included in this rush");
+                //         }
+                //     }
                 case ENEMY_EC:
                     if(enemyLocation == null) {
                         int[] dxdy = Comms.getDxDy(flag);
-                        MapLocation enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
-                        Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
-
-                        Comms.GroupRushType GRtype = Comms.getRushType(flag);
-                        int GRmod = Comms.getRushMod(flag);
-                        Debug.println(Debug.info, "EC is sending a rush: Read ENEMY_EC flag. Type: " + GRtype + ", mod: " + GRmod);
-
-                        if((GRtype == Comms.GroupRushType.MUC || GRtype == Comms.GroupRushType.MUC_POL)) {
-                            Debug.println(Debug.info, "Joining the rush");
-                            locGotEnemyLocation = rc.getLocation();
-                            enemyLocation = enemyLoc;
-                            seenEnemyLocation = false;
-                            bufSeenEnemyLocation = false;
-                            isEnemyLocEC = true;
-                            turnsSinceClosestDistanceDecreased = 0;
-                            closestDistanceToDest = Integer.MAX_VALUE;
-                        } else {
-                            Debug.println(Debug.info, "I was not included in this rush");
+                        if(dxdy[0] != 0 && dxdy[1] != 0) {
+                            MapLocation enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
+                            Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
+    
+                            Comms.GroupRushType GRtype = Comms.getRushType(flag);
+                            int GRmod = Comms.getRushMod(flag);
+                            Debug.println(Debug.info, "EC is sending a rush: Read ENEMY_EC flag. Type: " + GRtype + ", mod: " + GRmod);
+    
+                            if((GRtype == Comms.GroupRushType.MUC || GRtype == Comms.GroupRushType.MUC_POL)) {
+                                Debug.println(Debug.info, "Joining the rush");
+                                locGotEnemyLocation = rc.getLocation();
+                                enemyLocation = enemyLoc;
+                                seenEnemyLocation = false;
+                                bufSeenEnemyLocation = false;
+                                isEnemyLocEC = true;
+                                turnsSinceClosestDistanceDecreased = 0;
+                                closestDistanceToDest = Integer.MAX_VALUE;
+                            } else {
+                                Debug.println(Debug.info, "I was not included in this rush");
+                            }
                         }
                     }
                     break;
@@ -109,6 +135,7 @@ public class HunterMuckracker extends Robot {
                     break;
                 case DELETE_ENEMY_LOC:
                     if(enemyLocation != null && !seenEnemyLocation) {
+                        Debug.println("EC signaled to delete enemy location");
                         int[] dxdy = Comms.getDxDy(flag);
                         MapLocation enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
 
@@ -218,7 +245,7 @@ public class HunterMuckracker extends Robot {
             }
             if(rc.canGetFlag(robot.getID())) {
                 int flag = rc.getFlag(robot.getID());
-                if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_RUSH)) {
+                if(Comms.isRusher(flag)) {
                     Debug.println(Debug.info, "Found a rusher.");
                     disperseBot = robot;
                 }
@@ -249,13 +276,6 @@ public class HunterMuckracker extends Robot {
             isEnemyLocEC = true;
             Debug.println("Got bored of following direction past enemyLocation. Deleting enemyLocation.");
         }
-        
-        // This means that the first half of an EC-ID/EC-ID broadcast finished.
-        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
-        else if(broadcastECLocation());
-        else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
-        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
-
         if(disperseBot != null) {
             main_direction = currLoc.directionTo(disperseBot.getLocation()).opposite();
             tryMoveDest(main_direction);
@@ -358,7 +378,6 @@ public class HunterMuckracker extends Robot {
                 }
 
                 Debug.println(Debug.info, "Prioritizing hunting enemy at " + enemyLocation + ". Boredom: " + turnsSinceClosestDistanceDecreased);
-                Debug.setIndicatorLine(Debug.info, rc.getLocation(), enemyLocation, 255, 150, 50);
             }
             else if (awayFromBase) {
                 tryMoveDest(currLoc.directionTo(friendlyBase.getLocation()).opposite());
@@ -394,5 +413,11 @@ public class HunterMuckracker extends Robot {
                 Debug.println(Debug.info, "Prioritizing exploring: " + Nav.lastExploreDir);
             }
         }
+        
+        // This means that the first half of an EC-ID/EC-ID broadcast finished.
+        if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+        else if(broadcastECorSlanderers());
+        else if(bestSlanderer != null && broadcastEnemyFound(bestSlanderer.getLocation(), Comms.EnemyType.SLA));
+        else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));
     }
 }

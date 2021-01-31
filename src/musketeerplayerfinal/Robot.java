@@ -1,9 +1,8 @@
 package musketeerplayerfinal;
 import battlecode.common.*;
-
-import musketeerplayerfinal.Util.*;
 import musketeerplayerfinal.Comms.*;
 import musketeerplayerfinal.Debug.*;
+import musketeerplayerfinal.Util.*;
 import musketeerplayerfinal.fast.FastIntIntMap;
 import musketeerplayerfinal.fast.FastLocIntMap;
 import musketeerplayerfinal.fast.FastQueue;
@@ -19,6 +18,7 @@ public class Robot {
     static int homeID;
     static int prevBroadcastRound;
     static int localOrGlobal;
+    static int slanderersOrEC;
 
     static int sensorRadius;
     static int actionRadius;
@@ -31,6 +31,7 @@ public class Robot {
     static Comms.SubRobotType subRobotType;
 
     static final int parityBroadcastEnemy = (int) (Math.random() * 2);
+    static final int parityBroadcastSlanderers = 1 - parityBroadcastEnemy;
 
     static FastLocIntMap friendlyECs;
     static boolean needToBroadcastHomeEC;
@@ -48,6 +49,7 @@ public class Robot {
         needToBroadcastHomeEC = false;
         prevBroadcastRound = -2;
         localOrGlobal = 0;
+        slanderersOrEC = 0;
 
         if(rc.getType() == RobotType.ENLIGHTENMENT_CENTER) {
             home = rc.getLocation();
@@ -180,6 +182,51 @@ public class Robot {
         return false;
     }
 
+    boolean broadcastSlanderers() throws GameActionException {
+        RobotInfo robot;
+        // Moved beforehand, so we need to recalculate
+        RobotInfo[] sensable = rc.senseNearbyRobots(sensorRadius, enemy);
+        MapLocation ecLoc = null;
+        int slandererCount = 0;
+        for(int i = sensable.length - 1; i >= 0; i--) {
+            robot = sensable[i];
+            if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER) {
+                ecLoc = robot.getLocation();
+            }
+            
+            if(Util.isSlandererInfluence(robot.getInfluence()) && robot.getType() == RobotType.POLITICIAN) {
+                slandererCount++;
+            }
+        }
+
+        if(slandererCount >= 5 && ecLoc != null) {
+            Debug.println(Debug.info, "Reporting slanderers near an enemy EC: " + slandererCount);
+
+            int ecDX = ecLoc.x - home.x;
+            int ecDY = ecLoc.y - home.y;
+
+            slandererCount = Math.min(slandererCount, 63);
+
+            setFlag(Comms.getFlag(InformationCategory.ENEMY_EC_MUK, slandererCount, ecDX + Util.dOffset, ecDY + Util.dOffset));
+            return true;
+        }
+        return false;
+    }
+
+    boolean broadcastECorSlanderers() throws GameActionException {
+        boolean ret = false;
+        if(slanderersOrEC % 2 == parityBroadcastSlanderers) {
+            ret = broadcastSlanderers();
+        } else {
+            ret = broadcastECLocation();
+        }
+
+        if(ret) {
+            slanderersOrEC++;
+        }
+        return ret;
+    }
+
     void broadcastHomeEC() throws GameActionException {
         MapLocation currLoc = rc.getLocation();
         int homeDx = home.x - currLoc.x;
@@ -293,12 +340,16 @@ public class Robot {
             }
         }
 
+        boolean ret = false;
         if(localOrGlobal % 2 == parityBroadcastEnemy && (!isSmallMuck || subRobotType == Comms.SubRobotType.MUC_SCOUT )) {
-            broadcastEnemyFound(enemyLoc, type);
+            ret = broadcastEnemyFound(enemyLoc, type);
         } else {
-            broadcastEnemyLocal(enemyLoc, type);
+            ret = broadcastEnemyLocal(enemyLoc, type);
         }
-        localOrGlobal++;
+
+        if(ret) {
+            localOrGlobal++;
+        }
         return true;
     }
 
@@ -319,13 +370,15 @@ public class Robot {
             flag = Comms.getFlagEnemyFound(InformationCategory.ENEMY_FOUND, IsSla.NO, type, enemyDx + Util.dOffset, enemyDy + Util.dOffset);
         }
 
-        // if(rc.canSenseLocation(enemyLoc)) {
-        //     RobotInfo robot = rc.senseRobotAtLocation(enemyLoc);
-        //     int conviction = robot.getConviction();
-        //     if(robot.getType() == RobotType.MUCKRAKER && conviction > 50) {
-        //         flag = Comms.getFlag(InformationCategory.BUFF_MUCK, Comms.encodeInf(conviction), enemyDx + Util.dOffset, enemyDy + Util.dOffset);
-        //     }
-        // }
+        if(rc.canSenseLocation(enemyLoc)) {
+            RobotInfo robot = rc.senseRobotAtLocation(enemyLoc);
+            if(robot != null) {
+                int conviction = robot.getConviction();
+                if(robot.getType() == RobotType.MUCKRAKER && conviction >= 30) {
+                    flag = Comms.getFlag(InformationCategory.BUFF_MUCK, Comms.encodeInf(conviction), enemyDx + Util.dOffset, enemyDy + Util.dOffset);
+                }
+            }
+        }
 
         setFlag(flag);
 

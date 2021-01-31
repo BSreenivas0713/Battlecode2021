@@ -1,8 +1,7 @@
 package musketeerplayerfinal;
 import battlecode.common.*;
-
-import musketeerplayerfinal.Util.*;
 import musketeerplayerfinal.Debug.*;
+import musketeerplayerfinal.Util.*;
 
 public class CleanupPolitician extends Robot {
     static Direction main_direction;

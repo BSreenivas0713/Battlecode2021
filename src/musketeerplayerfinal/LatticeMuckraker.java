@@ -1,8 +1,7 @@
 package musketeerplayerfinal;
 import battlecode.common.*;
-
-import musketeerplayerfinal.Util.*;
 import musketeerplayerfinal.Debug.*;
+import musketeerplayerfinal.Util.*;
 
 public class LatticeMuckraker extends Robot {
     static Direction main_direction;
@@ -56,7 +55,7 @@ public class LatticeMuckraker extends Robot {
             robot = friendlySensable[i];
             if(rc.canGetFlag(robot.getID())) {
                 int flag = rc.getFlag(robot.getID());
-                if(Comms.isSubRobotType(flag, Comms.SubRobotType.POL_RUSH)) {
+                if(Comms.isRusher(flag)) {
                     Debug.println(Debug.info, "Found a rusher.");
                     disperseBot = robot;
                 }

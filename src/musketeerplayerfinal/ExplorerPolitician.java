@@ -1,20 +1,17 @@
 package musketeerplayerfinal;
 import battlecode.common.*;
-
-import musketeerplayerfinal.Util.*;
 import musketeerplayerfinal.Debug.*;
+import musketeerplayerfinal.Util.*;
 
 public class ExplorerPolitician extends Robot {
     static Direction main_direction;
     static boolean   toDetonate = false;
-    static MapLocation enemyLocation;
 
     //TOCONSIDER: allow for these types to attack neutrals
     public ExplorerPolitician(RobotController r) {
         super(r);
         subRobotType = Comms.SubRobotType.POL_EXPLORER;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
-        enemyLocation = null;
     }
     
     public ExplorerPolitician(RobotController r, MapLocation h, int hID) {
@@ -29,8 +26,6 @@ public class ExplorerPolitician extends Robot {
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        if (rc.getTeamVotes() < 751 && rc.getRoundNum() >= 1450) changeTo = new CleanupPolitician(rc, home, homeID);
-
         Debug.println(Debug.info, "I am an explorer politician; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));
 
@@ -38,11 +33,7 @@ public class ExplorerPolitician extends Robot {
             main_direction = Util.randomDirection();
         }
 
-        if (rc.getTeamVotes() < 751 && rc.canEmpower(actionRadius)) {
-            if (rc.getRoundNum() >= 1495) {
-                rc.empower(actionRadius);
-            }
-        }
+        if (rc.getTeamVotes() < 751 && rc.getRoundNum() >= 1450) changeTo = new CleanupPolitician(rc, home, homeID);
         
         RobotInfo robot;
         int min_attackable_conviction = (rc.getConviction() - 10) / 3;
@@ -65,27 +56,6 @@ public class ExplorerPolitician extends Robot {
         int numFriendlyAttackable = rc.senseNearbyRobots(rc.getType().actionRadiusSquared, rc.getTeam()).length;
         int polAttackThreshold = (int) (rc.getConviction() * rc.getEmpowerFactor(rc.getTeam(), 0) * 3 / 4);
 
-        if (enemyLocation == null) {
-            if(rc.canGetFlag(homeID)) {
-                Debug.println(Debug.info, "Checking home flag");
-                int flag = rc.getFlag(homeID);
-                Comms.InformationCategory IC = Comms.getIC(flag);
-                switch(IC) {
-                    case ENEMY_EC:
-                        int[] dxdy = Comms.getDxDy(flag);
-                        if(dxdy[0] != 0 && dxdy[1] != 0) {
-                            MapLocation enemyLoc = new MapLocation(dxdy[0] + home.x - Util.dOffset, dxdy[1] + home.y - Util.dOffset);
-                            Debug.setIndicatorDot(Debug.info, enemyLoc, 255, 0, 0);
-                            if(rc.getInfluence() > 100) {
-                                changeTo = new RushPolitician(rc, enemyLoc, home, homeID);
-                                return;
-                            }
-                        }
-                        break;
-                }
-            }
-        }
-        
         for(int i = enemyAttackable.length - 1; i >= 0; i--) {
             robot = enemyAttackable[i];
             robotConviction = robot.getConviction();
@@ -115,6 +85,7 @@ public class ExplorerPolitician extends Robot {
                 ecLoc = robot.getLocation();
             }
         }
+
         if (ecConviction < 5 * rc.getEmpowerFactor(rc.getTeam(), 0) * rc.getConviction() && rc.canEmpower(ecRadius)) {
             Debug.println(Debug.info, "Empowered near EC with radius: " + ecRadius);
             Debug.setIndicatorLine(Debug.info, rc.getLocation(), ecLoc, 255, 150, 50);
@@ -148,6 +119,7 @@ public class ExplorerPolitician extends Robot {
         int MukminDistSquared = Integer.MAX_VALUE;
         MapLocation enemyLoc = null;
         boolean enemyNearBase = false;
+        RobotInfo disperseBot = null;
 
         for(int i = enemySensable.length - 1; i >= 0; i--) {
             robot = enemySensable[i];
@@ -189,16 +161,22 @@ public class ExplorerPolitician extends Robot {
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyDist  <= actionRadius) {
                 inActionRadiusOfFriendly = true;
             }
-        }
 
-        if (home != null) {
-            // This means that the first half of an EC-ID/EC-ID broadcast finished.
-            if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
-            else if(broadcastECLocation());
-            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));   
+            if(rc.canGetFlag(robot.getID())) {
+                int flag = rc.getFlag(robot.getID());
+                // Move out of the way of rush pols
+                if(Comms.isRusher(flag)) {
+                    Debug.println(Debug.info, "Found a rusher.");
+                    disperseBot = robot;
+                }
+            }
         }
         
-        if(enemyNearBase) {
+        if (disperseBot != null) {
+            main_direction = currLoc.directionTo(disperseBot.getLocation()).opposite();
+            tryMoveDest(main_direction);
+            Debug.println(Debug.info, "Dispersing to avoid rusher.");
+        } else if(enemyNearBase && rc.getConviction() > 10) {
             if(rc.canEmpower(MukminDistSquared)) {
                 Debug.println("enemy too close to base. Even though I am an explorerer, I will empower");
                 rc.empower(MukminDistSquared);
@@ -208,25 +186,33 @@ public class ExplorerPolitician extends Robot {
                 Direction toMove = rc.getLocation().directionTo(enemyLoc);
                 tryMoveDest(toMove);
             }
-        }
-        if (EC != null) {
+        } else if (EC != null) {
+            Debug.println("Moving towards enemy EC");
             Direction toMove = rc.getLocation().directionTo(EC.getLocation());
             tryMoveDest(toMove);
+        } else {
+            Debug.println("Exploring normally");
+            Direction[] orderedDirs = Nav.exploreGreedy(rc);
+            boolean moved = false;
+            if(orderedDirs != null) {
+                for(Direction dir : orderedDirs) {
+                    moved = moved || tryMove(dir);
+                }
+                orderedDirs = Util.getOrderedDirections(main_direction);
+                for(Direction dir : orderedDirs) {
+                    moved = moved || tryMove(dir);
+                }
+                if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
+                    tryMoveDest(main_direction);
+                }
+            }
         }
 
-        Direction[] orderedDirs = Nav.exploreGreedy(rc);
-        boolean moved = false;
-        if(orderedDirs != null) {
-            for(Direction dir : orderedDirs) {
-                moved = moved || tryMove(dir);
-            }
-            orderedDirs = Util.getOrderedDirections(main_direction);
-            for(Direction dir : orderedDirs) {
-                moved = moved || tryMove(dir);
-            }
-            if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
-                tryMoveDest(main_direction);
-            }
+        if (home != null) {
+            // This means that the first half of an EC-ID/EC-ID broadcast finished.
+            if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+            else if(broadcastECorSlanderers());
+            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));   
         }
     }
 }

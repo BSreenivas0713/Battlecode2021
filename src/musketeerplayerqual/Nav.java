@@ -27,7 +27,7 @@ public class Nav {
     static int turnsSinceClosestDistanceDecreased;
 
 
-    public static Direction lastExploreDir;
+    static Direction lastExploreDir;
     static final int EXPLORE_BOREDOM = 20;
     static int boredom;
 
@@ -442,6 +442,7 @@ public class Nav {
                     minCost = costs[i][j];
                     minLoc = map[i][j];
                 }
+                
             }
         }
         // System.out.println("Bytecode at find min exit" + Clock.getBytecodeNum());

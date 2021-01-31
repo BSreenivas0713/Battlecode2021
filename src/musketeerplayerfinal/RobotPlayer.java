@@ -1,10 +1,9 @@
 package musketeerplayerfinal;
 
 import battlecode.common.*;
-
-import musketeerplayerfinal.Util.*;
 import musketeerplayerfinal.Comms.*;
 import musketeerplayerfinal.Debug.*;
+import musketeerplayerfinal.Util.*;
 
 public strictfp class RobotPlayer {
 
@@ -32,9 +31,12 @@ public strictfp class RobotPlayer {
                             case ENEMY_EC:
                                 int[] dxdy = Comms.getDxDy(botFlag);
                                 MapLocation spawningLoc = robot.getLocation();
-                                MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
-                                
-                                bot = new RushPolitician(rc, enemyLoc);
+                                if (dxdy[0] == 0 && dxdy[1] == 0) {
+                                    bot = new RushPolitician(rc, null);
+                                } else {
+                                    MapLocation enemyLoc = new MapLocation(dxdy[0] + spawningLoc.x - Util.dOffset, dxdy[1] + spawningLoc.y - Util.dOffset);
+                                    bot = new HeadRushPolitician(rc, enemyLoc);
+                                }
                                 break;
                             case TARGET_ROBOT:
                                 Comms.SubRobotType type = Comms.getSubRobotType(botFlag);
@@ -66,6 +68,37 @@ public strictfp class RobotPlayer {
                                             bot = new SpawnKillPolitician(rc);
                                         } else {
                                             bot = new ExplorerPolitician(rc);
+                                        }
+                                        break;
+                                    case POL_HEAD:
+                                        int[] headDxDy = Comms.getDxDySubRobotType(botFlag);
+                                        MapLocation spawningLoc2 = robot.getLocation();
+                                        MapLocation enemyLoc2 = new MapLocation(headDxDy[0] + spawningLoc2.x - Util.dOffset, headDxDy[1] + spawningLoc2.y - Util.dOffset);
+                                        bot = new HeadRushPolitician(rc, enemyLoc2);
+                                        break;
+                                    case POL_SUPPORT:
+                                        int[] supportDxDy = Comms.getDxDySubRobotType(botFlag);
+                                        if (supportDxDy[0] == 0 && supportDxDy[1] == 0) {
+                                            // This shouldn't happen but just in case
+                                            bot = new LatticeProtector(rc);
+                                        } else {
+                                            MapLocation spawningLoc1 = robot.getLocation();
+                                            MapLocation enemyLoc1 = new MapLocation(supportDxDy[0] + spawningLoc1.x - Util.dOffset, supportDxDy[1] + spawningLoc1.y - Util.dOffset);
+                                            bot = new SupportRushPolitician(rc, enemyLoc1);
+                                        }
+                                        break;
+                                    case POL_FAT:
+                                        bot = new RushPolitician(rc, null);
+                                        break;
+                                    case POL_ACTIVE_RUSH:
+                                        int[] activeRushDxDy = Comms.getDxDySubRobotType(botFlag);
+                                        if (activeRushDxDy[0] == 0 && activeRushDxDy[1] == 0) {
+                                            // This shouldn't happen but just in case
+                                            bot = new RushPolitician(rc, null);
+                                        } else {
+                                            MapLocation spawningLoc1 = robot.getLocation();
+                                            MapLocation enemyLoc1 = new MapLocation(activeRushDxDy[0] + spawningLoc1.x - Util.dOffset, activeRushDxDy[1] + spawningLoc1.y - Util.dOffset);
+                                            bot = new RushPolitician(rc, enemyLoc1);
                                         }
                                         break;
                                 }
@@ -143,6 +176,8 @@ public strictfp class RobotPlayer {
 
                 if (bot.changeTo != null) {
                     bot = bot.changeTo;
+                    bot.changeTo = null;
+                    continue;
                 }
                 // Debug.println(Debug.info, "BC left at end: " + Clock.getBytecodesLeft());
 

@@ -1,9 +1,8 @@
 package musketeerplayerfinal;
 
 import battlecode.common.*;
-
-import musketeerplayerfinal.Util.*;
 import musketeerplayerfinal.Debug.*;
+import musketeerplayerfinal.Util.*;
 
 public class LatticeRusher extends Robot {
     static MapLocation enemyLocation;
@@ -14,7 +13,7 @@ public class LatticeRusher extends Robot {
         super(r);
         enemyLocation = enemyLoc;
         moveSemaphore = 2;
-        subRobotType = Comms.SubRobotType.POL_RUSH;
+        subRobotType = Comms.SubRobotType.POL_ACTIVE_RUSH;
         defaultFlag = Comms.getFlag(Comms.InformationCategory.ROBOT_TYPE, subRobotType);
         Nav.setDest(enemyLoc);
     }
@@ -28,8 +27,6 @@ public class LatticeRusher extends Robot {
 
     public void takeTurn() throws GameActionException {
         super.takeTurn();
-
-        if (rc.getTeamVotes() < 751 && rc.getRoundNum() >= 1450) changeTo = new CleanupPolitician(rc, home, homeID);
 
         Debug.println(Debug.info, "I am a Lattice Rusher; current influence: " + rc.getInfluence());
         Debug.println(Debug.info, "current buff: " + rc.getEmpowerFactor(rc.getTeam(),0));

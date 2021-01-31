@@ -34,7 +34,11 @@ public class ExplorerPolitician extends Robot {
             main_direction = Util.randomDirection();
         }
 
-        if (rc.getTeamVotes() < 751 && rc.getRoundNum() >= 1450) changeTo = new CleanupPolitician(rc, home, homeID);
+        if (rc.getTeamVotes() < 751 && rc.canEmpower(actionRadius)) {
+            if (rc.getRoundNum() >= 1495) {
+                rc.empower(actionRadius);
+            }
+        }
         
         RobotInfo robot;
         int min_attackable_conviction = (rc.getConviction() - 10) / 3;
@@ -120,7 +124,6 @@ public class ExplorerPolitician extends Robot {
         int MukminDistSquared = Integer.MAX_VALUE;
         MapLocation enemyLoc = null;
         boolean enemyNearBase = false;
-        RobotInfo disperseBot = null;
 
         for(int i = enemySensable.length - 1; i >= 0; i--) {
             robot = enemySensable[i];
@@ -162,22 +165,16 @@ public class ExplorerPolitician extends Robot {
             if(robot.getType() == RobotType.ENLIGHTENMENT_CENTER && enemyDist  <= actionRadius) {
                 inActionRadiusOfFriendly = true;
             }
+        }
 
-            if(rc.canGetFlag(robot.getID())) {
-                int flag = rc.getFlag(robot.getID());
-                // Move out of the way of rush pols
-                if(Comms.isRusher(flag)) {
-                    Debug.println(Debug.info, "Found a rusher.");
-                    disperseBot = robot;
-                }
-            }
+        if (home != null) {
+            // This means that the first half of an EC-ID/EC-ID broadcast finished.
+            if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
+            else if(broadcastECLocation());
+            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));   
         }
         
-        if (disperseBot != null) {
-            main_direction = currLoc.directionTo(disperseBot.getLocation()).opposite();
-            tryMoveDest(main_direction);
-            Debug.println(Debug.info, "Dispersing to avoid rusher.");
-        } else if(enemyNearBase && rc.getConviction() > 10) {
+        if(enemyNearBase) {
             if(rc.canEmpower(MukminDistSquared)) {
                 Debug.println("enemy too close to base. Even though I am an explorerer, I will empower");
                 rc.empower(MukminDistSquared);
@@ -187,33 +184,25 @@ public class ExplorerPolitician extends Robot {
                 Direction toMove = rc.getLocation().directionTo(enemyLoc);
                 tryMoveDest(toMove);
             }
-        } else if (EC != null) {
-            Debug.println("Moving towards enemy EC");
+        }
+        if (EC != null) {
             Direction toMove = rc.getLocation().directionTo(EC.getLocation());
             tryMoveDest(toMove);
-        } else {
-            Debug.println("Exploring normally");
-            Direction[] orderedDirs = Nav.exploreGreedy(rc);
-            boolean moved = false;
-            if(orderedDirs != null) {
-                for(Direction dir : orderedDirs) {
-                    moved = moved || tryMove(dir);
-                }
-                orderedDirs = Util.getOrderedDirections(main_direction);
-                for(Direction dir : orderedDirs) {
-                    moved = moved || tryMove(dir);
-                }
-                if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
-                    tryMoveDest(main_direction);
-                }
-            }
         }
 
-        if (home != null) {
-            // This means that the first half of an EC-ID/EC-ID broadcast finished.
-            if(needToBroadcastHomeEC && rc.getFlag(rc.getID()) == defaultFlag) { broadcastHomeEC(); }
-            else if(broadcastECorSlanderers());
-            else if(closestEnemy != null && broadcastEnemyLocalOrGlobal(closestEnemy.getLocation(), closestEnemyType));   
+        Direction[] orderedDirs = Nav.exploreGreedy(rc);
+        boolean moved = false;
+        if(orderedDirs != null) {
+            for(Direction dir : orderedDirs) {
+                moved = moved || tryMove(dir);
+            }
+            orderedDirs = Util.getOrderedDirections(main_direction);
+            for(Direction dir : orderedDirs) {
+                moved = moved || tryMove(dir);
+            }
+            if(!moved && rc.isReady() && inActionRadiusOfFriendly) {
+                tryMoveDest(main_direction);
+            }
         }
     }
 }
