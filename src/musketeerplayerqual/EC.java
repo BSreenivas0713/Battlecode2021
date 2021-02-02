@@ -13,37 +13,33 @@ import musketeerplayerqual.fast.FastIntIntMap;
 
 import java.util.ArrayDeque;
 import java.util.PriorityQueue;
-/* 
-TODO: 
-slandies move away from scout mucks (reason why we lose as blue on circle, their scout finds us way earlier
-cuz ours tries to go around a slanderer)
-
-Fix accelerated slanderer mode so that we win on small maps but don't lose on the maps that we started winning because of the change(like snowflake)
-My first guess would be try and get out of the mode sooner. I tried to get out of it if we see any enemy but that didn't work. Myabe if we see more than 1 muckraker
-in our sensor radius? 
-
-We also don't win decisively on gridlock as blue anymore. Not sure why. Might be worth it to investigate.
-
-
-
-
-*/
 public class EC extends Robot {
+    //Different possible states that our EC could be in. They are all pretty explanatory
     static enum State {
-        BUILDING_SPAWNKILLS,
-        RUSHING,
+        BUILDING_SPAWNKILLS, //Not used after spawn kill nerf
+        RUSHING, //Rushing an enemy or neutral base
         SAVING_FOR_RUSH,
-        CLEANUP,
-        REMOVING_BLOCKAGE,
-        CHILLING,
-        ACCELERATED_SLANDERERS,
-        INIT,
+        CLEANUP, //trying to get rid of things on the map since we have not seen an enemy EC in a long time
+        REMOVING_BLOCKAGE, //Too many towers near our EC, it could be completely blocked
+        CHILLING,//Main state of an EC, when enemies surround it
+        ACCELERATED_SLANDERERS,//if an EC is out of enemy line, and there are no enemies near it, we build more slanderers
+        INIT, //initial state, hardcoded first few rounds
         STUCKY_MUCKY,
-        RUSHING_MUCKS,
-        ABOUT_TO_DIE,
+        RUSHING_MUCKS, //sending large muckrakers to enemy base to try and stifle their economy
+        ABOUT_TO_DIE, //if a big politician is on the way to base
         BUILDING_BUFF_POLS,
+        BETTER_RUSHING, //rushing with the buddy system in place
+        OBESITY,
     };
 
+    static enum RushingState {
+        MUCK,
+        SUPPORT1,
+        SUPPORT2,
+        RUSH,
+    }
+    /*This class was used to save information about a certain enemy/neutral EC. It stores influence of the base, 
+    the team of the base, and the flag that will be given to the rush politician to overtake it*/
     static class RushFlag implements Comparable<RushFlag> {
         int requiredInfluence;
         int dx;
@@ -255,7 +251,7 @@ public class EC extends Robot {
             return State.INIT;
         }
     }
-
+    /*Generic code to build a robot of a certain type. returns true if the build happened and false otherwise. */
     public boolean buildRobot(RobotType toBuild, int influence) throws GameActionException {
         Debug.println(Debug.info, "Trying to build robot of type: " + toBuild + " influence: " + influence);
         Debug.println("Max usable influence: " + maxUsableInfluence);
@@ -268,7 +264,7 @@ public class EC extends Robot {
         Direction[] orderedDirs = Util.getOrderedDirections(pref);
         boolean isScout = Comms.getIC(nextFlag) == Comms.InformationCategory.TARGET_ROBOT &&
                         Comms.getSubRobotType(nextFlag) == Comms.SubRobotType.MUC_SCOUT;
-
+        
         if(isScout) {
             Direction scoutDirection = Comms.getScoutDirection(nextFlag);
             orderedDirs = Util.getOrderedDirections(scoutDirection);            
